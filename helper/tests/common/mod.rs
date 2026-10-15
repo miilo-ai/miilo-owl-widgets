@@ -21,6 +21,7 @@ pub fn endpoint() -> Endpoint {
         token: "private-token".into(),
         providers: vec!["factory".into()],
         allow_actions: true,
+        actor_names: Default::default(),
     }
 }
 pub fn store(dir: &std::path::Path, endpoints: Vec<Endpoint>) -> Store {

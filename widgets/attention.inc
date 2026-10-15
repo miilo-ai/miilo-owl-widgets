@@ -25,7 +25,12 @@
       gap: 10
       Setup { }
       SetupTerminal { }
-      for a in ordered.take(visibleLimit) key a._key {
+      if focused != null {
+        WorkDetail { }
+      } else {
+        Search { placeholder: "Search attention" }
+        let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
+      for a in matches.take(pageSize) key a._key {
           Column {
           gap: 2
           fill: width
@@ -33,14 +38,14 @@
           Row {
             fill: width
             Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
-            Text { text: "›"; style: small; color: muted }
+            Text { text: "›"; width: 10; style: small; color: muted }
           }
           Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
           if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
         }
       }
-      if len(ordered) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
-      if len(ordered) > visibleLimit { Button { text: "+${len(ordered) - visibleLimit} more"; onTap: visibleLimit = visibleLimit + 12 } }
-      WorkDetail { }
+      if len(matches) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
+      if len(matches) > pageSize { Button { text: "+${len(matches) - pageSize} more"; onTap: pageSize = pageSize + 5 } }
+      }
     }
   }

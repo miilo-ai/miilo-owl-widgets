@@ -1,0 +1,239 @@
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index b8499e0..5121af5 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -51,6 +51,10 @@ android {
+     }
+ 
+     buildTypes {
++        debug {
++            applicationIdSuffix = ".miilopreview"
++            versionNameSuffix = "-header-preview"
++        }
+         release {
+             // Shrinks the APK and drops what the app doesn't use, like the owl module's unused parts.
+             isMinifyEnabled = true
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 34d35bd..e2a3940 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -228,7 +228,7 @@
+ 
+         <provider
+             android:name="androidx.core.content.FileProvider"
+-            android:authorities="dev.omalauncher.files"
++            android:authorities="${applicationId}.files"
+             android:exported="false"
+             android:grantUriPermissions="true">
+             <meta-data
+diff --git a/app/src/main/assets/widgets/README.md b/app/src/main/assets/widgets/README.md
+index 3060a78..4568840 100644
+--- a/app/src/main/assets/widgets/README.md
++++ b/app/src/main/assets/widgets/README.md
+@@ -527,3 +527,22 @@ and the message goes to `.errors/`.
+   `88-notes` (Input), `98-notifications` (android.notifications), `99-volume` (Slider),
+   and next to it `10-today` (a weather screen behind the tile), `20-fetch` (fastfetch as a dashboard), `45-terminal` (a live terminal) and
+   `60-owl` (sprites).
++
++### Header controls (owl 8)
++
++A screen may contain one optional `header { ... }` block. Its compact nodes render in the window title row immediately before the launcher's close control, sharing widget state and handlers. Existing screens without a header are unchanged. Keep it to a few fixed-size controls; avoid terminals, scrolling lists, or full-width content in this row. Declare `meta { owl: 8 }` so older launchers request an update.
++
++```owl
++widget "Header example" {
++  meta { owl: 8 }
++  state settings = false
++  Text { text: "Open"; onTap: screen() }
++  screen {
++    title: "Miilo"
++    header {
++      Text { text: "⚙"; fontSize: 24; width: 44; height: 44; align: center; onTap: settings = !settings }
++    }
++    Text { text: settings ? "Settings" : "Work" }
++  }
++}
++```
+diff --git a/app/src/main/kotlin/dev/omalauncher/ui/Components.kt b/app/src/main/kotlin/dev/omalauncher/ui/Components.kt
+index 5f68495..8b190d1 100644
+--- a/app/src/main/kotlin/dev/omalauncher/ui/Components.kt
++++ b/app/src/main/kotlin/dev/omalauncher/ui/Components.kt
+@@ -54,6 +54,7 @@ fun OverlayPanel(
+     onDismiss: () -> Unit,
+     actions: @Composable RowScope.() -> Unit = {},
+     contentWidth: Dp = Dp.Unspecified,
++    closeSize: TextUnit = TextSize.Title,
+     content: @Composable ColumnScope.() -> Unit,
+ ) {
+     Box(
+@@ -71,6 +72,7 @@ fun OverlayPanel(
+             title = { PanelTitle(title) },
+             actions = actions,
+             contentWidth = contentWidth,
++            closeSize = closeSize,
+             content = content,
+         )
+     }
+@@ -84,6 +86,7 @@ fun PanelFrame(
+     title: @Composable () -> Unit,
+     actions: @Composable RowScope.() -> Unit = {},
+     contentWidth: Dp = Dp.Unspecified,
++    closeSize: TextUnit = TextSize.Title,
+     content: @Composable ColumnScope.() -> Unit,
+ ) {
+     Column(
+@@ -95,7 +98,7 @@ fun PanelFrame(
+         Row(verticalAlignment = Alignment.CenterVertically) {
+             Box(Modifier.weight(1f)) { title() }
+             actions()
+-            Symbol(Glyph.Close, Palette.red, Modifier.clickable(onClick = onClose).padding(8.dp), TextSize.Title)
++            Symbol(Glyph.Close, Palette.accent, Modifier.clickable(onClick = onClose).padding(8.dp), closeSize)
+         }
+         Spacer(Modifier.height(8.dp))
+         if (contentWidth == Dp.Unspecified) {
+diff --git a/app/src/main/kotlin/dev/omalauncher/ui/ShareWidgetScreen.kt b/app/src/main/kotlin/dev/omalauncher/ui/ShareWidgetScreen.kt
+index 7c45575..769dbde 100644
+--- a/app/src/main/kotlin/dev/omalauncher/ui/ShareWidgetScreen.kt
++++ b/app/src/main/kotlin/dev/omalauncher/ui/ShareWidgetScreen.kt
+@@ -289,7 +289,7 @@ private fun qrImage(
+     val file = File(dir, "$slug-qr.png")
+     file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+     bitmap.recycle()
+-    return FileProvider.getUriForFile(context, "dev.omalauncher.files", file)
++    return FileProvider.getUriForFile(context, context.packageName + ".files", file)
+ }
+ 
+ /** [link] as a QR code at error correction L, the setting [Share.MAX_LINK] is measured for, with a 2-module margin. */
+diff --git a/app/src/main/kotlin/dev/omalauncher/ui/WidgetTile.kt b/app/src/main/kotlin/dev/omalauncher/ui/WidgetTile.kt
+index e9b147f..60fcbab 100644
+--- a/app/src/main/kotlin/dev/omalauncher/ui/WidgetTile.kt
++++ b/app/src/main/kotlin/dev/omalauncher/ui/WidgetTile.kt
+@@ -18,10 +18,12 @@ import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.input.pointer.pointerInput
+ import androidx.compose.ui.text.style.TextOverflow
+ import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
+ import dev.omalauncher.linux.LinuxState
+ import dev.omalauncher.widgets.WidgetSpec
+ import dev.omalauncher.widgets.lang.text
+ import dev.omalauncher.widgets.render.WidgetContent
++import dev.omalauncher.widgets.render.WidgetScreenHeader
+ import dev.omalauncher.widgets.render.WidgetScreen
+ import androidx.compose.foundation.layout.fillMaxWidth
+ import dev.omalauncher.widgets.runtime.WidgetInstance
+@@ -124,7 +126,7 @@ internal fun WidgetScreenPanel(
+     onDismiss: () -> Unit,
+ ) {
+     val title = instance.program.screenTitle?.let { instance.eval(it, instance.root, "title").text() } ?: spec.name
+-    OverlayPanel(title, onDismiss) {
++    OverlayPanel(title, onDismiss, actions = { WidgetScreenHeader(instance) }, closeSize = 24.sp) {
+         WidgetScreen(instance, Modifier.weight(1f).fillMaxWidth())
+     }
+ }
+diff --git a/app/src/main/kotlin/dev/omalauncher/widgets/render/Render.kt b/app/src/main/kotlin/dev/omalauncher/widgets/render/Render.kt
+index d013d6b..99dd9e0 100644
+--- a/app/src/main/kotlin/dev/omalauncher/widgets/render/Render.kt
++++ b/app/src/main/kotlin/dev/omalauncher/widgets/render/Render.kt
+@@ -139,6 +139,12 @@ fun WidgetScreen(
+     }
+ }
+ 
++/** Controls supplied by screen.header, sharing the screen's state and handlers. */
++@Composable
++fun WidgetScreenHeader(inst: WidgetInstance) {
++    Row { Nodes(inst.program.screenHeader, inst.root, inst, this) }
++}
++
+ /**
+  * A frame clock for widgets that read `time`, only while they're on screen ([covered] is false)
+  * and something still reads it: a `time` under an `if` that's false, like a backdrop drawn only
+diff --git a/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Compiler.kt b/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Compiler.kt
+index 17155ae..29d96a2 100644
+--- a/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Compiler.kt
++++ b/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Compiler.kt
+@@ -22,7 +22,7 @@ class Compiler private constructor(
+          * instead of failing on what they don't know. Bump it with every
+          * addition a widget could depend on: nodes, properties, builtins.
+          */
+-        const val LEVEL = 7
++        const val LEVEL = 8
+         private const val MAX_ASSET_BYTES = 2 shl 20
+ 
+         fun compile(src: String): Program =
+@@ -106,7 +106,8 @@ class Compiler private constructor(
+                 // owl 6: properties, named Node.property; values in commands, quoted; the launcher's corner style.
+                 listOf("Input.focus", "sh", "corners").associateWith { 6 } +
+                 // owl 7: more of the phone, without new permissions.
+-                listOf("android.alarm", "android.modes", "torch", "share", "haptic").associateWith { 7 }
++                listOf("android.alarm", "android.modes", "torch", "share", "haptic").associateWith { 7 } +
++                listOf("screen.header").associateWith { 8 }
+ 
+         // No onLongPress: long-press belongs to the home screen, which lifts the tile to move it.
+         /**
+@@ -249,6 +250,7 @@ class Compiler private constructor(
+ 
+     /** Where a handler calls screen() or close(), which need a screen { } block. */
+     private var screenAction: Int? = null
++    private var screenHeader: List<WNode> = emptyList()
+ 
+     /** The newest feature used, from [SINCE], and where: the widget must declare at least its version. */
+     private var needs: Triple<Int, String, Int>? = null
+@@ -335,6 +337,7 @@ class Compiler private constructor(
+             root = rootNodes,
+             screen = screen?.first,
+             screenTitle = screen?.second,
++            screenHeader = screenHeader,
+             onTap = onTap,
+             triggers = triggers,
+             commands = commands.toList(),
+@@ -357,7 +360,14 @@ class Compiler private constructor(
+         nodes = 0
+         maxNodes = MAX_SCREEN_NODES
+         inScreen = true
+-        val tree = items(body.items, root, Children.UI)
++        val headers = body.items.filterIsInstance<Item.Node>().filter { it.type == "header" }
++        if (headers.size > 1) fail("a screen has one header { }", headers[1].pos)
++        headers.firstOrNull()?.let {
++            since("screen.header", it.pos)
++            if (it.body.props.isNotEmpty() || it.body.handlers.isNotEmpty() || it.body.decls.isNotEmpty() || it.body.animations.isNotEmpty()) fail("header contains only compact control nodes", it.pos)
++            screenHeader = items(it.body.items, root, Children.UI)
++        }
++        val tree = items(body.items - headers.toSet(), root, Children.UI)
+         if (tree.isEmpty()) fail("a screen needs at least one node", n.pos)
+         return tree to body.props.firstOrNull()?.let { ex(it.value, root) }
+     }
+diff --git a/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Program.kt b/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Program.kt
+index 6f7b573..bef4ca8 100644
+--- a/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Program.kt
++++ b/owl/src/main/kotlin/dev/omalauncher/widgets/lang/Program.kt
+@@ -285,6 +285,8 @@ class Program(
+     /** The screen { } block: a full-screen view over the same globals, opened with screen(). */
+     val screen: List<WNode>? = null,
+     val screenTitle: Ev? = null,
++    /** Optional compact controls rendered in the launcher header before close. */
++    val screenHeader: List<WNode> = emptyList(),
+     val onTap: Action?,
+     val triggers: List<Trigger>,
+     /** Shell commands this widget can run, known without running it; for reviewing shared widgets. */
+diff --git a/owl/src/test/kotlin/dev/omalauncher/widgets/lang/LangTest.kt b/owl/src/test/kotlin/dev/omalauncher/widgets/lang/LangTest.kt
+index a22cd7e..e710004 100644
+--- a/owl/src/test/kotlin/dev/omalauncher/widgets/lang/LangTest.kt
++++ b/owl/src/test/kotlin/dev/omalauncher/widgets/lang/LangTest.kt
+@@ -578,6 +578,18 @@ class LangTest {
+         assertTrue(compileError("widget {\n meta { owl: 5 }\n $many }").contains("more than 500 nodes"))
+     }
+ 
++    @Test fun screenHeaderControls() {
++        val source = "widget {\n meta { owl: 8 }\n state n = 0\n Text { text: n }\n screen {\n header { Text { text: \"⚙\"; onTap: n = n + 1 } }\n Text { text: n }\n }\n}"
++        val p = Compiler.compile(source)
++        assertEquals(1, p.screenHeader.size)
++        assertEquals(1, p.screen!!.size)
++        assertTrue((p.screenHeader.single() as WNode.Element).handlers.containsKey("onTap"))
++        assertTrue(compileError(source.replace("owl: 8", "owl: 7")).contains("screen.header needs owl 8"))
++        assertTrue(compileError(source.replace("header {", "header { Text { text: 1 } } header {")).contains("one header"))
++        val legacy = Compiler.compile("widget { meta { owl: 5 }; Text { text: 1 }; screen { Text { text: 2 } } }")
++        assertTrue(legacy.screenHeader.isEmpty())
++    }
++
+     @Test fun inputFocus() {
+         val p = Compiler.compile("widget {\n meta { owl: 6 }\n state s = \"\"\n Text { text: 1 }\n screen { Input { focus: s == \"\" } } }")
+         assertTrue("focus" in (p.screen!!.single() as WNode.Element).props)

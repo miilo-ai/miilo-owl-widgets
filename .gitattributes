@@ -1,2 +1,2 @@
-*.owl text
-*.png binary
+# Unified diff context retains its leading space on blank lines.
+*.patch whitespace=-blank-at-eol

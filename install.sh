@@ -15,7 +15,7 @@ trap 'rm -f -- "$temp"' EXIT
 cp -- "$binary" "$temp"
 chmod 755 "$temp"
 mv -f -- "$temp" "$base/bin/miilo-owl"
-for file in "$repo"/*.owl; do
+for file in "$repo"/70-miilo-fleet.owl; do
   name="$(basename -- "$file")"
   if [ -f "$widgets/$name" ]; then
     backup="$widgets/$name.before-miilo-1.3"
@@ -23,7 +23,13 @@ for file in "$repo"/*.owl; do
   fi
   cp -- "$file" "$widgets/$name"
 done
-printf 'Installed miilo-owl and three widgets.\n'
+# Preserve prior focused widgets outside the launcher's .owl discovery pattern.
+for name in 71-miilo-attention.owl 72-miilo-board.owl; do
+  if [ -f "$widgets/$name" ]; then
+    mv -f -- "$widgets/$name" "$widgets/$name.disabled"
+  fi
+done
+printf 'Installed miilo-owl and the Miilo widget.\n'
 printf 'Ensure %s/bin is in your launcher Linux PATH.\n' "$base"
 if [ "${1:-}" != "--no-setup" ]; then
   "$base/bin/miilo-owl" setup

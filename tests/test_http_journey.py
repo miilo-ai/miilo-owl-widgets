@@ -89,6 +89,19 @@ class HttpJourney(unittest.TestCase):
         self.office = dict(self.home, id='office', url=base+'/office')
         self.save([self.home, self.office])
 
+    def test_artifacts_survive_authenticated_cli_snapshot(self):
+        cls = self.__class__
+        cls.current['attempts'] = [{'id': 'run', 'providerId': 'factory', 'taskId': 'task-1'}]
+        cls.current['artifacts'] = [{'id': 'file', 'providerId': 'factory', 'attemptId': 'run',
+            'kind': 'file', 'name': 'src/main.rs', 'extensions': {'custom': {'diff': '-old\n+new'}}}]
+        data = self.run_cli('snapshot')['snapshot']
+        self.assertEqual(len(data['artifacts']), 2)
+        for work in data['workItems']:
+            linked = [a for a in data['artifacts'] if a['_key'] in work['_artifactKeys']]
+            self.assertEqual(len(linked), 1)
+            self.assertEqual(linked[0]['providerId'], work['providerId'])
+            self.assertEqual(linked[0]['_preview'], '-old\n+new')
+
     def tearDown(self):
         self.tmp.cleanup()
 

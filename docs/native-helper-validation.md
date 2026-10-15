@@ -32,3 +32,9 @@ Evidence screenshots: [native helper execution](../previews/native-rust-helper.p
 - Physical-phone layouts, scrolling, theme changes, and full setup/confirmation interactions.
 
 No real provider, synthetic approval, or production token was added to the emulator. An empty fresh install is expected until the user selects a reachable backend and its registered providers.
+
+## October 15 interaction and evidence validation
+
+Current suite: 19 Rust tests, 9 authenticated CLI/installer tests, and 255 OWL evaluations. Approve, Reject, and Retry handlers each verify propose-only first tap, Cancel without dispatch, explicit Confirm with one dispatch, pending-request suppression, and stale-proposal rejection. SDK privileged/explicit approvals with empty-object schemas are accepted; destructive/strong/form-input actions remain delegated to the provider. Native emulator rendering separately verified the three buttons and Confirm/Cancel on a clearly labeled local fixture; no real Factory action was executed. The fixture was removed and real observation restored.
+
+Live tower observation preserved 93 artifacts with 38 nonempty previews, linked to 18 tasks. Current live cards advertise no available actions, and the connection remains observation-only; details now explain both conditions. Local action opt-in cannot invent an upstream action or grant provider authorization. Native inline-header changes and their reproducible OWL8 generator are documented in `launcher-header.md`; the default release remains stock-compatible OWL6.

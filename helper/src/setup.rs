@@ -62,6 +62,7 @@ fn add(
             .ok_or("Setup cancelled")?,
         providers: vec![],
         allow_actions: false,
+        actor_names: Default::default(),
     };
     let raw = http.request(&endpoint, "/v1/snapshot", None)?;
     valid_records(&raw)?;
@@ -110,10 +111,13 @@ fn add(
     }
     endpoint.allow_actions = ask(
         ui,
-        "Allow bounded provider actions on this endpoint? [y/N]: ",
+        "Allow provider actions with explicit confirmation (excluding destructive actions)? [y/N]: ",
     )?
     .eq_ignore_ascii_case("y");
     let mut next = config.clone();
+    if let Some(old) = config.endpoints.iter().find(|e| e.id == endpoint.id) {
+        endpoint.actor_names = old.actor_names.clone();
+    }
     next.endpoints.retain(|e| e.id != endpoint.id);
     next.endpoints.push(endpoint);
     Ok(next)

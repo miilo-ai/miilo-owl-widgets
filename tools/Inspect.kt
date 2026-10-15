@@ -31,6 +31,23 @@ private class FixtureHost(val program: Program, fixture: String, val width: Doub
         }
         if (scenario == "filter") state("system", first("providers")?.fields?.get("id") ?: Str(""))
         if (scenario == "actor") state("selectedActor", first("actors")?.fields?.get("_key") ?: Str(""))
+        if (scenario == "group") state("expandedSystem", first("providers")?.fields?.get("id") ?: Str(""))
+        if (scenario == "agent-tab") {
+            state("expandedSystem", first("providers")?.fields?.get("id") ?: Str(""))
+            state("workflowActor", first("actors")?.fields?.get("_key") ?: Str(""))
+        }
+        if (scenario == "left-hand") {
+            state("leftHanded", TRUE)
+            state("expandedSystem", first("providers")?.fields?.get("id") ?: Str(""))
+        }
+        if (scenario == "preview") state("previewRobots", TRUE)
+        if (scenario == "colors") {
+            state("setupOpen", TRUE)
+            state("colorAgent", first("actors")?.fields?.get("_key") ?: Str(""))
+        }
+        if (scenario == "needs") state("needsOnly", TRUE)
+        if (scenario == "search") state("query", Str(item?.fields?.get("title")?.toString()?.uppercase().orEmpty()))
+        if (scenario == "no-match") state("query", Str("__no_such_work__"))
     }
     override fun read(slot: Int): Value = (program.globals[slot] as? Global.Let)?.let { memo.getOrPut(slot) { it.value(Env.root(this)) } } ?: slots[slot]
     override fun write(slot: Int, value: Value) { slots[slot] = value; memo.clear() }
@@ -79,10 +96,35 @@ fun main(args: Array<String>) {
     val p = Compiler.compile(File(args[0]).readText())
     val host = FixtureHost(p, args[1], args[2].toDouble(), args[3].toDouble(), args[4], args[5])
     if(args[5] == "interaction") {
+        fun state(name: String, value: Value) { host.write(p.globals.indexOfFirst { it.name == name }, value) }
+        for ((index, label) in listOf("Approve", "Reject", "Retry").withIndex()) {
+            check(click(p.screen.orEmpty(), Env.root(host), label))
+            check(host.runs.size == index) { "First tap must only propose" }
+            check(click(p.screen.orEmpty(), Env.root(host), "Cancel"))
+            check(host.runs.size == index) { "Cancel must not dispatch" }
+            check(!click(p.screen.orEmpty(), Env.root(host), "Confirm"))
+            check(click(p.screen.orEmpty(), Env.root(host), label))
+            check(click(p.screen.orEmpty(), Env.root(host), "Confirm"))
+            check(host.runs.size == index + 1 && host.runs.last().startsWith("miilo-owl action "))
+            check(!click(p.screen.orEmpty(), Env.root(host), label)) { "Pending requests must disable actions" }
+            state("reply", Str("{\"status\":\"accepted\",\"message\":\"Queued by provider\"}"))
+            state("requestPending", FALSE)
+        }
         check(click(p.screen.orEmpty(), Env.root(host), "Approve"))
-        check(host.runs.isEmpty()) { "First tap must only propose" }
-        check(click(p.screen.orEmpty(), Env.root(host), "Confirm"))
-        check(host.runs.size == 1 && host.runs[0].startsWith("miilo-owl action "))
+        state("proposalRevision", Str("stale-revision"))
+        check(!click(p.screen.orEmpty(), Env.root(host), "Confirm")) { "Stale proposal must not confirm" }
+        check(host.runs.size == 3)
+        state("proposed", Str(""))
+    }
+    if(args[5] == "colors" && args[0].contains("70-miilo")) {
+        check(click(p.screen.orEmpty(), Env.root(host), "Green"))
+        val pref = p.globals.indexOfFirst { it.name == "robotColors" }
+        check((p.globals[pref] as Global.State).persist)
+        check((host.read(pref) as Lst).items.size == 1)
+        check(click(p.screen.orEmpty(), Env.root(host), "Automatic"))
+        check((host.read(pref) as Lst).items.isEmpty())
+        check(click(p.screen.orEmpty(), Env.root(host), "Shuffle"))
+        check((host.read(pref) as Lst).items.size == 1)
     }
     val tile = host.budget.run { expand(p.root, Env.root(host)) }
     host.renderWidth = 328.0

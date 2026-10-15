@@ -1,8 +1,19 @@
   state system = ""
   state systemsOpen = false
   state setupOpen = false
-  state visibleLimit = 12
-  state actorLimit = 8
+  state pageSize = 5
+  state agentLimit = 5
+  state needsOnly = false
+  state agentsOpen = false
+  state leftHanded = false
+  state previewRobots = false
+  state robotColors = [] persist
+  state colorAgent = ""
+  state workflowActor = ""
+  state query = ""
+  state expandedSystem = ""
+  state providerLimit = 5
+  state renameOpen = false
   state selectedWork = ""
   state selectedActor = ""
   state evidenceOpen = false
@@ -25,8 +36,11 @@
   let attention = (snap.attention ?? []).filter(a => effectiveSystem == "" || a.providerId == effectiveSystem)
   let attempts = snap.attempts ?? []
   let evidence = snap.evidence ?? []
+  let artifacts = snap.artifacts ?? []
   let busy = actors.filter(a => contains(["working", "running", "reviewing"], a.status))
   let live = works.filter(w => contains(["active", "waiting", "failed", "queued"], w.lifecycle))
+  let needle = lower(trim(query))
+  let searched = works.filter(w => contains(lower("${w.title} ${w.summary ?? ""} ${w.phase} ${get(find(allProviders, p => p.id == w.providerId), "name", "")}"), needle))
   let focused = find(works, w => w._key == selectedWork)
   let actor = find(actors, a => a._key == selectedActor)
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
@@ -35,21 +49,33 @@
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
 
+  let robotPalette = [
+    {name: "Blue", value: blue ?? accent}, {name: "Green", value: green ?? accent},
+    {name: "Purple", value: purple ?? magenta ?? accent}, {name: "Orange", value: orange ?? accent},
+    {name: "Cyan", value: cyan ?? accent}, {name: "Red", value: red ?? accent}
+  ]
+
   component Heading(label, count) {
     Row {
       fill: width
       align: center
       Text { text: label; fontSize: 11; color: accent; weight: 1; maxLines: 1 }
-      Text { text: count; fontSize: 10; color: muted; maxLines: 1 }
+      Text { text: count; width: max(16, len(count) * 6); align: end; fontSize: 10; color: muted; maxLines: 1 }
     }
   }
 
   component Setup() {
-    Flow {
-      gap: 6
-      Button { text: setupOpen ? "Hide setup" : "Set up"; onTap: setupOpen = !setupOpen }
-      if len(allProviders) > 1 { Button { text: systemsOpen ? "Hide systems" : "Filter"; onTap: systemsOpen = !systemsOpen } }
-      if !requestPending { Button { text: "Refresh"; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
+    Row {
+      fill: width
+      gap: 4
+      align: center
+      if !leftHanded { Spacer { weight: 1 } }
+      if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
+      else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+      Text { text: "⚙"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: setupOpen = !setupOpen }
+      if len(allProviders) > 1 { Text { text: "≡"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: systemsOpen = !systemsOpen } }
+      if !requestPending { Text { text: "↻"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
+      if leftHanded { Spacer { weight: 1 } }
     }
     if !configured {
       Text { text: data == null ? "Install helper, then add systems" : "Add Miilo endpoints and choose providers"; style: small; color: muted; maxLines: 2 }
@@ -60,9 +86,9 @@
     if systemsOpen && len(allProviders) > 1 {
       Flow {
         gap: 5
-        Button { text: "All systems"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; visibleLimit = 12; actorLimit = 8; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
+        Button { text: "All systems"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
         for p in allProviders key p.id {
-          Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; visibleLimit = 12; actorLimit = 8; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
+          Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
         }
       }
     }
@@ -70,6 +96,8 @@
 
   component SetupTerminal() {
     if setupOpen {
+      Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
+      Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
       Terminal { command: "miilo-owl setup"; height: 340 }
       Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
       Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
@@ -93,8 +121,8 @@
     }
   }
 
-  component WorkRows(list) {
-    for w in list.take(visibleLimit) key w._key {
+  component WorkRows(list, showSystem = false) {
+    for w in list.take(pageSize) key w._key {
       Column {
         gap: 2
         fill: width
@@ -103,27 +131,42 @@
           gap: 6
           fill: width
           Text { text: w.title; style: body; weight: 1; maxLines: 1 }
-          Text { text: "›"; style: small; color: muted }
+          Text { text: "›"; width: 10; style: small; color: muted }
         }
-        Text { text: "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}"; style: small; color: muted; maxLines: 1 }
+        Text { text: showSystem ? "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}" : "${w.phase} · ${w.lifecycle}"; style: small; color: muted; maxLines: 1 }
       }
     }
-    if len(list) > visibleLimit { Button { text: "+${len(list) - visibleLimit} more"; onTap: visibleLimit = visibleLimit + 12 } }
+    if len(list) > pageSize {
+      Row {
+        fill: width
+        if !leftHanded { Spacer { weight: 1 } }
+        Button { text: "+${len(list) - pageSize} more"; onTap: pageSize = pageSize + 5 }
+        if leftHanded { Spacer { weight: 1 } }
+      }
+    }
   }
 
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
-      Text { text: focused.title; style: body; maxLines: 2 }
+      Text { text: focused.title; style: body; maxLines: 4 }
       Text { text: "${get(find(allProviders, p => p.id == focused.providerId), "name", "System")} · ${focused.phase}"; style: small; color: muted; maxLines: 1 }
       Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
-      if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 3 } }
+      if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 8 } }
       if !requestPending {
         Flow {
           gap: 6
           Button { text: "Explain"; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
-          Button { text: evidenceOpen ? "Hide evidence" : "Evidence"; onTap: evidenceOpen = !evidenceOpen }
           if focused.nativeUrl != "" { Button { text: "Provider ↗"; onTap: url(focused.nativeUrl) } }
+        }
+        if !(focused._actionsEnabled ?? false) {
+          Text { text: "Actions disabled for this connection"; style: small; color: muted }
+          Button { text: "Action settings"; onTap: setupOpen = true }
+        }
+        if len(focused.actions ?? []) == 0 { Text { text: "No actions currently offered by this provider"; style: small; color: muted } }
+        for a in (focused.actions ?? []).filter(a => !a._supported) key a._key {
+          Text { text: "${a.label} · ${a._unavailableReason ?? "Use provider"}"; style: small; color: muted; maxLines: 3 }
+          if a.nativeUrl != "" { Button { text: "${a.label} ↗"; onTap: url(a.nativeUrl) } }
         }
         Flow {
           gap: 6
@@ -145,18 +188,25 @@
           Text { text: "Task changed. Review again."; style: small; color: muted }
         }
       }
-      if evidenceOpen {
+      Column {
+        gap: 6
+        Text { text: "Evidence"; style: small; color: muted }
         let taskEvidence = evidence.filter(e => contains(focused._evidenceKeys ?? [], e._key))
         if len(taskEvidence) == 0 { Text { text: "No evidence supplied"; style: small; color: muted } }
-        for e in taskEvidence.take(visibleLimit) key e._key {
-          Text { text: "${e.outcome} · ${e.summary}"; style: small; maxLines: 3 }
+        for e in taskEvidence.take(pageSize) key e._key {
+          Text { text: "${e.outcome} · ${e.summary}"; style: small; maxLines: 8 }
+          if (e._missingArtifactCount ?? 0) > 0 { Text { text: "${e._missingArtifactCount} referenced artifacts unavailable"; style: small; color: muted } }
         }
-        if len(taskEvidence) > visibleLimit { Button { text: "More evidence"; onTap: visibleLimit = visibleLimit + 12 } }
+        if len(taskEvidence) > pageSize { Button { text: "More evidence"; onTap: pageSize = pageSize + 5 } }
+        TaskArtifacts { }
       }
     }
     if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
     if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
       Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
-      for c in receipt.changes ?? [] key c.id { Text { text: c.name; style: small; color: muted; maxLines: 2 } }
+      for c in receipt.changes ?? [] key c.id {
+        Text { text: c.name; style: small; maxLines: 4 }
+        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
+      }
     }
   }

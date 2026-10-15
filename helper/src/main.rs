@@ -1,4 +1,6 @@
-use miilo_owl::{Result, config::Store, operations, setup, snapshot, transport::Http};
+use miilo_owl::{
+    Result, config::Store, display_names, operations, setup, snapshot, transport::Http,
+};
 use serde_json::{Value, json};
 
 fn run(args: &[String]) -> Result<Option<Value>> {
@@ -20,6 +22,9 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         ["action", item, action, revision] => {
             operations::action(&store, &http, item, action, revision).map(Some)
         }
+        ["name-agent", actor, label] => {
+            display_names::name_agent(&store, &http, actor, label).map(Some)
+        }
         _ => Err("Invalid command".into()),
     }
 }
@@ -34,7 +39,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: setup | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION"
+            "miilo-owl: setup | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

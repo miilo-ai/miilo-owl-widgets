@@ -1,5 +1,8 @@
 //! Provider-neutral application logic; filesystem and HTTP are replaceable ports.
+pub mod action_policy;
+pub mod artifacts;
 pub mod config;
+pub mod display_names;
 pub mod graph;
 pub mod operations;
 pub mod projection;

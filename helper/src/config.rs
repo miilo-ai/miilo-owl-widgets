@@ -17,6 +17,12 @@ pub struct Endpoint {
     pub providers: Vec<String>,
     #[serde(default, rename = "allowActions")]
     pub allow_actions: bool,
+    #[serde(
+        default,
+        rename = "actorNames",
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub actor_names: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

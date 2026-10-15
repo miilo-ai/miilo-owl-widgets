@@ -16,6 +16,8 @@ class InstallTest(unittest.TestCase):
             local, widgets, config = folder/'local', folder/'widgets', folder/'config'
             widgets.mkdir()
             (widgets/'70-miilo-fleet.owl').write_text('old widget')
+            (widgets/'71-miilo-attention.owl').write_text('old attention')
+            (widgets/'72-miilo-board.owl').write_text('old board')
             config.mkdir()
             config_file = config/'config.json'
             config_file.write_text('{"version":1,"endpoints":[]}')
@@ -25,7 +27,9 @@ class InstallTest(unittest.TestCase):
             subprocess.run(['bash', str(ROOT/'install.sh'), '--no-setup'], env=env, check=True, capture_output=True)
             output = subprocess.check_output([str(local/'bin/miilo-owl'), 'snapshot'], env=env, text=True)
             self.assertFalse(json.loads(output)['configured'])
-            self.assertEqual(3, len(list(widgets.glob('*.owl'))))
+            self.assertEqual(1, len(list(widgets.glob('*.owl'))))
+            self.assertEqual('old attention', (widgets/'71-miilo-attention.owl.disabled').read_text())
+            self.assertEqual('old board', (widgets/'72-miilo-board.owl.disabled').read_text())
             self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.3').read_text())
             self.assertEqual('{"version":1,"endpoints":[]}', config_file.read_text())
             subprocess.run(['bash', str(ROOT/'install.sh'), '--no-setup'], env=env, check=True, capture_output=True)

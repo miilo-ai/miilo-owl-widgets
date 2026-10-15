@@ -1,15 +1,15 @@
 use crate::{Result, config::Endpoint, graph, key};
-use chrono::{DateTime, Utc};
 use serde_json::{Value, json};
 use std::collections::HashSet;
 
-pub const COLLECTIONS: [&str; 6] = [
+pub const COLLECTIONS: [&str; 7] = [
     "providers",
     "actors",
     "workItems",
     "attention",
     "attempts",
     "evidence",
+    "artifacts",
 ];
 pub fn empty() -> Value {
     COLLECTIONS
@@ -50,24 +50,9 @@ pub fn valid_records(raw: &Value) -> Result<()> {
     Ok(())
 }
 pub fn supported(endpoint: &Endpoint, action: &Value) -> bool {
-    let schema_empty = action
-        .get("inputSchema")
-        .is_none_or(|v| v.is_null() || v.as_object().is_some_and(|o| o.is_empty()));
-    let expired = action
-        .get("expiresAt")
-        .filter(|v| !v.is_null())
-        .is_some_and(|v| {
-            v.as_str()
-                .and_then(|s| DateTime::parse_from_rfc3339(s).ok())
-                .is_none_or(|t| t <= Utc::now())
-        });
-    endpoint.allow_actions
-        && action["available"] == true
-        && matches!(action["risk"].as_str(), Some("read" | "bounded"))
-        && matches!(action["confirmation"].as_str(), Some("none" | "explicit"))
-        && schema_empty
-        && !expired
+    crate::action_policy::unavailable_reason(endpoint, action).is_none()
 }
+
 pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
     valid_records(raw)?;
     let available: HashSet<_> = raw["providers"]
@@ -100,6 +85,7 @@ pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
             }
             let mut item = original.clone();
             item["_source"] = json!(endpoint.id);
+            item["_actionsEnabled"] = json!(endpoint.allow_actions);
             item["_provider"] = json!(provider);
             item["_key"] = json!(key(&json!([endpoint.id, provider, name, id])));
             item["_revisionKey"] = json!(key(&json!([item.get("revision").unwrap_or(&json!(""))])));
@@ -114,6 +100,17 @@ pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
                 ));
             } else {
                 item["providerId"] = json!(scoped_provider);
+            }
+            if name == "actors"
+                && let Some(label) = endpoint
+                    .actor_names
+                    .get(provider)
+                    .and_then(|names| names.get(id))
+            {
+                item["name"] = json!(label);
+            }
+            if name == "artifacts" {
+                crate::artifacts::present(&mut item);
             }
             let actions = match original.get("actions") {
                 None | Some(Value::Null) => vec![],
@@ -132,6 +129,8 @@ pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
                 action["_key"] = json!(key(&json!([endpoint.id, provider, item["id"], aid])));
                 action["nativeUrl"] = json!(web_url(&action["nativeUrl"]));
                 action["_supported"] = json!(supported(endpoint, &action));
+                action["_unavailableReason"] =
+                    json!(crate::action_policy::unavailable_reason(endpoint, &action));
                 projected.push(action);
             }
             item["actions"] = json!(projected);
@@ -139,5 +138,6 @@ pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
         }
     }
     graph::link(&mut result);
+    crate::artifacts::link(&mut result);
     Ok(result)
 }

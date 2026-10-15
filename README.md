@@ -2,13 +2,13 @@
 
 Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
-| Widget | Tile | On tap |
+| Widget | Collapsed | Expanded |
 | --- | --- | --- |
-| Feed · 3×3 | Agents and one current task | Select an agent, its reported assignments, or a task |
-| Needs you · 3×2 | Highest-priority review and its system | Inspect the queue, evidence, explanation, and supported actions |
-| Work in motion · 3×2 | Queued/working/waiting distribution; failures stay visible | Filter systems, browse phases, and inspect a task |
+| Miilo · 3×2 | Responsive animated robot grid, per-system colors, and attention marks | Search and filter systems/agents, inspect tasks, evidence and diffs, and confirm advertised actions |
 
-All colors come from Omalauncher (`accent`, `background`, `foreground`, `muted`, `red`). There are no fixed provider colors. Light and dark theme changes are handled by the launcher. Native tile sizing is intentionally small; users can enlarge tiles on the home screen.
+The installer enables one Miilo widget. The focused attention/board sources remain available for manual use; existing installations of those are preserved as `.disabled` files.
+
+All colors come from Omalauncher’s semantic palette. There are no fixed provider colors. Light and dark theme changes are handled by the launcher. Native tile sizing is intentionally small; users can enlarge tiles on the home screen.
 
 ## Install and register what to observe
 
@@ -18,26 +18,26 @@ Download and verify the **ARM64 Linux release bundle**, extract it, then run **i
 ./install.sh
 ```
 
-The installer copies the shared `miilo-owl` helper to `~/.local/bin`, installs the three widgets under `~/.config/omalauncher/widgets`, and starts setup. Existing widget files receive a one-time `.before-miilo-1.3` backup; existing connection config is preserved. Ensure `~/.local/bin` is in the launcher's Linux PATH. To install without interactive setup, use `./install.sh --no-setup`.
+The installer copies the shared `miilo-owl` helper to `~/.local/bin`, installs the Miilo widget under `~/.config/omalauncher/widgets`, and starts setup. Existing widget files receive a one-time `.before-miilo-1.3` backup; existing connection config is preserved. Ensure `~/.local/bin` is in the launcher's Linux PATH. To install without interactive setup, use `./install.sh --no-setup`.
 
 Setup lets you:
 
 1. Add a named Miilo API endpoint (home, office, customer, etc.).
 2. Enter its bearer token through a hidden prompt.
 3. Discover its registered providers and explicitly choose which to observe.
-4. Opt in to supported bounded provider actions, or keep observation read-only.
+4. Opt in to supported provider actions with explicit confirmation, or keep observation read-only.
 5. Repeat for other endpoints; later update or remove any of them.
 
-One endpoint may expose many factories/providers. Up to eight independent endpoints are supported. Identical provider/task IDs on different endpoints remain separate. New providers are **not** silently added to the selection. All three widgets use the same configuration; their `Set up` control reopens this flow.
+One endpoint may expose many factories/providers. Up to eight independent endpoints are supported. Identical provider/task IDs on different endpoints remain separate. New providers are **not** silently added to the selection. All widget sources use the same configuration; their `Set up` control reopens this flow.
 
 This setup registers **observation endpoints and provider selections locally**. Factory/provider adapters must already be registered in the Miilo backend. It does not invent credentials or create an upstream factory integration. If an endpoint has no providers, setup asks you to register them in Miilo first. Existing per-widget endpoint/token state from version 1.1 is no longer used; run setup once to create the shared configuration.
 
 ## Expanded controls
 
-- `Filter` switches between all selected systems and one system; large lists have “more” controls.
+- `Filter` switches between selected systems. Expanded views start with collapsed system groups. Search narrows work, agent names and system context; work search includes completed records. Lists show five entries at first, with explicit “more” controls.
 - Select an agent to see work associated through its provider-scoped attempts.
-- Select a task for a revision-bound explanation, linked evidence, and provider links.
-- Provider-advertised, available **read/bounded** actions with no input form can be proposed, then explicitly confirmed. The helper re-reads the task and rejects a changed revision before posting. The backend also validates access and revision.
+- Select a task to replace the list with its revision-bound explanation, linked evidence, and provider links. Back restores your search/group context. Agent detail includes a Name control; display names are local preferences and never change provider IDs.
+- Provider-advertised, available **read/bounded or explicitly confirmed privileged** actions with no input form can be proposed, then explicitly confirmed. The helper re-reads the task and rejects a changed revision before posting. The backend also validates access and revision.
 - Strong-auth, privileged, destructive, expired, unavailable, or form-dependent actions remain in the provider interface. CE currently has observation/explanations but no action-proxy route; leave action opt-in disabled for CE.
 - Accepted receipts are shown as accepted, never as completed. Mutation requests are not automatically retried. Idempotency keys are stable for the same task/action/revision.
 - Explanation results are text. Speech playback and microphone capture are not implemented in these widgets.
@@ -80,7 +80,7 @@ This uses official `owl-check` to validate installed widgets and, when supported
 ## Source layout
 
 - `widgets/*.inc`: small OWL source fragments (OWL itself has no imports).
-- `tools/assemble.py`: generates the three installable `.owl` files, each under 300 lines.
+- `tools/assemble.py`: generates the three installable `.owl` files, assembled from small source fragments.
 - `helper/src`: Rust configuration, transport, projection, graph, aggregation, onboarding, and operations modules. `Transport` and `Console` ports keep HTTP and terminal details outside the application logic.
 - `helper/tests`: Rust boundary tests; `tests/test_*.py`: development-only black-box tests of the compiled binary.
 - `tools/Dockerfile.helper`, `tools/build-linux.sh`: pinned ARM64 Linux build environment, capped at two CPUs/2 GB during compilation.
@@ -106,6 +106,41 @@ The Linux binary runs inside Arch/PRoot. It is not an Android/Bionic APK or a ma
 
 Existing version-1 configuration and the CLI commands (`setup`, `snapshot`, `refresh`, `explain ITEM REVISION`, `action ITEM ACTION REVISION`) remain compatible. Opaque task/action/revision keys match the old helper, including Unicode. Existing credentials and provider selections are preserved. Older Python helper files may remain from previous installations but are not used by the replaced executable. Python is not removed from the device; other software may need it.
 
-The installer leaves connections unconfigured on a fresh device. For live data, register the desired factories/providers in your Miilo backend, ensure that API is reachable from the device, then use **Set up** to add the endpoint, enter a token privately, and select providers. The emulator does not automatically inherit the Mac's Tailscale connectivity. Avoid placing real credentials in ADB commands or shell history.
+The installer leaves connections unconfigured on a fresh device. For live data, register the desired factories/providers in your Miilo backend, ensure that API is reachable from the device, then use **Set up** to add the endpoint, enter a token privately, and select providers. Emulator access depends on the host's routing: this Mac's emulator was verified to reach the tower through the Mac's Tailscale connection, without an emulator-specific VPN. Test that route before adding another Tailscale client; a physical phone needs its own reachable path. Avoid placing real credentials in ADB commands or shell history.
 
 Validation evidence and remaining device/provider checks: [native helper validation](docs/native-helper-validation.md).
+
+### Unified feed
+
+Miilo Feed is the primary view: expand a system to browse five work items at a time, filter Needs you across systems, search work or agents, and open a task for evidence and confirmed actions. Animated robots remain visible above each expanded system's work and act as tabs that filter workflows by assigned agent. All work includes unassigned tasks; agent details remain available on demand. The installer exposes only Miilo and preserves older focused widgets as .disabled files. The inline toolbar uses ← for Back, ⚙ for setup, and ↻ for refresh. Labels on consequential actions remain explicit.
+
+Controls default to right-handed placement. Open ⚙ and tap Controls: right hand to switch to left-hand placement; the toolbar and work-list More control follow that preference. Setup/refresh/back use borderless icons with 44 dp touch areas. Omalauncher's title/close row is launcher-owned and has no widget action slot, so icons sit directly below it. Robot tabs replace the redundant Agents count button for small teams.
+
+The collapsed Miilo tile is robot-first: no task titles or workflow progress bar. Theme-colored `?!` marks actionable work and tight red `!!` marks failures; a muted connection marker distinguishes reported offline agents. Activity is conveyed through robot animation without a bulb. Resting agents retain closed eyes and drifting Zs. Tapping a robot opens its assigned workflows. Additional agents remain discoverable in the expanded view. New installations default to a compact 3×2 tile; existing user sizing is retained by the launcher.
+
+For visual testing, setup offers Show/Hide preview robots. This adds only tile-local sleeping and working examples, labeled Preview; it does not register systems or alter snapshots/actions. Preview mode shows one real robot plus two examples. It is disabled by default in the repository; enabled temporarily in the emulator at the user's request.
+
+Robot tile layout responds to both width and height. Equal grid cells use bounded 30–100 dp robots, responsive punctuation anchored near the head, and a fixed 28 dp two-line label area. Very short tiles omit names. Up to two rows render when there is room; overflow is represented by +N and remains accessible in the expanded view.
+
+The tile has a muted bottom-right miilo wordmark, overlaid independently of the centered robot group. Awake robots occasionally glance toward occupied adjacent cells (left/right/up/down), with a smooth two-second eye movement staggered across a seventeen-second cycle. Sleeping eyes stay closed, and lone robots have no glance target. These movements are decorative and do not imply inter-agent communication.
+
+Robot colors: open setup (⚙), select an automation under Robot colors, then choose Automatic, a theme palette color, or Shuffle. Choices persist locally under the scoped actor key; semantic palette positions adapt to the current launcher theme. Automatic assignment is deterministic from identity, and Shuffle chooses a different palette position. Color preferences never alter provider records. Blocked, failed, or actionable assigned work also triggers an occasional brief wistful eye/mouth expression; ordinary waiting does not.
+
+Newcomer empty state: when no systems are configured, the tile centers a blinking welcome robot above “Tap to add a system”. Tapping that group opens setup directly. It uses the same theme palette and scales down to compact tiles; it is not a provider or agent record.
+
+Theme behavior: saved Green/Red/etc. choices keep their color family, while the current theme supplies each shade. Robot ink also blends slightly with the theme foreground for contrast. Sleep Zs are larger, bold, foreground-weighted and use a stronger fade envelope so they remain visible against light/dark themed tiles.
+
+
+### Files, changes, and evidence
+
+Task details show evidence and linked artifacts inline. The Rust helper preserves the SDK `artifacts` collection and scopes task/attempt/evidence links to each endpoint and provider. Files and change sets include provider-supplied previews (`fileDiff`, `preview`, `delta`, or `diff` within extensions), bounded to 8,000 characters with an explicit shortened-preview label. Empty previews display “Diff not supplied”; absent task artifacts display “No files or change sets supplied”. Missing evidence references are counted explicitly. Only HTTP(S) artifact links without embedded credentials are actionable; local paths are labels, never executed or fetched.
+
+No SDK protocol change is required. Tests cover real authenticated HTTP snapshot output, colliding identities across connections/providers, unrelated attempts, missing references, Unicode preview limits, and rendered filenames/diffs/empty-preview states.
+
+### Approval controls
+
+Supported provider actions appear above evidence in task details. Approve, Reject, Retry, or any other supported advertised action first opens a Confirm/Cancel prompt bound to the task revision. No action runs on the first tap. Pending requests hide action controls; stale proposals cannot confirm; dispatch rechecks the current provider revision, preserves idempotency, and never retries a timed-out mutation. Receipts report the actual provider outcome.
+
+Actions are opt-in per connection in setup. With observation-only configuration, details show “Actions disabled for this connection” and an Action settings button. When the provider publishes no actions, details say so. Other unsupported actions explain why and offer their safe provider URL when available. The widget supports no-input read/bounded actions and privileged actions requiring explicit confirmation, including standard empty-object SDK schemas. Destructive actions, strong confirmation, and actions requiring form input stay in the provider interface. Enabling the local option never grants upstream permission or invents provider actions.
+
+Optional inline launcher header: see [launcher-header.md](docs/launcher-header.md).

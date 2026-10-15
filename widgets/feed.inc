@@ -1,67 +1,186 @@
+  let tileActors = (previewRobots ? actors.take(1) : actors) + (previewRobots ? [
+    {_key: "preview-resting", providerId: "", name: "Preview sleep", status: "resting", health: "healthy", _preview: true},
+    {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true}
+  ] : [])
+  component StateMark(warning, working, offline, s = 18) {
+    Canvas {
+      width: s
+      height: s
+      let k = s / 18
+      let mark = warning ? (orange ?? foreground) : working ? (green ?? foreground) : foreground
+      if offline {
+        circle(9*k, 9*k, 5*k, stroke: alpha(muted, 0.7), width: 1.3)
+        line(4*k, 14*k, 14*k, 4*k, stroke: muted, width: 1.3)
+
+      }
+    }
+  }
+  let availableWidth = max(tileWidth - 16, 32)
+  let availableHeight = max(tileHeight - 16, 32)
+  let showNames = availableHeight >= 88
+  let columns = max(1, min(len(tileActors), floor((availableWidth + 6) / 76)))
+  let rows = max(1, min(2, floor((availableHeight - 16) / (showNames ? 96 : 50))))
+  let capacity = columns * rows
+  let cellWidth = (availableWidth - (columns - 1) * 6) / columns
+  let cellHeight = (availableHeight - 16 - (rows - 1) * 6) / rows
+  let robotSize = clamp(min(cellWidth - 10, cellHeight - (showNames ? 32 : 0)), 30, 100)
+  let usedRows = ceil(min(len(tileActors), capacity) / columns)
+  let groupHeight = usedRows * (robotSize + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
+  Box {
+    fill: true
   Column {
-    gap: 6
-    Heading { label: "miilo feed"; count: "${len(busy)} working" }
+    fill: true
+    justify: availableHeight >= groupHeight ? "center" : "start"
+    gap: 5
     if !configured {
-      Text { text: "Tap to add systems"; style: small; color: muted }
-    } else {
-      Row {
-        gap: 5
+      Column {
         fill: width
-        for a in actors.take(tileWidth < 190 ? 3 : 4) key a._key {
+        align: center
+        gap: 5
+        onTap: { setupOpen = true; screen() }
+        Bot { agent: {_key: "welcome", name: "Miilo", status: "ready", health: "healthy"}; s: clamp(min(availableWidth - 20, availableHeight - 30), 16, 96) }
+        Text { text: "Tap to add a system"; width: availableWidth; height: 24; align: center; fontSize: 10; color: muted; maxLines: 2 }
+      }
+    } else {
+      Grid {
+        columns: columns
+        gap: 6
+        fill: width
+        for a, slot in tileActors.take(capacity) key a._key {
+          let visibleCount = min(len(tileActors), capacity)
+          let neighbors = [
+            {x: -1, y: 0, valid: slot % columns > 0},
+            {x: 1, y: 0, valid: slot % columns < columns - 1 && slot + 1 < visibleCount},
+            {x: 0, y: -1, valid: slot >= columns},
+            {x: 0, y: 1, valid: slot + columns < visibleCount}
+          ].filter(n => n.valid)
+          let neighbor = len(neighbors) > 0 ? neighbors[floor((time + slot * 3.7) / 17) % len(neighbors)] : {x: 0, y: 0}
+
+          let owned = live.filter(w => contains(w._actorKeys ?? [], a._key))
+          let errors = any(owned, w => w.lifecycle == "failed") || contains(["failed", "error"], a.status)
+          let warning = any(owned, w => w.lifecycle == "failed" || w.attention != "none") || any(attention, n => n.providerId == a.providerId && any(owned, w => w._key == n._workKey))
+          let working = any(owned, w => w.lifecycle == "active") || contains(["working", "running"], a.status)
+          let offline = contains(["offline", "unreachable", "disconnected"], a.status) || contains(["offline", "unreachable", "unknown"], a.health)
           Column {
-            weight: 1
-            gap: 1
-            Bot { agent: a; s: tileWidth < 190 ? 40 : 48 }
-            Text { text: a.name; fontSize: 10; maxLines: 1 }
+            align: center
+            gap: 2
+            onTap: { expandedSystem = a.providerId; workflowActor = (a._preview ?? false) ? "" : a._key; selectedActor = ""; selectedWork = ""; needsOnly = false; query = ""; pageSize = 5; screen() }
+            Box {
+              width: robotSize + 10
+              height: robotSize
+              align: center
+              Bot { agent: a; s: robotSize; lookX: neighbor.x; lookY: neighbor.y; slot: slot; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+              Box {
+                width: max(1, robotSize - 6)
+                height: max(1, robotSize * 0.92 - 6)
+                align: bottomEnd
+                if offline { StateMark { warning: warning; working: working; offline: offline; s: clamp(robotSize * 0.24, 12, 21) } }
+              }
+            }
+            if showNames { Text { text: replace(a.name, "-", " "); width: cellWidth; height: 28; align: center; fontSize: 10; maxLines: 2 } }
           }
         }
       }
-      let preview = live.sortBy(w => w.lifecycle == "failed" ? 0 : w.attention != "none" ? 1 : 2).take(tileHeight >= 230 ? 2 : 1)
-      for w in preview key w._key {
-        Column {
-          gap: 1
-          fill: width
-          Text { text: w.title; fontSize: 11; maxLines: 1 }
-          Text { text: "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.lifecycle == "failed" ? "Needs a fix" : w.attention != "none" ? "Action" : w.phase}"; fontSize: 10; color: w.lifecycle == "failed" ? red : muted; maxLines: 1 }
-          Arc { phase: w.phase; moving: w.lifecycle == "active" }
-        }
-      }
-      if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
-      if issueCount > 0 { Text { text: "${issueCount} unavailable"; fontSize: 10; color: red } }
+      if len(tileActors) > capacity { Text { text: "+${len(tileActors) - capacity}"; fontSize: 10; color: muted; maxLines: 1 } }
+      if len(actors) == 0 { Text { text: len(live) == 0 ? "No work in flight" : "No agents reported"; style: small; color: muted } }
+      if issueCount > 0 { Text { text: "${issueCount} unavailable"; fontSize: 10; color: muted } }
     }
   }
+    Box {
+      fill: true
+      align: bottomEnd
+      Text { text: "miilo.tech"; width: 64; height: 12; fontSize: 9; color: alpha(muted, 0.65); align: end; maxLines: 1 }
+    }
+  }
+  component AgentRows(list) {
+    for a in list.take(agentLimit) key a._key {
+      Row {
+        gap: 8
+        fill: width
+        align: center
+        onTap: { selectedActor = a._key; selectedWork = ""; renameOpen = false; proposed = "" }
+        Bot { agent: a; s: 38 }
+        Column {
+          weight: 1
+          gap: 1
+          Text { text: a.name; style: body; maxLines: 1 }
+          Text { text: a.status; style: small; color: muted; maxLines: 1 }
+        }
+        Text { text: "›"; width: 10; style: small; color: muted }
+      }
+    }
+    if len(list) > agentLimit { Button { text: "+${len(list) - agentLimit} agents"; onTap: agentLimit = agentLimit + 5 } }
+  }
   screen {
-    title: "miilo feed"
+    title: "miilo"
     Column {
       scroll: true
       gap: 10
       Setup { }
+      if setupOpen { RobotColors { } }
       SetupTerminal { }
-      for a in actors.take(actorLimit) key a._key {
-        Row {
-          gap: 8
-          fill: width
-          align: center
-          onTap: { selectedActor = a._key; selectedWork = ""; reply = requestPending ? reply : ""; proposed = "" }
-          Bot { agent: a; s: 38 }
-          Column {
-            weight: 1
-            gap: 1
-            Text { text: a.name; style: body; maxLines: 1 }
-            Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.status}"; style: small; color: muted; maxLines: 1 }
-          }
-          Text { text: "›"; style: small; color: muted }
+      if focused != null {
+        WorkDetail { }
+      } else if actor != null {
+        Bot { agent: actor; s: 48 }
+        Text { text: actor.name; style: body; maxLines: 1 }
+        Flow {
+          Button { text: renameOpen ? "Cancel name" : "Name"; onTap: renameOpen = !renameOpen }
         }
-      }
-      if len(actors) > actorLimit { Button { text: "More agents"; onTap: actorLimit = actorLimit + 8 } }
-      if actor != null {
-        Text { text: actor.name; style: label; color: accent }
+        if renameOpen && !requestPending {
+          Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
+        }
         let owned = works.filter(w => w.providerId == actor.providerId && contains(w._actorKeys ?? [], actor._key))
         WorkRows { list: owned }
         if len(owned) == 0 { Text { text: "No assigned work reported"; style: small; color: muted } }
+        WorkDetail { }
       } else {
-        WorkRows { list: live }
+        Search { placeholder: "Search systems, agents or work" }
+        let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
+        let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
+        Row {
+          fill: width
+          gap: 8
+          Button { text: "All work"; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
+          Button { text: "Needs you ${len(actionable)}"; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
+        }
+        if needle != "" {
+          let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
+          if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
+          WorkRows { list: visible; showSystem: true }
+          if len(visible) == 0 && (needsOnly || len(matches) == 0) { Text { text: "No matches"; style: small; color: muted } }
+        } else {
+          for p in provs.filter(p => !needsOnly || any(visible, w => w.providerId == p.id)).take(providerLimit) key p.id {
+            let team = actors.filter(a => a.providerId == p.id)
+            let tasks = visible.filter(w => w.providerId == p.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
+            let urgent = actionable.filter(w => w.providerId == p.id)
+            SystemRow { provider: p; count: len(urgent) > 0 ? "${len(urgent)} needs you" : "${len(tasks)} work" }
+            if expandedSystem == p.id {
+              Row {
+                fill: width
+                gap: 8
+                for a in team.take(4) key a._key {
+                  Column {
+                    weight: 1
+                    align: center
+                    gap: 2
+                    onTap: { workflowActor = workflowActor == a._key ? "" : a._key; pageSize = 5 }
+                    Bot { agent: a; s: 42 }
+                    Text { text: replace(a.name, "-", " "); width: 76; align: center; fontSize: 10; color: workflowActor == a._key ? accent : muted; maxLines: 2 }
+                    if workflowActor == a._key { Spacer { width: 30; height: 2; background: accent } }
+                  }
+                }
+              }
+              Text { text: "${len(tasks.filter(w => w.lifecycle == "active"))} working · ${len(tasks.filter(w => w.lifecycle == "waiting"))} waiting"; style: small; color: muted }
+              WorkRows { list: tasks }
+              if len(tasks) == 0 { Text { text: workflowActor != "" ? "No assigned work reported" : "No work in flight"; style: small; color: muted } }
+              if len(team) > 4 { Button { text: agentsOpen ? "Hide agents" : "More agents"; onTap: agentsOpen = !agentsOpen } }
+              if agentsOpen { AgentRows { list: team } }
+            }
+          }
+          if needsOnly && len(visible) == 0 { Text { text: "Nothing needs you"; style: small; color: muted } }
+          if len(provs) > providerLimit { Button { text: "More systems"; onTap: providerLimit = providerLimit + 5 } }
+        }
       }
-      WorkDetail { }
     }
   }

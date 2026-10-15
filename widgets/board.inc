@@ -50,14 +50,18 @@
       gap: 10
       Setup { }
       SetupTerminal { }
-      for stage in ["failed", "waiting", "active", "queued"] {
-        let tasks = live.filter(w => w.lifecycle == stage)
-        if len(tasks) > 0 {
-          Text { text: stage == "active" ? "Working" : stage == "failed" ? "Needs a fix" : stage; style: label; color: stage == "failed" ? red : accent }
-          WorkRows { list: tasks }
+      if focused != null {
+        WorkDetail { }
+      } else {
+        Search { placeholder: "Search work or systems" }
+        if needle != "" {
+          Text { text: "${len(searched)} matches"; style: small; color: muted }
+          WorkRows { list: searched; showSystem: true }
+          if len(searched) == 0 { Text { text: "No matching work"; style: small; color: muted } }
+        } else {
+          WorkGroups { list: live }
+          if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
         }
       }
-      if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
-      WorkDetail { }
     }
   }
