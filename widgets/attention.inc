@@ -1,0 +1,45 @@
+  let ordered = attention.sortBy(a => a.level == "intervention" ? 0 : a.level == "approval" ? 1 : 2)
+  Column {
+    gap: 5
+    Heading { label: "needs you"; count: "${len(attention)}" }
+    if !configured {
+      Text { text: "Tap to add systems"; style: small; color: muted }
+    } else if len(ordered) == 0 {
+      Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted }
+    } else {
+      let a = ordered[0]
+      Row {
+        gap: 8
+        align: center
+        Bot { agent: {status: "reviewing", health: "healthy"}; s: 34 }
+        Text { text: a.level == "intervention" ? "Needs a fix" : a.level == "approval" ? "Review" : "Decision"; style: small; color: a.level == "intervention" ? red : accent; weight: 1; maxLines: 1 }
+      }
+      Text { text: a._title ?? a.message; fontSize: 11; maxLines: 1 }
+      Text { text: get(find(allProviders, p => p.id == a.providerId), "name", "System"); fontSize: 10; color: muted; maxLines: 1 }
+    }
+  }
+  screen {
+    title: "needs you"
+    Column {
+      scroll: true
+      gap: 10
+      Setup { }
+      for a in ordered.take(visibleLimit) key a._key {
+          Column {
+          gap: 2
+          fill: width
+          onTap: { selectedWork = a._workKey ?? ""; evidenceOpen = false; proposed = ""; reply = requestPending ? reply : "" }
+          Row {
+            fill: width
+            Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
+            Text { text: "›"; style: small; color: muted }
+          }
+          Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
+          if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
+        }
+      }
+      if len(ordered) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
+      if len(ordered) > visibleLimit { Button { text: "+${len(ordered) - visibleLimit} more"; onTap: visibleLimit = visibleLimit + 12 } }
+      WorkDetail { }
+    }
+  }

@@ -1,0 +1,157 @@
+{
+  "snapshot": {
+    "providers": [
+      {
+        "id": "factory",
+        "name": "Automation factory"
+      },
+      {
+        "id": "codex",
+        "name": "Codex"
+      }
+    ],
+    "actors": [
+      {
+        "id": "0",
+        "providerId": "factory",
+        "name": "Linux coding agent",
+        "status": "working",
+        "health": "healthy",
+        "kind": "agent",
+        "capabilities": []
+      },
+      {
+        "id": "1",
+        "providerId": "factory",
+        "name": "Independent verifier",
+        "status": "reviewing",
+        "health": "healthy",
+        "kind": "agent",
+        "capabilities": []
+      },
+      {
+        "id": "2",
+        "providerId": "factory",
+        "name": "Codex implementation",
+        "status": "running",
+        "health": "healthy",
+        "kind": "agent",
+        "capabilities": []
+      },
+      {
+        "id": "3",
+        "providerId": "factory",
+        "name": "Codex observer",
+        "status": "idle",
+        "health": "healthy",
+        "kind": "agent",
+        "capabilities": []
+      },
+      {
+        "id": "4",
+        "providerId": "factory",
+        "name": "Overflow agent",
+        "status": "working",
+        "health": "healthy",
+        "kind": "agent",
+        "capabilities": []
+      }
+    ],
+    "workItems": [
+      {
+        "id": "0",
+        "providerId": "factory",
+        "title": "Introduce voice AI options",
+        "phase": "reviewing",
+        "lifecycle": "waiting",
+        "attention": "approval",
+        "workspaceId": "miilo",
+        "providerState": "reviewing"
+      },
+      {
+        "id": "1",
+        "providerId": "factory",
+        "title": "Improve provider reconnect",
+        "phase": "implementing",
+        "lifecycle": "active",
+        "attention": "none",
+        "workspaceId": "miilo",
+        "providerState": "implementing"
+      },
+      {
+        "id": "2",
+        "providerId": "factory",
+        "title": "Cache explanation evidence",
+        "phase": "planning",
+        "lifecycle": "queued",
+        "attention": "none",
+        "workspaceId": "miilo",
+        "providerState": "planning"
+      },
+      {
+        "id": "3",
+        "providerId": "factory",
+        "title": "Repair stream recovery",
+        "phase": "verifying",
+        "lifecycle": "failed",
+        "attention": "none",
+        "workspaceId": "miilo",
+        "providerState": "verifying"
+      },
+      {
+        "id": "4",
+        "providerId": "factory",
+        "title": "Add workspace onboarding",
+        "phase": "planning",
+        "lifecycle": "queued",
+        "attention": "none",
+        "workspaceId": "miilo",
+        "providerState": "planning"
+      }
+    ],
+    "attention": [
+      {
+        "id": "0",
+        "providerId": "factory",
+        "subject": {
+          "id": "0"
+        },
+        "level": "approval",
+        "message": "Ready for your review",
+        "actions": []
+      },
+      {
+        "id": "1",
+        "providerId": "factory",
+        "subject": {
+          "id": "1"
+        },
+        "level": "intervention",
+        "message": "Verification needs a correction",
+        "actions": []
+      },
+      {
+        "id": "2",
+        "providerId": "factory",
+        "subject": {
+          "id": "2"
+        },
+        "level": "decision",
+        "message": "Choose a deployment target",
+        "actions": []
+      },
+      {
+        "id": "3",
+        "providerId": "factory",
+        "subject": {
+          "id": "3"
+        },
+        "level": "approval",
+        "message": "Approve the implementation",
+        "actions": []
+      }
+    ],
+    "attempts": [],
+    "evidence": []
+  }
+}

@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>Miilo OWL layout reference</title>
+<style>
+*{box-sizing:border-box;min-width:0}body{margin:0;background:#100f15;color:#eeeaf4;font-family:ui-monospace,monospace;padding:28px}main{display:flex;gap:20px}.tile{width:300px;height:300px;padding:10px;background:radial-gradient(ellipse at 80% 0%,#ac9cf50b,transparent 65%),#16151d;border:1px solid #37333f;border-radius:18px;overflow:hidden}h1{font:12px ui-monospace,monospace;color:#9993a8;margin:0 0 20px}.label{font-size:11px;color:#9993a8;margin:14px 4px}canvas{display:block} .text{overflow:hidden;text-overflow:ellipsis}
+</style>
+<h1>Miilo · evaluated OWL layout reference · not a native launcher capture</h1><main></main>
+<script>
+const trees=/*TREES*/;
+const color=v=> typeof v==='string'&&v.startsWith('#')&&v.length===9 ? '#'+v.slice(3)+v.slice(1,3):v;
+function build(n){const p=n.props||{},el=document.createElement(n.kind==='Canvas'?'canvas':'div');
+ el.dataset.kind=n.kind;
+ if(p.weight) {el.style.flex=p.weight+' 1 0';}
+ if(p.width!=null) {el.style.width=p.width+'px';el.style.flexShrink='0';}
+ if(p.height!=null)el.style.height=p.height+'px';
+ if(p.fill==='width')el.style.width='100%';
+ if(p.padding)el.style.padding=Array.isArray(p.padding)?p.padding.map(v=>v+'px').join(' '):p.padding+'px';
+ if(p.background)el.style.background=color(p.background);
+ if(p.radius)el.style.borderRadius=p.radius+'px';
+ if(n.kind==='Column'||n.kind==='Row'){el.style.display='flex';el.style.flexDirection=n.kind==='Column'?'column':'row';el.style.gap=(p.gap||0)+'px';if(n.kind==='Row'&&p.align==='center')el.style.alignItems='center';}
+ if(n.kind==='Text'){el.className='text';el.textContent=p.text;el.style.fontSize=(p.fontSize||(['small','label'].includes(p.style)?11:13))+'px';el.style.lineHeight='1.3';el.style.color=color(p.color||'#ffeeeaf4');if(p.bold)el.style.fontWeight='bold';if(p.maxLines===1)el.style.whiteSpace='nowrap';if(p.align==='end')el.style.textAlign='right';}
+ if(n.kind==='Canvas'){el._draw=n.children;}else for(const c of n.children||[])el.append(build(c));return el;
+}
+for(const [name,tree]of Object.entries(trees)){const box=document.createElement('section');const tile=document.createElement('div');tile.className='tile';for(const n of tree)tile.append(build(n));box.append(tile);const label=document.createElement('div');label.className='label';label.textContent=name;box.append(label);document.querySelector('main').append(box);}
+requestAnimationFrame(()=>{for(const el of document.querySelectorAll('canvas')){const rect=el.getBoundingClientRect();el.width=rect.width*2;el.height=rect.height*2;const ctx=el.getContext('2d');ctx.scale(2,2);for(const n of el._draw||[]){let a=n.args||[],p=n.named||{};ctx.fillStyle=color(p.fill||'#00000000');ctx.strokeStyle=color(p.stroke||'#00000000');ctx.lineWidth=p.width||1;ctx.lineCap=p.cap||'butt';ctx.beginPath();if(n.op==='circle')ctx.arc(a[0],a[1],a[2],0,Math.PI*2);if(n.op==='rect')ctx.roundRect(a[0],a[1],a[2],a[3],p.radius||0);if(n.op==='line'){ctx.moveTo(a[0],a[1]);ctx.lineTo(a[2],a[3]);}if(p.fill)ctx.fill();if(p.stroke)ctx.stroke();}}});
+</script>

@@ -1,102 +1,225 @@
 widget "miilo board" {
-  meta { owl: 5; description: "Work items grouped by lifecycle on a compact board"; version: "1.0"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Tasks moving through selected factories"; version: "1.2"; license: "MIT"; category: "dev" }
   page: 1
   order: 9
-  size: 3x3
-  minSize: 2x2
-  padding: 10
-
-  // Reads any Miilo control plane through the Miilo CLI. Set the endpoint and
-  // token in the expanded view (tap the tile); the launcher keeps them, so this
-  // file stays free of anything personal.
-  state miiloUrl = "" persist
-  state miiloToken = "" persist
-  let configured = miiloUrl != ""
-  source doc_live = cmd(miiloUrl == "" ? "echo {}" : "MIILO_URL=\"${miiloUrl}\" MIILO_TOKEN=\"${miiloToken}\" miilo doctor --json") every 3s timeout 20s
-  let doc = doc_live
-  let data = doc == null ? null : parseJson(doc)
+  size: 3x2
+  minSize: 3x2
+  padding: 8
+  requires { pacman: ["python"] }
+  state system = ""
+  state systemsOpen = false
+  state visibleLimit = 12
+  state actorLimit = 8
+  state selectedWork = ""
+  state selectedActor = ""
+  state evidenceOpen = false
+  state reply = ""
+  state requestPending = false
+  state replyWork = ""
+  state replyRevision = ""
+  state proposed = ""
+  state proposalRevision = ""
+  state proposalWork = ""
+  source feed = cmd("miilo-owl snapshot") every 15s timeout 25s status
+  let data = feed.ok ? parseJson(feed.out) : null
+  let configured = data != null && data.configured
   let snap = data == null ? null : data.snapshot
-  let works = snap == null ? [] : (snap.workItems ?? [])
-  let provs = snap == null ? [] : (snap.providers ?? [])
-
-  let ids = map(provs, p => p.id)
-  let palette = [blue, cyan, magenta, orange, red, green]
-  let lanes = ["queued", "active", "waiting", "reviewing", "failed"]
-
+  let allProviders = snap == null ? [] : (snap.providers ?? [])
+  let effectiveSystem = any(allProviders, p => p.id == system) ? system : ""
+  let provs = allProviders.filter(p => effectiveSystem == "" || p.id == effectiveSystem)
+  let works = (snap.workItems ?? []).filter(w => effectiveSystem == "" || w.providerId == effectiveSystem)
+  let actors = (snap.actors ?? []).filter(a => effectiveSystem == "" || a.providerId == effectiveSystem)
+  let attention = (snap.attention ?? []).filter(a => effectiveSystem == "" || a.providerId == effectiveSystem)
+  let attempts = snap.attempts ?? []
+  let evidence = snap.evidence ?? []
+  let busy = actors.filter(a => contains(["working", "running", "reviewing"], a.status))
+  let live = works.filter(w => contains(["active", "waiting", "failed", "queued"], w.lifecycle))
+  let focused = find(works, w => w._key == selectedWork)
+  let actor = find(actors, a => a._key == selectedActor)
+  let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
+  let issueCount = len(data.errors ?? [])
+  let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
+  on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
 
-  Canvas {
-    background: background
-    rect(0, 0, width, height, stroke: border, width: 1, radius: 14)
-
-    let headerTop = 14
-    let bodyTop = 86
-    text("miilo board", 14, headerTop, size: 30, bold: true, color: foreground)
-    let sub = !configured ? "not connected" : works.length == 0 ? "no work" : "${works.length} work item${works.length==1?"":"s"}"
-    text(sub, 14, headerTop + 22, size: 18, color: muted)
-
-    for l, i in lanes {
-      let x = 14 + i*114
-      let items = filter(works, w => (w.lifecycle ?? "") == l)
-      text(l, x, bodyTop-8, size: 16, bold: true, color: muted)
-      for it, j in take(items, 3) {
-        let y = bodyTop + j*24
-        let p = get(it, "providerId", "")
-        let col = palette[max(indexOf(ids, p), 0) % 6]
-        rect(x, y, 108, 20, radius: 4, stroke: col, width: 1, fill: alpha(col, 0.14))
-        text(sub(it.title, 0, 28), x+4, y+6, size: 14, color: foreground)
-      }
-    }
-    if (!configured) {
-      text("tap to set the Miilo endpoint", 14, height-20, size: 16, color: muted)
-    } else if (works.length > 0) {
-      text("open full board", 14, height-20, size: 16, color: muted)
+  component Heading(label, count) {
+    Row {
+      fill: width
+      align: center
+      Text { text: label; fontSize: 11; color: accent; weight: 1; maxLines: 1 }
+      Text { text: count; fontSize: 10; color: muted; maxLines: 1 }
     }
   }
 
-  screen {
-    Column {
-      gap: 12
-      padding: 20
-      Text { text: "board"; style: title; bold: true }
-      Text { text: works.length == 0 ? (configured ? "no work" : "not connected — set the endpoint below") : "${works.length} work items grouped by lifecycle"; style: body; color: works.length == 0 && !configured ? orange : muted }
-      Spacer { height: 4 }
-      for l in lanes {
-        let items = filter(works, w => (w.lifecycle ?? "") == l)
-        if (items.length > 0) {
-          Column {
-            gap: 8
-            Text { text: "${l} · ${items.length}"; style: label; bold: true; color: muted }
-            for it in items {
-              let col = palette[max(indexOf(ids, get(it,"providerId","")), 0) % 6]
-              Column {
-                gap: 4
-                padding: 10
-                radius: 10
-                background: alpha(border, 0.3)
-                Row { gap: 6; align: center
-                  Spacer { width: 8; height: 8; radius: 4; background: col }
-                  Text { text: get(find(provs, q => q.id == get(it,"providerId","")), "name", get(it,"providerId","")); style: small; color: col }
-                  Spacer { weight: 1 }
-                  Text { text: it.phase ?? ""; style: small; color: muted }
-                }
-                Text { text: it.title; style: body }
-                Text { text: it.id; style: small; color: muted }
-              }
+  component Setup() {
+    Flow {
+      gap: 6
+      Button { text: "Set up"; onTap: terminal("miilo-owl setup", "Miilo systems") }
+      if len(allProviders) > 1 { Button { text: systemsOpen ? "Hide systems" : "Filter"; onTap: systemsOpen = !systemsOpen } }
+      if !requestPending { Button { text: "Refresh"; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
+    }
+    if !configured {
+      Text { text: data == null ? "Install helper, then add systems" : "Add Miilo endpoints and choose providers"; style: small; color: muted; maxLines: 2 }
+    }
+    if issueCount > 0 {
+      Text { text: "${issueCount} endpoint(s) unavailable"; style: small; color: red; maxLines: 1 }
+    }
+    if systemsOpen && len(allProviders) > 1 {
+      Flow {
+        gap: 5
+        Button { text: "All systems"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; visibleLimit = 12; actorLimit = 8; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
+        for p in allProviders key p.id {
+          Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; visibleLimit = 12; actorLimit = 8; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
+        }
+      }
+    }
+  }
+
+  component Arc(phase, moving) {
+    Canvas {
+      fill: width
+      height: 25
+      let index = indexOf(phases, phase)
+      let cx = 12 + clamp(index, 0, 4) / 4 * max(width - 24, 1)
+      let xs = range(81).map(i => i * width / 80)
+      let points = xs.map(x => [x, 17 - (abs(x - cx) < 12 ? 9 * (1 + cos(abs(x - cx) / 12 * 3.14159)) / 2 : 0)])
+      if index >= 0 {
+        path(points, stroke: alpha(accent, 0.7), width: 1.5)
+        circle(cx, 17, moving ? 3.4 + 0.4 * sin(time * 2) : 3.4, fill: accent)
+      } else {
+        line(0, 17, width, 17, stroke: alpha(muted, 0.25), width: 1.5)
+      }
+    }
+  }
+
+  component WorkRows(list) {
+    for w in list.take(visibleLimit) key w._key {
+      Column {
+        gap: 2
+        fill: width
+        onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; evidenceOpen = false; proposed = "" }
+        Row {
+          gap: 6
+          fill: width
+          Text { text: w.title; style: body; weight: 1; maxLines: 1 }
+          Text { text: "›"; style: small; color: muted }
+        }
+        Text { text: "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}"; style: small; color: muted; maxLines: 1 }
+      }
+    }
+    if len(list) > visibleLimit { Button { text: "+${len(list) - visibleLimit} more"; onTap: visibleLimit = visibleLimit + 12 } }
+  }
+
+  component WorkDetail() {
+    if focused != null {
+      Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
+      Text { text: focused.title; style: body; maxLines: 2 }
+      Text { text: "${get(find(allProviders, p => p.id == focused.providerId), "name", "System")} · ${focused.phase}"; style: small; color: muted; maxLines: 1 }
+      Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
+      if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 3 } }
+      if !requestPending {
+        Flow {
+          gap: 6
+          Button { text: "Explain"; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          Button { text: evidenceOpen ? "Hide evidence" : "Evidence"; onTap: evidenceOpen = !evidenceOpen }
+          if focused.nativeUrl != "" { Button { text: "Provider ↗"; onTap: url(focused.nativeUrl) } }
+        }
+        Flow {
+          gap: 6
+          for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
+            Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
+          }
+        }
+      }
+      if proposed != "" && focused._key == proposalWork {
+        let action = find(focused.actions ?? [], a => a._key == proposed)
+        if action != null && focused._revisionKey == proposalRevision {
+          Text { text: "${action.label}: ${focused.title}?"; style: small; maxLines: 2 }
+          Flow {
+            gap: 6
+            Button { text: "Confirm"; color: accent; onTap: { requestPending = true; replyWork = proposalWork; replyRevision = proposalRevision; reply = run("miilo-owl action ${sh(proposalWork)} ${sh(proposed)} ${sh(proposalRevision)}"); reply = "pending"; proposed = "" } }
+            Button { text: "Cancel"; onTap: proposed = "" }
+          }
+        } else {
+          Text { text: "Task changed. Review again."; style: small; color: muted }
+        }
+      }
+      if evidenceOpen {
+        let taskEvidence = evidence.filter(e => contains(focused._evidenceKeys ?? [], e._key))
+        if len(taskEvidence) == 0 { Text { text: "No evidence supplied"; style: small; color: muted } }
+        for e in taskEvidence.take(visibleLimit) key e._key {
+          Text { text: "${e.outcome} · ${e.summary}"; style: small; maxLines: 3 }
+        }
+        if len(taskEvidence) > visibleLimit { Button { text: "More evidence"; onTap: visibleLimit = visibleLimit + 12 } }
+      }
+    }
+    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
+    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
+      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
+      for c in receipt.changes ?? [] key c.id { Text { text: c.name; style: small; color: muted; maxLines: 2 } }
+    }
+  }
+
+  let stages = ["queued", "active", "waiting"]
+  Column {
+    gap: 5
+    Heading { label: "work in motion"; count: "${len(live)}" }
+    if !configured {
+      Text { text: "Tap to add systems"; style: small; color: muted }
+    } else if len(live) == 0 {
+      Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted }
+    } else {
+      Canvas {
+        fill: width
+        height: 32
+        let y = 16
+        line(8, y, width - 8, y, stroke: alpha(muted, 0.25), width: 1.5)
+        for phase, i in stages {
+          let items = live.filter(w => w.lifecycle == phase)
+          let x = 8 + i / 2 * max(width - 16, 1)
+          if len(items) > 0 {
+            circle(x, y, 3 + min(len(items), 5) * 0.35, fill: accent)
+            if phase == "active" {
+              circle(x, y, 6 + sin(time * 2), stroke: alpha(accent, 0.25), width: 1)
             }
           }
         }
       }
-
-      Text { text: "connection"; style: label; color: accent }
-      Column {
-        gap: 6
+      Row {
         fill: width
-        Text { text: "endpoint"; style: small; color: muted }
-        Input { text: miiloUrl; placeholder: "http://host:port"; onSubmit: miiloUrl = value }
-        Text { text: "token"; style: small; color: muted }
-        Input { text: miiloToken; placeholder: "bearer token"; onSubmit: miiloToken = value }
+        gap: 4
+        for stage in stages {
+          Column {
+            weight: 1
+            gap: 0
+            Text { text: "${len(live.filter(w => w.lifecycle == stage))}"; fontSize: 11; color: foreground; maxLines: 1 }
+            Text { text: stage == "active" ? "working" : stage; fontSize: 9; color: muted; maxLines: 1 }
+          }
+        }
       }
+      let failed = live.filter(w => w.lifecycle == "failed")
+      if len(failed) > 0 { Text { text: "${len(failed)} needs a fix"; fontSize: 10; color: red; maxLines: 1 } }
+      if tileHeight >= 180 {
+        let current = find(live, w => w.lifecycle == "active")
+        if current != null { Text { text: current.title; fontSize: 11; maxLines: 1 } }
+      }
+    }
+  }
+  screen {
+    title: "work in motion"
+    Column {
+      scroll: true
+      gap: 10
+      Setup { }
+      for stage in ["failed", "waiting", "active", "queued"] {
+        let tasks = live.filter(w => w.lifecycle == stage)
+        if len(tasks) > 0 {
+          Text { text: stage == "active" ? "Working" : stage == "failed" ? "Needs a fix" : stage; style: label; color: stage == "failed" ? red : accent }
+          WorkRows { list: tasks }
+        }
+      }
+      if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
+      WorkDetail { }
     }
   }
 }
