@@ -8,7 +8,7 @@ for index, name, internal, description in [
     (71, 'attention', 'attention', 'Compact review queue with evidence and provider actions'),
     (72, 'board', 'board', 'Tasks moving through selected factories')]:
     header = f'''widget "miilo {internal}" {{
-  meta {{ owl: 6; description: "{description}"; version: "1.2"; license: "MIT"; category: "dev" }}
+  meta {{ owl: 6; description: "{description}"; version: "1.3"; license: "MIT"; category: "dev" }}
   page: 1
   order: {index-63}
   size: 3x{3 if index == 70 else 2}

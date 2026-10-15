@@ -26,10 +26,18 @@ class InstallTest(unittest.TestCase):
             output = subprocess.check_output([str(local/'bin/miilo-owl'), 'snapshot'], env=env, text=True)
             self.assertFalse(json.loads(output)['configured'])
             self.assertEqual(3, len(list(widgets.glob('*.owl'))))
-            self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.2').read_text())
+            self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.3').read_text())
             self.assertEqual('{"version":1,"endpoints":[]}', config_file.read_text())
             subprocess.run(['bash', str(ROOT/'install.sh'), '--no-setup'], env=env, check=True, capture_output=True)
-            self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.2').read_text())
+            self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.3').read_text())
+
+    def test_missing_binary_fails_before_changing_widgets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {**os.environ, 'MIILO_OWL_BINARY': '/nonexistent/miilo-owl',
+                   'MIILO_OWL_INSTALL_ROOT': tmp+'/local', 'MIILO_OWL_WIDGET_DIR': tmp+'/widgets'}
+            result = subprocess.run(['bash', str(ROOT/'install.sh'), '--no-setup'], env=env, capture_output=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertFalse((Path(tmp)/'widgets').exists())
 
 if __name__ == '__main__':
     unittest.main()

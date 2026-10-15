@@ -4,12 +4,10 @@ import json
 import os
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT/'helper'))
-from miilo_owl.snapshot import project
+PROJECTOR = ROOT/'helper/target/debug/examples/project-fixture'
 
 
 def run(args):
@@ -36,7 +34,9 @@ def fixtures(folder):
             'id': 'approve', 'label': 'Approve', 'risk': 'bounded', 'confirmation': 'explicit',
             'available': True}])
     def add(raw, alias='home'):
-        return project({'id': alias, 'providers': ['factory', 'codex'], 'allowActions': True}, raw)
+        payload = {'endpoint': {'id': alias, 'url': 'http://127.0.0.1',
+            'providers': ['factory', 'codex'], 'allowActions': True}, 'snapshot': raw}
+        return json.loads(subprocess.check_output([str(PROJECTOR)], input=json.dumps(payload), text=True))
     selected = add(raw)
     cases = {'populated': {'configured': True, 'snapshot': selected, 'errors': []},
              'disconnected': {'configured': False, 'snapshot': {k: [] for k in selected}, 'errors': []},
@@ -59,6 +59,8 @@ def fixtures(folder):
 
 
 def main():
+    subprocess.run(['cargo', 'build', '--locked', '--manifest-path', str(ROOT/'helper/Cargo.toml'),
+                    '--example', 'project-fixture', '-j', '2'], check=True)
     owl = os.environ['OWL_CHECKER_CLASSPATH']
     compiler = os.environ['KOTLIN_COMPILER_CLASSPATH']
     files = sorted(ROOT.glob('*.owl'))

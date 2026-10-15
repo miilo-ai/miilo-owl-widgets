@@ -2,3 +2,6 @@ __pycache__/
 *.py[cod]
 .render/
 dist/
+helper/target/
+helper/target-linux/
+bin/

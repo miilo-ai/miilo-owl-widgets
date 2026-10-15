@@ -1,11 +1,10 @@
 widget "miilo fleet" {
-  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.2"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.3"; license: "MIT"; category: "dev" }
   page: 1
   order: 7
   size: 3x3
   minSize: 3x3
   padding: 8
-  requires { pacman: ["python"] }
   state system = ""
   state systemsOpen = false
   state setupOpen = false

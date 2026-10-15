@@ -1,4 +1,3 @@
-  requires { pacman: ["python"] }
   state system = ""
   state systemsOpen = false
   state setupOpen = false

@@ -12,13 +12,13 @@ All colors come from Omalauncher (`accent`, `background`, `foreground`, `muted`,
 
 ## Install and register what to observe
 
-Run **inside Omalauncher's Linux environment**, with Python 3.9+ installed:
+Download and verify the **ARM64 Linux release bundle**, extract it, then run **inside Omalauncher's Linux environment**. No Python or Rust toolchain is needed on the device:
 
 ```sh
 ./install.sh
 ```
 
-The installer copies the shared `miilo-owl` helper to `~/.local/bin`, installs the three widgets under `~/.config/omalauncher/widgets`, and starts setup. Existing widget files receive a one-time `.before-miilo-1.2` backup; existing connection config is preserved. Ensure `~/.local/bin` is in the launcher's Linux PATH. To install without interactive setup, use `./install.sh --no-setup`.
+The installer copies the shared `miilo-owl` helper to `~/.local/bin`, installs the three widgets under `~/.config/omalauncher/widgets`, and starts setup. Existing widget files receive a one-time `.before-miilo-1.3` backup; existing connection config is preserved. Ensure `~/.local/bin` is in the launcher's Linux PATH. To install without interactive setup, use `./install.sh --no-setup`.
 
 Setup lets you:
 
@@ -50,7 +50,7 @@ Credentials are stored in `~/.config/miilo-owl/config.json` with owner-only perm
 
 Each widget checks the helper every 15 seconds while visible. A shared eight-second cache and file lock avoid triple fetches. Each HTTP request has an eight-second timeout and two-megabyte response limit. Endpoint reads are bounded to four concurrent requests. This is periodic observation, not an SSE client or an offline store. The private cache holds only the short-lived last aggregate; failed endpoints are explicitly reported and are not represented as healthy empty systems. Actions and explanations always fetch fresh observations.
 
-The helper uses only Python's standard library. No Miilo Cloud dependency, CLI installation, package download, or account creation is required by the installer. Users still need network access and valid credentials for their chosen Miilo backend(s).
+The helper is a statically linked Rust binary (about 2.2 MiB for ARM64 Linux), with Rustls HTTPS and bundled public trust roots. The installer copies the bundled binary; it does not download a runtime or install packages. No Miilo Cloud dependency, separate CLI installation, or account creation is required by the installer. Private CAs are not yet configurable; use a publicly trusted HTTPS certificate or your trusted local/Tailscale HTTP endpoint. Users still need network access and valid credentials for their chosen Miilo backend(s).
 
 ## Validation
 
@@ -59,7 +59,7 @@ make test
 make assemble
 ```
 
-Tests cover shared onboarding, selecting/removing two endpoints, provider isolation with colliding IDs (including 20 factories / 1,000 tasks), cache invalidation, credentials, action restrictions, revision conflicts, authenticated localhost explanations/actions, redirects, and installation into paths containing spaces. CI runs helper/installer tests and checks generated OWL does not drift.
+Tests cover shared onboarding, selecting/removing two endpoints, provider isolation with colliding IDs (including 20 factories / 1,000 tasks), cache invalidation, credentials, action restrictions, revision conflicts, authenticated localhost explanations/actions, redirects, and installation into paths containing spaces. CI runs Rust boundary tests, black-box CLI/HTTP/installer journeys, formatting/lint checks, and generated OWL drift checks. An ARM64 job builds the static helper, runs the same tests against it, and uploads a checksummed install bundle. These workflows are prepared; a remote CI pass is not implied by local results.
 
 The real [Omalauncher compiler](https://github.com/SimonSchubert/omalauncher/tree/main/owl) validates OWL syntax. The runtime inspector evaluates both tiles and expanded screens across light/dark themes, multiple sizes, crowded/empty/disconnected/partial/multi-system snapshots, and UI selections. It also executes the actual propose/confirm handlers against a recording host: the first tap must not dispatch an action.
 
@@ -75,13 +75,16 @@ The Kotlin inspector is a real-language evaluator, **not a Compose screenshot re
 ./tools/check-device.sh
 ```
 
-This uses official `owl-check` to produce live tile **and full-screen** PNGs under `~/.config/omalauncher/widgets/.preview`. Review those in your chosen light and dark themes, including system font scaling, long names, scroll, and confirmation behavior. No native-device result is claimed for version 1.2 yet: no Android device was attached during development.
+This uses official `owl-check` to validate installed widgets and, when supported, produce live tile **and full-screen** PNGs under `~/.config/omalauncher/widgets/.preview`. Widgets containing Terminal may be skipped by the automatic preview renderer; use on-screen inspection/ADB screenshots for those. Review your chosen light and dark themes, including system font scaling, long names, scroll, and confirmation behavior. Version 1.3 has been installed in an ARM64 Android 14 emulator running Omalauncher 0.7.2 and its Arch/PRoot environment. The helper runs and opens the in-widget onboarding terminal without Python. Real-provider connectivity and physical-phone interaction are separate checks; no tower connection is implied by this smoke test.
 
 ## Source layout
 
 - `widgets/*.inc`: small OWL source fragments (OWL itself has no imports).
 - `tools/assemble.py`: generates the three installable `.owl` files, each under 300 lines.
-- `helper/miilo_owl`: configuration, transport, aggregation, onboarding, and operations in separate modules.
+- `helper/src`: Rust configuration, transport, projection, graph, aggregation, onboarding, and operations modules. `Transport` and `Console` ports keep HTTP and terminal details outside the application logic.
+- `helper/tests`: Rust boundary tests; `tests/test_*.py`: development-only black-box tests of the compiled binary.
+- `tools/Dockerfile.helper`, `tools/build-linux.sh`: pinned ARM64 Linux build environment, capped at two CPUs/2 GB during compilation.
+- `tools/package.sh`: packages the static helper, widgets and installer with SHA-256 checksums. No Python runtime is shipped.
 - `tests`: helper, HTTP, installer, and runtime fixtures.
 - `tools/reference.html`, `tools/render_reference.py`: browser layout references from evaluated OWL trees; not native screenshots.
 - Numbered original PNGs under `previews`: before images, retained for comparison.
@@ -89,3 +92,20 @@ This uses official `owl-check` to produce live tile **and full-screen** PNGs und
 Edit fragments, then run `make assemble`; do not edit generated OWL directly.
 
 Design reference: [Omalauncher widget guidance](https://github.com/SimonSchubert/omalauncher/blob/main/app/src/main/assets/widgets/README.md). Community context: [Building Calm in Complex Interfaces](https://dev.to/khanh_nguyen_04b1205f5a91/building-calm-in-complex-interfaces-18n8) — consistent hierarchy and details on demand. The implemented safety boundary comes from Miilo's SDK/API contracts and the tests, not from community examples.
+
+## Native helper development and migration
+
+```sh
+make test                 # Rust tests + compiled CLI journeys; Python is a dev test tool only
+make build                # Build for your development machine
+make build-linux          # Docker: static aarch64-unknown-linux-musl, including on Apple Silicon
+make package              # dist/miilo-owl-widgets-1.3-linux-aarch64.tar.gz + SHA256SUMS
+```
+
+The Linux binary runs inside Arch/PRoot. It is not an Android/Bionic APK or a macOS executable. A source checkout intentionally requires building the helper first; it does not silently fall back to Python. For local installer tests, set `MIILO_OWL_BINARY=/absolute/path/to/miilo-owl`. Release packaging rejects a non-static/non-ARM64 artifact.
+
+Existing version-1 configuration and the CLI commands (`setup`, `snapshot`, `refresh`, `explain ITEM REVISION`, `action ITEM ACTION REVISION`) remain compatible. Opaque task/action/revision keys match the old helper, including Unicode. Existing credentials and provider selections are preserved. Older Python helper files may remain from previous installations but are not used by the replaced executable. Python is not removed from the device; other software may need it.
+
+The installer leaves connections unconfigured on a fresh device. For live data, register the desired factories/providers in your Miilo backend, ensure that API is reachable from the device, then use **Set up** to add the endpoint, enter a token privately, and select providers. The emulator does not automatically inherit the Mac's Tailscale connectivity. Avoid placing real credentials in ADB commands or shell history.
+
+Validation evidence and remaining device/provider checks: [native helper validation](docs/native-helper-validation.md).

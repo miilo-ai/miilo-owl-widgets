@@ -1,11 +1,10 @@
 widget "miilo attention" {
-  meta { owl: 6; description: "Compact review queue with evidence and provider actions"; version: "1.2"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Compact review queue with evidence and provider actions"; version: "1.3"; license: "MIT"; category: "dev" }
   page: 1
   order: 8
   size: 3x2
   minSize: 3x2
   padding: 8
-  requires { pacman: ["python"] }
   state system = ""
   state systemsOpen = false
   state setupOpen = false
