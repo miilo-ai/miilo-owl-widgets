@@ -157,6 +157,9 @@
         Flow {
           gap: 6
           Button { text: "Explain"; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
+            Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
+          }
           if focused.nativeUrl != "" { Button { text: "Provider ↗"; onTap: url(focused.nativeUrl) } }
         }
         if !(focused._actionsEnabled ?? false) {
@@ -167,12 +170,6 @@
         for a in (focused.actions ?? []).filter(a => !a._supported) key a._key {
           Text { text: "${a.label} · ${a._unavailableReason ?? "Use provider"}"; style: small; color: muted; maxLines: 3 }
           if a.nativeUrl != "" { Button { text: "${a.label} ↗"; onTap: url(a.nativeUrl) } }
-        }
-        Flow {
-          gap: 6
-          for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
-            Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
-          }
         }
       }
       if proposed != "" && focused._key == proposalWork {

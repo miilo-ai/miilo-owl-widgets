@@ -140,6 +140,9 @@ def main():
                     assert 'Confirm' in texts and 'Cancel' in texts
                 if scenario == 'detail':
                     assert any('No repeated events' in t for t in texts)
+                    action_rows = [n for n in nodes(result['screen']) if n.get('kind') == 'Flow' and
+                        {'Explain', 'Approve', 'Reject', 'Retry'} <= {c.get('props', {}).get('text') for c in n.get('children', [])}]
+                    assert len(action_rows) == 1, 'Explain and actions must share one row'
                     assert 'src/worker.rs' in texts
                     assert any('@@ -1 +1 @@' in t for t in texts)
                     assert 'Diff not supplied' in texts
