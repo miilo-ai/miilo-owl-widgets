@@ -1,17 +1,11 @@
-# Optional inline launcher header
+# Search toolbar and native launcher header
 
-Stock-compatible generated widgets remain OWL6. The inline cog/refresh/back beside the launcher close icon requires the OWL8 `screen.header` extension. The included `patches/omalauncher-header-actions.patch` records the local Omalauncher changes tested against upstream commit `ca99985b3536d26dfd8935391bbfa5c0d215488a`. It also sets a separate debug application ID/file authority for side-by-side installation and uses the active theme accent for close.
+The current Miilo layout is stock-compatible OWL6. Cog and refresh share the search row; the system filter also appears when multiple systems are connected. Tapping search replaces the compact preview with a focused input and hides the adjacent toolbar controls so editing has more room. Submit or the checkmark restores the compact row without losing the query. Task/agent detail views retain a separate contextual back/settings/refresh row because those views have no search field.
 
-Apply the patch in an Omalauncher source checkout, fetch its native PRoot libraries using its documented build steps, and build/test that launcher. A separate app has separate configuration and Linux data: installing it does not automatically migrate the original app. Preserve the original installation. No APK or native libraries are committed here.
+Stock OWL6 supports requesting Input focus but not focus/blur callbacks. This is an explicit editing state: dismissing the Android keyboard alone does not end editing; use submit or the checkmark. No launcher patch is required for this layout. The default installer and emulator use the same generated source. `tools/header-variant.py` is retained as a compatibility export; it no longer injects an OWL8 native header. Its optional preview-robots switch changes only the clearly labeled decorative examples.
 
-Generate the matching widget after `make assemble`:
+## Native close icon and historical patch
 
-```sh
-python3 tools/header-variant.py /tmp/70-miilo-fleet.owl
-```
+The launcher's own close icon is outside widget control. Stock Omalauncher controls its color. The archived `patches/omalauncher-header-actions.patch` records the earlier local header integration against upstream commit `ca99985b3536d26dfd8935391bbfa5c0d215488a`; that patch includes a theme-accent close icon and side-by-side debug app packaging. It is not applied by the widget installer, and installing a separately packaged launcher does not migrate the original Linux guest/configuration.
 
-Install that output into the patched launcher's widget directory. The default installer intentionally installs OWL6 for compatibility. `--preview-robots` adds clearly labeled tile-only visual examples; it never registers providers or creates action targets.
-
-Local validation: the patched launcher passed 98 Android unit tests and 83 OWL tests. The live emulator uses the patched app with preserved real configuration. All current robot/evidence/action rendering resides in the shared widget fragments; the generator only moves controls into the native header.
-
-The patch modifies upstream Omalauncher code and remains subject to that project’s license; the widget repository’s license does not replace it.
+The previous emulator used that patched host. The current widget toolbar no longer depends on its OWL8 extension. Do not describe the native close-color patch as a widget update. No APK or native runtime libraries are committed here. The patch modifies upstream code and remains subject to that project's license.

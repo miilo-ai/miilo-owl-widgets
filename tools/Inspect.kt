@@ -82,7 +82,8 @@ private fun click(nodes: List<WNode>, env: Env, label: String): Boolean {
             is WNode.For -> (node.list(env) as? Lst)?.items.orEmpty().withIndex().any { (i, item) -> click(node.body, env.child(item, Num(i.toDouble())), label) }
             is WNode.Lets -> click(node.children, env.lets(node.values), label)
             is WNode.Use -> click(node.body, env.child(*node.args.map { it(env) }.toTypedArray()), label)
-            is WNode.Element -> if (node.kind == "Button" && node.props["text"]?.invoke(env)?.toString() == label) {
+            is WNode.Element -> if (node.handlers.containsKey("onTap") && (node.props["text"]?.invoke(env)?.toString() == label ||
+                (node.kind == "Box" && node.children.any { it is WNode.Element && it.props["text"]?.invoke(env)?.toString() == label }))) {
                 node.handlers["onTap"]!!.run(env, listOf(Num(0.0), Num(0.0))); true
             } else if(node.kind != "Canvas") click(node.children, env, label) else false
             is WNode.Draw -> false
@@ -115,6 +116,27 @@ fun main(args: Array<String>) {
         check(!click(p.screen.orEmpty(), Env.root(host), "Confirm")) { "Stale proposal must not confirm" }
         check(host.runs.size == 3)
         state("proposed", Str(""))
+    }
+    if(args[5] in listOf("search-edit", "search-done", "search-clear")) {
+        val label = when {
+            args[0].contains("70-") -> "Search systems, agents or work"
+            args[0].contains("71-") -> "Search attention"
+            else -> "Search work or systems"
+        }
+        check(click(p.screen.orEmpty(), Env.root(host), label))
+        val slot = p.globals.indexOfFirst { it.name == "searchEditing" }
+        check(host.read(slot).truthy)
+        if(args[5] in listOf("search-done", "search-clear")) {
+            val query = p.globals.indexOfFirst { it.name == "query" }
+            host.write(query, Str("recovery"))
+            check(click(p.screen.orEmpty(), Env.root(host), "✓"))
+            check(!host.read(slot).truthy)
+            check(host.read(query).toString() == "recovery")
+            if(args[5] == "search-clear") {
+                check(click(p.screen.orEmpty(), Env.root(host), "×"))
+                check(host.read(query).toString().isEmpty())
+            }
+        }
     }
     if(args[5] == "colors" && args[0].contains("70-miilo")) {
         check(click(p.screen.orEmpty(), Env.root(host), "Green"))

@@ -24,11 +24,11 @@
       scroll: true
       gap: 10
       Setup { }
+      if focused == null && actor == null { Search { placeholder: "Search attention" } }
       SetupTerminal { }
       if focused != null {
         WorkDetail { }
       } else {
-        Search { placeholder: "Search attention" }
         let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
       for a in matches.take(pageSize) key a._key {
           Column {

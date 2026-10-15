@@ -11,6 +11,7 @@
   state colorAgent = ""
   state workflowActor = ""
   state query = ""
+  state searchEditing = false
   state expandedSystem = ""
   state providerLimit = 5
   state renameOpen = false
@@ -64,18 +65,38 @@
     }
   }
 
-  component Setup() {
+  component ToolbarControls() {
     Row {
-      fill: width
       gap: 4
       align: center
-      if !leftHanded { Spacer { weight: 1 } }
-      if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-      else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
-      Text { text: "⚙"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: setupOpen = !setupOpen }
-      if len(allProviders) > 1 { Text { text: "≡"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: systemsOpen = !systemsOpen } }
-      if !requestPending { Text { text: "↻"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
-      if leftHanded { Spacer { weight: 1 } }
+      Box { width: 44; height: 44; align: center; onTap: setupOpen = !setupOpen
+        Text { text: "⚙"; width: 44; fontSize: 24; align: center; color: accent }
+      }
+      if len(allProviders) > 1 {
+        Box { width: 44; height: 44; align: center; onTap: systemsOpen = !systemsOpen
+          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
+        }
+      }
+      if !requestPending {
+        Box { width: 44; height: 44; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
+        }
+      }
+    }
+  }
+
+  component Setup() {
+    if focused != null || actor != null || !configured {
+      Row {
+        fill: width
+        gap: 4
+        align: center
+        if !leftHanded { Spacer { weight: 1 } }
+        if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
+        else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+        ToolbarControls { }
+        if leftHanded { Spacer { weight: 1 } }
+      }
     }
     if !configured {
       Text { text: data == null ? "Install helper, then add systems" : "Add Miilo endpoints and choose providers"; style: small; color: muted; maxLines: 2 }

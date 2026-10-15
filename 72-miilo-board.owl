@@ -18,6 +18,7 @@ widget "miilo board" {
   state colorAgent = ""
   state workflowActor = ""
   state query = ""
+  state searchEditing = false
   state expandedSystem = ""
   state providerLimit = 5
   state renameOpen = false
@@ -71,18 +72,38 @@ widget "miilo board" {
     }
   }
 
-  component Setup() {
+  component ToolbarControls() {
     Row {
-      fill: width
       gap: 4
       align: center
-      if !leftHanded { Spacer { weight: 1 } }
-      if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-      else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
-      Text { text: "⚙"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: setupOpen = !setupOpen }
-      if len(allProviders) > 1 { Text { text: "≡"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: systemsOpen = !systemsOpen } }
-      if !requestPending { Text { text: "↻"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
-      if leftHanded { Spacer { weight: 1 } }
+      Box { width: 44; height: 44; align: center; onTap: setupOpen = !setupOpen
+        Text { text: "⚙"; width: 44; fontSize: 24; align: center; color: accent }
+      }
+      if len(allProviders) > 1 {
+        Box { width: 44; height: 44; align: center; onTap: systemsOpen = !systemsOpen
+          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
+        }
+      }
+      if !requestPending {
+        Box { width: 44; height: 44; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
+        }
+      }
+    }
+  }
+
+  component Setup() {
+    if focused != null || actor != null || !configured {
+      Row {
+        fill: width
+        gap: 4
+        align: center
+        if !leftHanded { Spacer { weight: 1 } }
+        if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
+        else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+        ToolbarControls { }
+        if leftHanded { Spacer { weight: 1 } }
+      }
     }
     if !configured {
       Text { text: data == null ? "Install helper, then add systems" : "Add Miilo endpoints and choose providers"; style: small; color: muted; maxLines: 2 }
@@ -237,13 +258,35 @@ widget "miilo board" {
   }
 
   component Search(placeholder) {
-    Input {
-      text: query
-      placeholder: placeholder
-      onChange: { query = value; pageSize = 5; agentLimit = 5 }
-      onSubmit: { query = trim(value); pageSize = 5 }
+    Row {
+      fill: width
+      gap: 6
+      align: center
+      if !searchEditing && leftHanded && configured { ToolbarControls { } }
+      if searchEditing {
+        Box {
+          weight: 1
+          Input {
+            text: query
+            placeholder: placeholder
+            focus: true
+            onChange: { query = value; pageSize = 5; agentLimit = 5 }
+            onSubmit: { query = trim(value); pageSize = 5; searchEditing = false }
+          }
+        }
+        Box { width: 36; height: 44; align: center; onTap: searchEditing = false
+          Text { text: "✓"; width: 36; fontSize: 22; align: center; color: accent }
+        }
+      } else {
+        Box { weight: 1; height: 44; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
+          Text { text: query == "" ? placeholder : query; fill: width; fontSize: 13; color: query == "" ? muted : foreground; maxLines: 1 }
+        }
+        if needle != "" { Box { width: 30; height: 44; align: center; onTap: { query = ""; pageSize = 5 }
+          Text { text: "×"; width: 30; fontSize: 22; align: center; color: muted }
+        } }
+        if !leftHanded && configured { ToolbarControls { } }
+      }
     }
-    if needle != "" { Button { text: "Clear"; onTap: { query = ""; pageSize = 5 } } }
   }
 
   component BackToList() {
@@ -325,11 +368,11 @@ widget "miilo board" {
       scroll: true
       gap: 10
       Setup { }
+      if focused == null && actor == null { Search { placeholder: "Search work or systems" } }
       SetupTerminal { }
       if focused != null {
         WorkDetail { }
       } else {
-        Search { placeholder: "Search work or systems" }
         if needle != "" {
           Text { text: "${len(searched)} matches"; style: small; color: muted }
           WorkRows { list: searched; showSystem: true }

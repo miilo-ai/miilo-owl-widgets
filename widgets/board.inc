@@ -49,11 +49,11 @@
       scroll: true
       gap: 10
       Setup { }
+      if focused == null && actor == null { Search { placeholder: "Search work or systems" } }
       SetupTerminal { }
       if focused != null {
         WorkDetail { }
       } else {
-        Search { placeholder: "Search work or systems" }
         if needle != "" {
           Text { text: "${len(searched)} matches"; style: small; color: muted }
           WorkRows { list: searched; showSystem: true }

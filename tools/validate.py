@@ -119,7 +119,7 @@ def main():
                             (dest/(file.stem+'-'+theme+'.json')).write_text(json.dumps(result))
                         total += 1
         for file in files:
-            for scenario in ['detail', 'confirm', 'filter', 'actor', 'interaction', 'group', 'search', 'no-match', 'agent-tab', 'needs', 'left-hand', 'preview', 'colors']:
+            for scenario in ['detail', 'confirm', 'filter', 'actor', 'interaction', 'group', 'search', 'no-match', 'agent-tab', 'needs', 'left-hand', 'preview', 'colors', 'search-edit', 'search-done', 'search-clear']:
                 result = json.loads(run(['java', '-cp', tmp+os.pathsep+owl, 'InspectKt', str(file), str(paths['multiple']), '180', '180', 'dark', scenario]))
                 assert_row_widths(result['tile'] + result['screen'])
                 texts = [n['props'].get('text', '') for n in nodes(result['screen']) if n.get('kind') in ('Text', 'Button')]
@@ -136,6 +136,13 @@ def main():
                     tile_texts = [n['props'].get('text', '') for n in nodes(result['tile']) if n.get('kind') == 'Text']
                     assert 'Preview sleep' in tile_texts
                     assert not any('Preview ' in t for t in texts)
+                if scenario == 'search-edit':
+                    assert any(n.get('kind') == 'Input' and n.get('props', {}).get('focus') for n in nodes(result['screen']))
+                    assert '⚙' not in texts and '↻' not in texts
+                    assert '✓' in texts
+                if scenario in ['search-done', 'search-clear']:
+                    assert not any(n.get('kind') == 'Input' for n in nodes(result['screen']))
+                    assert '⚙' in texts and '↻' in texts
                 if scenario == 'confirm':
                     assert 'Confirm' in texts and 'Cancel' in texts
                 if scenario == 'detail':

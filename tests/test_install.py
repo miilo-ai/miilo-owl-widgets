@@ -28,6 +28,8 @@ class InstallTest(unittest.TestCase):
             output = subprocess.check_output([str(local/'bin/miilo-owl'), 'snapshot'], env=env, text=True)
             self.assertFalse(json.loads(output)['configured'])
             self.assertEqual(1, len(list(widgets.glob('*.owl'))))
+            self.assertEqual((ROOT/'70-miilo-fleet.owl').read_bytes(), (widgets/'70-miilo-fleet.owl').read_bytes())
+            self.assertIn('owl: 6;', (widgets/'70-miilo-fleet.owl').read_text())
             self.assertEqual('old attention', (widgets/'71-miilo-attention.owl.disabled').read_text())
             self.assertEqual('old board', (widgets/'72-miilo-board.owl.disabled').read_text())
             self.assertEqual('old widget', (widgets/'70-miilo-fleet.owl.before-miilo-1.3').read_text())

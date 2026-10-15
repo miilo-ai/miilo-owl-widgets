@@ -117,6 +117,7 @@
       scroll: true
       gap: 10
       Setup { }
+      if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
       if setupOpen { RobotColors { } }
       SetupTerminal { }
       if focused != null {
@@ -135,7 +136,6 @@
         if len(owned) == 0 { Text { text: "No assigned work reported"; style: small; color: muted } }
         WorkDetail { }
       } else {
-        Search { placeholder: "Search systems, agents or work" }
         let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
         let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
         Row {

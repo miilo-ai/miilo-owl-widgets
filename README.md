@@ -143,4 +143,6 @@ Supported provider actions appear above evidence in task details. Approve, Rejec
 
 Actions are opt-in per connection in setup. With observation-only configuration, details show “Actions disabled for this connection” and an Action settings button. When the provider publishes no actions, details say so. Other unsupported actions explain why and offer their safe provider URL when available. The widget supports no-input read/bounded actions and privileged actions requiring explicit confirmation, including standard empty-object SDK schemas. Destructive actions, strong confirmation, and actions requiring form input stay in the provider interface. Enabling the local option never grants upstream permission or invents provider actions.
 
-Optional inline launcher header: see [launcher-header.md](docs/launcher-header.md).
+Search toolbar behavior and launcher-owned close icon: see [launcher-header.md](docs/launcher-header.md).
+
+Search shares one compact row with cog/refresh (and a system filter for multiple systems). Tap it to expand a focused input; submit or ✓ restores the controls without clearing the query. The stock launcher does not expose blur callbacks, so keyboard dismissal alone leaves editing active. This works with the default OWL6 install; no custom launcher is needed.
