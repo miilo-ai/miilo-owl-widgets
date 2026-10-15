@@ -49,6 +49,7 @@
       scroll: true
       gap: 10
       Setup { }
+      SetupTerminal { }
       for stage in ["failed", "waiting", "active", "queued"] {
         let tasks = live.filter(w => w.lifecycle == stage)
         if len(tasks) > 0 {

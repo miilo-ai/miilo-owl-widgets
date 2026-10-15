@@ -1,6 +1,7 @@
   requires { pacman: ["python"] }
   state system = ""
   state systemsOpen = false
+  state setupOpen = false
   state visibleLimit = 12
   state actorLimit = 8
   state selectedWork = ""
@@ -47,7 +48,7 @@
   component Setup() {
     Flow {
       gap: 6
-      Button { text: "Set up"; onTap: terminal("miilo-owl setup", "Miilo systems") }
+      Button { text: setupOpen ? "Hide setup" : "Set up"; onTap: setupOpen = !setupOpen }
       if len(allProviders) > 1 { Button { text: systemsOpen ? "Hide systems" : "Filter"; onTap: systemsOpen = !systemsOpen } }
       if !requestPending { Button { text: "Refresh"; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" } } }
     }
@@ -65,6 +66,14 @@
           Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; visibleLimit = 12; actorLimit = 8; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
         }
       }
+    }
+  }
+
+  component SetupTerminal() {
+    if setupOpen {
+      Terminal { command: "miilo-owl setup"; height: 340 }
+      Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
+      Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
     }
   }
 

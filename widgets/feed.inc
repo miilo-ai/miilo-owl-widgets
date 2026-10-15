@@ -36,6 +36,7 @@
       scroll: true
       gap: 10
       Setup { }
+      SetupTerminal { }
       for a in actors.take(actorLimit) key a._key {
         Row {
           gap: 8

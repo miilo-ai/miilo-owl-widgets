@@ -24,6 +24,7 @@
       scroll: true
       gap: 10
       Setup { }
+      SetupTerminal { }
       for a in ordered.take(visibleLimit) key a._key {
           Column {
           gap: 2
