@@ -1,0 +1,292 @@
+widget "miilo fleet" {
+  meta { owl: 5; description: "Watch Miilo agents work and tasks move through their phases, across every connected provider"; version: "1.0"; license: "MIT"; category: "dev" }
+  page: 1
+  order: 7
+  size: 3x3
+  minSize: 2x2
+  padding: 10
+
+  // Reads any Miilo control plane through the Miilo CLI. Set the endpoint and
+  // token in the expanded view (tap the tile); the launcher keeps them, so this
+  // file stays free of anything personal.
+  state miiloUrl = "" persist
+  state miiloToken = "" persist
+  let configured = miiloUrl != ""
+  source doc_live = cmd(miiloUrl == "" ? "echo {}" : "MIILO_URL=\"${miiloUrl}\" MIILO_TOKEN=\"${miiloToken}\" miilo doctor --json") every 3s timeout 20s
+  let doc = doc_live
+  let data = doc == null ? null : parseJson(doc)
+  let snap = data == null ? null : data.snapshot
+  let works = snap == null ? [] : (snap.workItems ?? [])
+  let actors = snap == null ? [] : (snap.actors ?? [])
+  let provs = snap == null ? [] : (snap.providers ?? [])
+  let attention = snap == null ? [] : (snap.attention ?? [])
+  let attempts = snap == null ? [] : (snap.attempts ?? [])
+  let evid = snap == null ? [] : (snap.evidence ?? [])
+  let ids = provs.map(p => p.id)
+  let palette = [accent, cyan, magenta, orange, green, yellow]
+  let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
+  let busy = actors.filter(a => contains(["working", "running", "reviewing"], a.status))
+  let needs = works.filter(w => w.attention != null && w.attention != "none")
+  let live = works.filter(w => contains(["active", "waiting", "failed", "queued"], w.lifecycle))
+  let lanes = live.sortBy(w => w.lifecycle == "failed" ? 0 : w.attention == "approval" ? 1 : w.lifecycle == "active" ? 2 : 3)
+
+  // One bobbing bot per agent, a pulse while mid-task. Used on the tile and,
+  // larger, in the expanded screen.
+  component Robots(list, h, maxn) {
+    Canvas {
+      fill: width
+      height: h
+      let body = mix(accent, background, 0.22)
+      let n = max(min(len(list), maxn), 1)
+      let cw = width / n
+      let r = min(min(cw * 0.24, 34), h * 0.26) * 0.9
+      let by = h * 0.44 - 3.5
+      for a in list.take(maxn) {
+        let i = max(indexOf(list, a), 0)
+        let cx = cw * (i + 0.5)
+        let bob = sin(time * 2.2 + i * 0.9) * r * 0.1
+        let on = contains(["working", "running"], a.status)
+        let led = on ? green : a.status == "reviewing" ? yellow : a.health == "degraded" ? red : muted
+        if on || a.status == "reviewing" {
+          circle(cx, by + bob, r * 1.6 + r * 0.28 * sin(time * 3 + i), fill: alpha(led, 0.16))
+        }
+        line(cx, by - r * 1.24 + bob, cx, by - r * 0.92 + bob, stroke: alpha(led, 0.85), width: 2)
+        circle(cx, by - r * 1.36 + bob, r * 0.18, fill: led)
+        circle(cx, by + bob, r, fill: body)
+        circle(cx - r * 0.34, by - r * 0.14 + bob, r * 0.18, fill: background)
+        circle(cx + r * 0.34, by - r * 0.14 + bob, r * 0.18, fill: background)
+        rect(cx - r * 0.62, by + r * 0.9 + bob, r * 1.24, r * 0.6, radius: r * 0.3, fill: mix(body, foreground, 0.25))
+        let ws = words(a.name)
+        let cap = max(int(cw / 7), 6)
+        let cum = range(len(ws)).map(k => sum(take(ws, k + 1).map(w => len(w))) + k)
+        let k1 = clamp(count(cum.filter(c => c <= cap)) - 1, 0, max(len(ws) - 1, 0))
+        text(sub(join(take(ws, k1 + 1), " "), 0, cap), cx, by + r * 1.5 + 8, size: 12, align: center, color: foreground)
+        if len(ws) - k1 > 1 {
+          text(sub(join(drop(ws, k1 + 1), " "), 0, cap), cx, by + r * 1.5 + 21, size: 12, align: center, color: foreground)
+        }
+      }
+    }
+  }
+
+  // A single agent's bot, shown beside its health/status in the expanded view.
+  component Bot(agent, s) {
+    Canvas {
+      width: s
+      height: s
+      let body = mix(accent, background, 0.22)
+      let r = s * 0.26
+      let cx = s / 2
+      let by = s * 0.48
+      let i = max(indexOf(actors, agent), 0)
+      let bob = sin(time * 2.2 + i * 0.9) * r * 0.1
+      let on = contains(["working", "running"], agent.status)
+      let led = on ? green : agent.status == "reviewing" ? yellow : agent.health == "degraded" ? red : muted
+      if on || agent.status == "reviewing" {
+        circle(cx, by + bob, r * 1.6 + r * 0.28 * sin(time * 3 + i), fill: alpha(led, 0.16))
+      }
+      line(cx, by - r * 1.24 + bob, cx, by - r * 0.92 + bob, stroke: alpha(led, 0.85), width: 2)
+      circle(cx, by - r * 1.36 + bob, r * 0.18, fill: led)
+      circle(cx, by + bob, r, fill: body)
+      circle(cx - r * 0.34, by - r * 0.14 + bob, r * 0.18, fill: background)
+      circle(cx + r * 0.34, by - r * 0.14 + bob, r * 0.18, fill: background)
+      rect(cx - r * 0.62, by + r * 0.9 + bob, r * 1.24, r * 0.6, radius: r * 0.3, fill: mix(body, foreground, 0.25))
+    }
+  }
+
+  onTap: screen()
+
+  Column {
+    gap: 6
+    Row {
+      align: center
+      fill: width
+      Text { text: "miilo fleet"; style: label; color: accent; weight: 1 }
+      if snap != null {
+        Text { text: "${len(busy)}/${len(actors)}"; style: label; color: len(busy) > 0 ? green : muted; maxLines: 1; width: 60; align: end }
+      }
+      if len(needs) > 0 {
+        Text { text: "${len(needs)}!"; style: label; color: orange; maxLines: 1; width: 40; align: end }
+      }
+    }
+    Robots { list: actors; h: 110; maxn: 4 }
+    if !configured {
+      Text { text: "not connected"; style: body; color: muted }
+      Text { text: "tap to set the Miilo endpoint and token in the expanded view"; style: small; color: muted; maxLines: 3 }
+    }
+    // Work in flight, grouped by factory. Each factory header names the
+    // provider; its tasks sit underneath with a five-phase bar.
+    Column {
+      gap: 14
+      let laneIds = ids.filter(pid => any(lanes, w => w.providerId == pid))
+      for pid in laneIds key pid {
+        let col = palette[max(indexOf(ids, pid), 0) % 6]
+        let pname = get(find(provs, q => q.id == pid), "name", pid)
+        let group = lanes.filter(w => w.providerId == pid)
+        Column {
+          gap: 3
+          fill: width
+          Row {
+            gap: 6
+            align: center
+            fill: width
+            Spacer { width: 8; height: 8; radius: 4; background: col }
+            Text { text: pname; style: label; color: col; weight: 1; maxLines: 1 }
+          }
+          Column {
+            gap: 8
+            fill: width
+            for w in group.take(2) {
+              let j = max(indexOf(lanes, w), 0)
+              let pi = max(indexOf(phases, w.phase), 0)
+              let st = w.lifecycle
+              let sicon = st == "failed" ? "✗" : st == "waiting" ? "⏳" : st == "completed" ? "✓" : st == "active" ? "●" : "○"
+              let scol = st == "failed" ? red : st == "waiting" ? orange : (st == "completed" || st == "active") ? green : muted
+              Column {
+                gap: 2
+                fill: width
+                padding: [14, 0, 0, 0]
+                Row {
+                  gap: 6
+                  align: center
+                  fill: width
+                  Text { text: w.title; style: body; bold: true; weight: 1; maxLines: 1 }
+                  Text { text: "${w.phase} · ${st}"; style: label; color: scol; maxLines: 1; align: end }
+                }
+                Row {
+                  gap: 4
+                  align: center
+                  fill: width
+                  for s in range(5) {
+                    let fillc = s < pi ? col : s == pi ? alpha(col, 0.55 + 0.35 * sin(time * 3 + j)) : alpha(muted, 0.25)
+                    Spacer { weight: 1; height: 10; radius: 5; background: fillc }
+                  }
+                  Text { text: sicon; fontSize: 12; color: scol; width: 16; align: center }
+                }
+              }
+            }
+          }
+        }
+      }
+      if len(lanes) == 0 {
+        Text { text: snap == null ? "connecting…" : "no work in flight"; style: body; color: muted; align: center }
+      }
+    }
+  }
+
+  screen {
+    title: "miilo fleet"
+    Column {
+      scroll: true
+      gap: 14
+      Text { text: snap == null ? (configured ? "connecting…" : "not connected — set the endpoint below") : "${len(provs)} providers · ${len(actors)} agents · ${len(works)} work items"; style: body; color: snap == null && !configured ? orange : muted }
+
+      Text { text: "agents"; style: label; color: accent }
+      for a in actors key a.id {
+        let led = contains(["working", "running"], a.status) ? green : a.status == "reviewing" ? yellow : a.health == "degraded" ? red : muted
+        let prov = get(find(provs, q => q.id == a.providerId), "name", a.providerId)
+        let caps = join(a.capabilities ?? [], " · ")
+        Row {
+          gap: 10
+          align: center
+          fill: width
+          Bot { agent: a; s: 44 }
+          Column {
+            gap: 2
+            weight: 1
+            Row {
+              gap: 8
+              align: center
+              fill: width
+              Text { text: a.name; style: body; weight: 1; maxLines: 1 }
+              Text { text: "${a.health} · ${a.status}"; style: label; color: led; maxLines: 1 }
+            }
+            Text { text: caps == "" ? "${prov} · ${a.kind}" : "${prov} · ${a.kind} · ${caps}"; style: small; color: muted; maxLines: 1 }
+          }
+        }
+      }
+
+      Text { text: "work"; style: label; color: accent }
+      let screenIds = ids.filter(pid => any(works, w => w.providerId == pid))
+      for pid in screenIds key pid {
+        let col = palette[max(indexOf(ids, pid), 0) % 6]
+        let pname = get(find(provs, q => q.id == pid), "name", pid)
+        Column {
+          gap: 6
+          fill: width
+          Row {
+            gap: 8
+            align: center
+            fill: width
+            Spacer { width: 8; height: 8; radius: 4; background: col }
+            Text { text: pname; style: body; color: col; weight: 1; maxLines: 1 }
+          }
+          for w in works.filter(x => x.providerId == pid) key w.id {
+            let st = w.lifecycle
+            let sicon = st == "failed" ? "✗" : st == "waiting" ? "⏳" : st == "completed" ? "✓" : st == "active" ? "●" : "○"
+            let scol = st == "failed" ? red : st == "waiting" ? orange : (st == "completed" || st == "active") ? green : muted
+            Column {
+              gap: 2
+              fill: width
+              padding: [14, 0, 0, 0]
+              Row {
+                gap: 6
+                align: center
+                fill: width
+                Text { text: w.title; style: body; weight: 1; maxLines: 2 }
+                Text { text: "${w.phase} · ${st}"; style: label; color: scol; maxLines: 1; align: end }
+                Text { text: sicon; style: label; color: scol; width: 16; align: center }
+              }
+              Text { text: "${w.workspaceId} · ${w.providerState}"; style: small; color: muted; maxLines: 1 }
+            }
+          }
+        }
+      }
+
+      if len(attention) > 0 {
+        Text { text: "attention"; style: label; color: orange }
+        for item in attention key item.id {
+          let lc = item.level == "intervention" ? red : item.level == "approval" ? orange : yellow
+          Column {
+            gap: 2
+            Row {
+              gap: 6
+              align: center
+              fill: width
+              Text { text: upper(item.level); style: label; color: lc; maxLines: 1 }
+              Spacer { weight: 1 }
+              Text { text: item.reason; style: small; color: muted; maxLines: 1 }
+            }
+            Text { text: item.message; style: body; maxLines: 2 }
+            if len(item.actions ?? []) > 0 {
+              Text { text: join((item.actions ?? []).map(x => x.label), "  ·  "); style: small; color: accent; maxLines: 2 }
+            }
+          }
+        }
+      }
+
+      if len(attempts) > 0 {
+        Text { text: "activity"; style: label; color: accent }
+        for at in attempts key at.id {
+          let oc = join(evid.filter(e => e.attemptId == at.id).map(e => e.outcome), "/")
+          Row {
+            gap: 8
+            align: center
+            fill: width
+            Text { text: (len(oc) > 0 ? "${oc} · " : "") + (at.summary ?? at.taskId); style: small; weight: 1; maxLines: 1 }
+            Text { text: "${at.phase} · ${at.lifecycle}"; style: small; color: at.lifecycle == "failed" ? red : at.lifecycle == "active" ? green : muted; maxLines: 1 }
+          }
+        }
+      }
+
+      Text { text: "connection"; style: label; color: accent }
+      Column {
+        gap: 6
+        fill: width
+        Text { text: "endpoint"; style: small; color: muted }
+        Input { text: miiloUrl; placeholder: "http://host:port"; onSubmit: miiloUrl = value }
+        Text { text: "token"; style: small; color: muted }
+        Input { text: miiloToken; placeholder: "bearer token"; onSubmit: miiloToken = value }
+      }
+    }
+  }
+}

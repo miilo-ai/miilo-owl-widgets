@@ -1,0 +1,102 @@
+widget "miilo board" {
+  meta { owl: 5; description: "Work items grouped by lifecycle on a compact board"; version: "1.0"; license: "MIT"; category: "dev" }
+  page: 1
+  order: 9
+  size: 3x3
+  minSize: 2x2
+  padding: 10
+
+  // Reads any Miilo control plane through the Miilo CLI. Set the endpoint and
+  // token in the expanded view (tap the tile); the launcher keeps them, so this
+  // file stays free of anything personal.
+  state miiloUrl = "" persist
+  state miiloToken = "" persist
+  let configured = miiloUrl != ""
+  source doc_live = cmd(miiloUrl == "" ? "echo {}" : "MIILO_URL=\"${miiloUrl}\" MIILO_TOKEN=\"${miiloToken}\" miilo doctor --json") every 3s timeout 20s
+  let doc = doc_live
+  let data = doc == null ? null : parseJson(doc)
+  let snap = data == null ? null : data.snapshot
+  let works = snap == null ? [] : (snap.workItems ?? [])
+  let provs = snap == null ? [] : (snap.providers ?? [])
+
+  let ids = map(provs, p => p.id)
+  let palette = [blue, cyan, magenta, orange, red, green]
+  let lanes = ["queued", "active", "waiting", "reviewing", "failed"]
+
+  onTap: screen()
+
+  Canvas {
+    background: background
+    rect(0, 0, width, height, stroke: border, width: 1, radius: 14)
+
+    let headerTop = 14
+    let bodyTop = 86
+    text("miilo board", 14, headerTop, size: 30, bold: true, color: foreground)
+    let sub = !configured ? "not connected" : works.length == 0 ? "no work" : "${works.length} work item${works.length==1?"":"s"}"
+    text(sub, 14, headerTop + 22, size: 18, color: muted)
+
+    for l, i in lanes {
+      let x = 14 + i*114
+      let items = filter(works, w => (w.lifecycle ?? "") == l)
+      text(l, x, bodyTop-8, size: 16, bold: true, color: muted)
+      for it, j in take(items, 3) {
+        let y = bodyTop + j*24
+        let p = get(it, "providerId", "")
+        let col = palette[max(indexOf(ids, p), 0) % 6]
+        rect(x, y, 108, 20, radius: 4, stroke: col, width: 1, fill: alpha(col, 0.14))
+        text(sub(it.title, 0, 28), x+4, y+6, size: 14, color: foreground)
+      }
+    }
+    if (!configured) {
+      text("tap to set the Miilo endpoint", 14, height-20, size: 16, color: muted)
+    } else if (works.length > 0) {
+      text("open full board", 14, height-20, size: 16, color: muted)
+    }
+  }
+
+  screen {
+    Column {
+      gap: 12
+      padding: 20
+      Text { text: "board"; style: title; bold: true }
+      Text { text: works.length == 0 ? (configured ? "no work" : "not connected — set the endpoint below") : "${works.length} work items grouped by lifecycle"; style: body; color: works.length == 0 && !configured ? orange : muted }
+      Spacer { height: 4 }
+      for l in lanes {
+        let items = filter(works, w => (w.lifecycle ?? "") == l)
+        if (items.length > 0) {
+          Column {
+            gap: 8
+            Text { text: "${l} · ${items.length}"; style: label; bold: true; color: muted }
+            for it in items {
+              let col = palette[max(indexOf(ids, get(it,"providerId","")), 0) % 6]
+              Column {
+                gap: 4
+                padding: 10
+                radius: 10
+                background: alpha(border, 0.3)
+                Row { gap: 6; align: center
+                  Spacer { width: 8; height: 8; radius: 4; background: col }
+                  Text { text: get(find(provs, q => q.id == get(it,"providerId","")), "name", get(it,"providerId","")); style: small; color: col }
+                  Spacer { weight: 1 }
+                  Text { text: it.phase ?? ""; style: small; color: muted }
+                }
+                Text { text: it.title; style: body }
+                Text { text: it.id; style: small; color: muted }
+              }
+            }
+          }
+        }
+      }
+
+      Text { text: "connection"; style: label; color: accent }
+      Column {
+        gap: 6
+        fill: width
+        Text { text: "endpoint"; style: small; color: muted }
+        Input { text: miiloUrl; placeholder: "http://host:port"; onSubmit: miiloUrl = value }
+        Text { text: "token"; style: small; color: muted }
+        Input { text: miiloToken; placeholder: "bearer token"; onSubmit: miiloToken = value }
+      }
+    }
+  }
+}

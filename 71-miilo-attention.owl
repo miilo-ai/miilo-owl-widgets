@@ -1,0 +1,93 @@
+widget "miilo attention" {
+  meta { owl: 5; description: "Actionable attention items from Miilo control plane"; version: "1.0"; license: "MIT"; category: "dev" }
+  page: 1
+  order: 8
+  size: 3x3
+  minSize: 2x2
+  padding: 10
+
+  // Reads any Miilo control plane through the Miilo CLI. Set the endpoint and
+  // token in the expanded view (tap the tile); the launcher keeps them, so this
+  // file stays free of anything personal.
+  state miiloUrl = "" persist
+  state miiloToken = "" persist
+  let configured = miiloUrl != ""
+  source doc_live = cmd(miiloUrl == "" ? "echo {}" : "MIILO_URL=\"${miiloUrl}\" MIILO_TOKEN=\"${miiloToken}\" miilo doctor --json") every 3s timeout 20s
+  let doc = doc_live
+  let data = doc == null ? null : parseJson(doc)
+  let snap = data == null ? null : data.snapshot
+  let works = snap == null ? [] : (snap.workItems ?? [])
+  let attn = snap == null ? [] : (snap.attention ?? [])
+
+  let at_sorted = sortBy(attn, a => (a.level ?? "informational") == "intervention" ? 0 : ((a.level ?? "informational") == "approval" ? 1 : ((a.level ?? "informational") == "decision" ? 2 : 3)))
+  let at_limited = take(at_sorted, 12)
+
+  onTap: screen()
+
+  Canvas {
+    background: background
+    rect(0, 0, width, height, stroke: border, width: 1, radius: 14)
+    let headerTop = 14
+    let bodyTop = 86
+    text("miilo attention", 14, headerTop, size: 30, bold: true, color: foreground)
+    let sub = attn.length == 0 ? "no attention" : "${attn.length} item${attn.length==1?"":"s"}"
+    text(sub, 14, headerTop + 22, size: 18, color: muted)
+    if (attn.length == 0) {
+      text(configured ? "No attention items." : "Not connected — tap to set the Miilo endpoint.", 16, bodyTop, size: 18, color: muted)
+    } else {
+      for a, i in at_limited {
+        let y = bodyTop + i*34
+        let lvl = a.level ?? "informational"
+        let c = lvl == "intervention" ? red : (lvl == "approval" ? orange : (lvl == "decision" ? yellow : muted))
+        let subjectId = get(get(a, "subject", {}), "id", a.id)
+        let titleText = sub(get(find(works, q => q.id == subjectId), "title", subjectId), 0, 72)
+        text(lvl, 16, y, size: 18, color: c, bold: true)
+        text(titleText, 128, y, size: 18, color: foreground)
+        text(sub(a.message ?? "", 0, 160), 128, y+16, size: 16, color: muted)
+      }
+    }
+  }
+
+  screen {
+    Column {
+      gap: 12
+      padding: 20
+      Text { text: "attention"; style: title; bold: true }
+      Text { text: attn.length == 0 ? (configured ? "no attention" : "not connected — set the endpoint below") : "${attn.length} items, sorted by level"; style: body; color: attn.length == 0 && !configured ? orange : muted }
+      Spacer { height: 4 }
+      for a in at_sorted {
+        let lvl = a.level ?? "informational"
+        let c = lvl == "intervention" ? red : (lvl == "approval" ? orange : (lvl == "decision" ? yellow : muted))
+        let subjectId = get(get(a, "subject", {}), "id", a.id)
+        let titleText = get(find(works, q => q.id == subjectId), "title", subjectId)
+        Column {
+          gap: 6
+          padding: 12
+          radius: 12
+          background: alpha(border, 0.3)
+          Row {
+            gap: 8; align: center
+            Text { text: lvl; style: label; color: c; bold: true }
+            Spacer { weight: 1 }
+            Text { text: a.providerId ?? ""; style: small; color: muted }
+          }
+          Text { text: titleText; style: body }
+          if (a.message != null) { Text { text: a.message; style: body; color: muted } }
+          if (a.actions != null && len(a.actions) > 0) {
+            Text { text: "${len(a.actions)} action${len(a.actions)==1?"":"s"}"; style: small; color: muted }
+          }
+        }
+      }
+
+      Text { text: "connection"; style: label; color: accent }
+      Column {
+        gap: 6
+        fill: width
+        Text { text: "endpoint"; style: small; color: muted }
+        Input { text: miiloUrl; placeholder: "http://host:port"; onSubmit: miiloUrl = value }
+        Text { text: "token"; style: small; color: muted }
+        Input { text: miiloToken; placeholder: "bearer token"; onSubmit: miiloToken = value }
+      }
+    }
+  }
+}
