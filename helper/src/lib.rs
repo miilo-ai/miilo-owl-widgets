@@ -2,8 +2,10 @@
 pub mod action_policy;
 pub mod artifacts;
 pub mod config;
+pub mod desktop_install;
 pub mod display_names;
 pub mod graph;
+pub mod local_agents;
 pub mod operations;
 pub mod projection;
 pub mod setup;

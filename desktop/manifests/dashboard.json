@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "io.miilo.dashboard",
+  "name": "Miilo",
+  "version": "0.1.0",
+  "author": "Miilo",
+  "license": "MIT",
+  "description": "Animated automation widgets, dashboard, and work attention.",
+  "kinds": [
+    "overlay"
+  ],
+  "entryPoints": {
+    "overlay": "omarchy/Dashboard.qml"
+  }
+}

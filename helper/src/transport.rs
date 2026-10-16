@@ -32,8 +32,9 @@ impl Transport for Http {
             None => self.client.get(url),
         }
         .header("Accept", "application/json");
-        if !endpoint.token.is_empty() {
-            request = request.bearer_auth(&endpoint.token);
+        let credential = endpoint.credential()?;
+        if !credential.is_empty() {
+            request = request.bearer_auth(&credential);
         }
         let response = request
             .send()

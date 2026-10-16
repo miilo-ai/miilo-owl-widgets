@@ -58,12 +58,25 @@ fn add(
         id: name,
         url: safe_url(&ask(ui, "Miilo API URL: ")?)?,
         token: ui
-            .read("Bearer token (hidden; blank if not required): ", true)?
+            .read(
+                "Bearer token or @/absolute/credential-file (hidden; blank if not required): ",
+                true,
+            )?
             .ok_or("Setup cancelled")?,
+        token_file: None,
         providers: vec![],
         allow_actions: false,
         actor_names: Default::default(),
     };
+    if let Some(file) = endpoint.token.strip_prefix('@') {
+        let path = std::path::PathBuf::from(file);
+        if !path.is_absolute() {
+            return Err("Use @ followed by an absolute credential-file path".into());
+        }
+        endpoint.token_file = Some(path);
+        endpoint.token.clear();
+        endpoint.credential()?;
+    }
     let raw = http.request(&endpoint, "/v1/snapshot", None)?;
     valid_records(&raw)?;
     let providers = raw["providers"]

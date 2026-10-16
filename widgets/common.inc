@@ -70,7 +70,16 @@
       gap: 4
       align: center
       Box { width: 44; height: 44; align: center; onTap: setupOpen = !setupOpen
-        Text { text: "⚙"; width: 44; fontSize: 24; align: center; color: accent }
+        Canvas {
+          width: 24
+          height: 24
+          circle(12, 12, 7.2, stroke: foreground, width: 1.5)
+          circle(12, 12, 2.8, stroke: foreground, width: 1.5)
+          for i in [0, 1, 2, 3, 4, 5, 6, 7] {
+            let angle = i * 0.7853981634
+            line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
+          }
+        }
       }
       if len(allProviders) > 1 {
         Box { width: 44; height: 44; align: center; onTap: systemsOpen = !systemsOpen

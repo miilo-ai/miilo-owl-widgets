@@ -12,6 +12,24 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["local-agents"] => {
+            let home =
+                std::path::PathBuf::from(std::env::var_os("HOME").ok_or("Home unavailable")?);
+            let paths = std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default())
+                .collect::<Vec<_>>();
+            Ok(Some(miilo_owl::local_agents::detect(&home, &paths)))
+        }
+        ["install-desktop", root, mode] if matches!(*mode, "portable" | "omarchy") => {
+            miilo_owl::desktop_install::install(
+                std::path::Path::new(root),
+                &std::env::current_exe().map_err(|_| "Cannot locate helper")?,
+                &miilo_owl::desktop_install::Paths::from_env()?,
+                *mode == "omarchy",
+            )?;
+            Ok(Some(
+                json!({"status":"installed","activation":"explicit","mode":mode}),
+            ))
+        }
         ["setup"] => {
             setup::setup(&store, &http, &mut setup::Terminal)?;
             Ok(None)

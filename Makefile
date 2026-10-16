@@ -1,11 +1,10 @@
-.PHONY: assemble test check-owl build build-linux package
+.PHONY: assemble test check-owl check-desktop build build-linux package
 assemble:
-	python3 tools/assemble.py
+	cargo xtask assemble
 
 test:
 	cargo test --locked --manifest-path helper/Cargo.toml -j 2
-	cargo build --locked --manifest-path helper/Cargo.toml -j 2
-	MIILO_OWL_BINARY="$(CURDIR)/helper/target/debug/miilo-owl" python3 -m unittest discover -s tests -p 'test_*.py' -v
+	cargo test --locked --manifest-path xtask/Cargo.toml -j 2
 
 build:
 	cargo build --locked --release --manifest-path helper/Cargo.toml -j 2
@@ -17,4 +16,7 @@ package:
 	bash tools/package.sh
 
 check-owl:
-	python3 tools/validate.py
+	cargo xtask check-owl
+
+check-desktop:
+	cargo xtask check-desktop

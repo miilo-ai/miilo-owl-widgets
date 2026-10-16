@@ -14,6 +14,8 @@ pub struct Endpoint {
     pub url: String,
     #[serde(default)]
     pub token: String,
+    #[serde(default, rename = "tokenFile", skip_serializing_if = "Option::is_none")]
+    pub token_file: Option<PathBuf>,
     pub providers: Vec<String>,
     #[serde(default, rename = "allowActions")]
     pub allow_actions: bool,
@@ -23,6 +25,24 @@ pub struct Endpoint {
         skip_serializing_if = "std::collections::BTreeMap::is_empty"
     )]
     pub actor_names: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
+}
+
+impl Endpoint {
+    pub fn credential(&self) -> Result<String> {
+        let Some(path) = &self.token_file else {
+            return Ok(self.token.clone());
+        };
+        let mut token = String::new();
+        private_file(path)?
+            .take(4097)
+            .read_to_string(&mut token)
+            .map_err(|_| "Cannot read credential file")?;
+        let token = token.trim();
+        if token.is_empty() || token.len() > 4096 || token.chars().any(char::is_whitespace) {
+            return Err("Invalid credential file".into());
+        }
+        Ok(token.into())
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -69,6 +89,12 @@ pub fn validate(config: &Config) -> Result<()> {
             return Err("Endpoint names must be unique lowercase words/dashes".into());
         }
         safe_url(&e.url)?;
+        if e.token_file.is_some() && !e.token.is_empty() {
+            return Err("Choose a credential or a credential file, not both".into());
+        }
+        if e.token_file.as_ref().is_some_and(|p| !p.is_absolute()) {
+            return Err("Credential file paths must be absolute".into());
+        }
         if e.token.contains(['\r', '\n']) {
             return Err("Invalid credential".into());
         }

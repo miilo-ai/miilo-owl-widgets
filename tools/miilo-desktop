@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -d "$root/desktop" ]]; then
+  config="$root/desktop"
+  binary="${MIILO_OWL_BINARY:-$root/helper/target/debug/miilo-owl}"
+else
+  config="${XDG_DATA_HOME:-$HOME/.local/share}/miilo/desktop"
+  binary="${MIILO_OWL_BINARY:-${HOME}/.local/bin/miilo-owl}"
+fi
+case "${1:-dashboard}" in
+  dashboard)
+    if [[ -x "$binary" ]]; then export PATH="$(dirname -- "$binary"):$PATH"; fi
+    command -v miilo-owl >/dev/null || { echo 'Build or install miilo-owl first.' >&2; exit 1; }
+    command -v quickshell >/dev/null || { echo 'Quickshell is required for the desktop dashboard.' >&2; exit 1; }
+    exec quickshell --no-duplicate -p "$config"
+    ;;
+  omarchy-dashboard|omarchy-desktop)
+    surface="${1#omarchy-}"
+    exec omarchy-shell shell toggle "io.miilo.$surface" '{}'
+    ;;
+  --help|-h) echo 'miilo-desktop [dashboard|omarchy-dashboard|omarchy-desktop]';;
+  *) echo 'Unknown surface. Use --help.' >&2; exit 2;;
+esac

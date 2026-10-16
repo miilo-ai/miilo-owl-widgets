@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "io.miilo.bar",
+  "name": "Miilo",
+  "version": "0.1.0",
+  "author": "Miilo",
+  "license": "MIT",
+  "description": "Animated automation widgets, dashboard, and work attention.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "omarchy/BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Miilo",
+    "category": "AI",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

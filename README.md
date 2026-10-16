@@ -2,6 +2,10 @@
 
 Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
+Application logic, installation, assembly, validation orchestration, and tests are Rust. Run `make test` and `cargo xtask assemble`; Python is not required. OWL remains the shared declarative UI format. Its official Android compiler and the Linux Quickshell renderer are upstream platform tools.
+
+The Linux dashboard, native Omarchy bar and desktop tile, and existing-session connection flow are documented in [Miilo on Linux](docs/desktop.md).
+
 | Widget | Collapsed | Expanded |
 | --- | --- | --- |
 | Miilo · 3×2 | Responsive animated robot grid, per-system colors, and attention marks | Search and filter systems/agents, inspect tasks, evidence and diffs, and confirm advertised actions |
@@ -80,13 +84,14 @@ This uses official `owl-check` to validate installed widgets and, when supported
 ## Source layout
 
 - `widgets/*.inc`: small OWL source fragments (OWL itself has no imports).
-- `tools/assemble.py`: generates the three installable `.owl` files, assembled from small source fragments.
+- `cargo xtask assemble`: generates the three installable `.owl` files, assembled from small source fragments.
 - `helper/src`: Rust configuration, transport, projection, graph, aggregation, onboarding, and operations modules. `Transport` and `Console` ports keep HTTP and terminal details outside the application logic.
-- `helper/tests`: Rust boundary tests; `tests/test_*.py`: development-only black-box tests of the compiled binary.
+- `helper/tests`: Rust boundary, HTTP, concurrency, and installer tests of the compiled binary.
+- `xtask/src`: Rust assembly, fixture generation, official OWL validation orchestration, reference exports, and release-policy tooling.
 - `tools/Dockerfile.helper`, `tools/build-linux.sh`: pinned ARM64 Linux build environment, capped at two CPUs/2 GB during compilation.
 - `tools/package.sh`: packages the static helper, widgets and installer with SHA-256 checksums. No Python runtime is shipped.
 - `tests`: helper, HTTP, installer, and runtime fixtures.
-- `tools/reference.html`, `tools/render_reference.py`: browser layout references from evaluated OWL trees; not native screenshots.
+- `tools/reference.html`, `cargo xtask render-reference`: browser layout references from evaluated OWL trees; not native screenshots.
 - Numbered original PNGs under `previews`: before images, retained for comparison.
 
 Edit fragments, then run `make assemble`; do not edit generated OWL directly.
@@ -96,7 +101,7 @@ Design reference: [Omalauncher widget guidance](https://github.com/SimonSchubert
 ## Native helper development and migration
 
 ```sh
-make test                 # Rust tests + compiled CLI journeys; Python is a dev test tool only
+make test                 # Rust boundary, compiled CLI, installer and release-policy tests
 make build                # Build for your development machine
 make build-linux          # Docker: static aarch64-unknown-linux-musl, including on Apple Silicon
 make package              # dist/miilo-owl-widgets-1.3-linux-aarch64.tar.gz + SHA256SUMS

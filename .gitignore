@@ -5,3 +5,6 @@ dist/
 helper/target/
 helper/target-linux/
 bin/
+
+xtask/target/
+**/.errors/

@@ -2,7 +2,7 @@
 
 The current Miilo layout is stock-compatible OWL6. Cog and refresh share the search row; the system filter also appears when multiple systems are connected. Tapping search replaces the compact preview with a focused input and hides the adjacent toolbar controls so editing has more room. Submit or the checkmark restores the compact row without losing the query. Task/agent detail views retain a separate contextual back/settings/refresh row because those views have no search field.
 
-Stock OWL6 supports requesting Input focus but not focus/blur callbacks. This is an explicit editing state: dismissing the Android keyboard alone does not end editing; use submit or the checkmark. No launcher patch is required for this layout. The default installer and emulator use the same generated source. `tools/header-variant.py` is retained as a compatibility export; it no longer injects an OWL8 native header. Its optional preview-robots switch changes only the clearly labeled decorative examples.
+Stock OWL6 supports requesting Input focus but not focus/blur callbacks. This is an explicit editing state: dismissing the Android keyboard alone does not end editing; use submit or the checkmark. No launcher patch is required for this layout. The default installer and emulator use the same generated source. `cargo xtask header-variant` is retained as a compatibility export; it no longer injects an OWL8 native header. Its optional preview-robots switch changes only the clearly labeled decorative examples.
 
 ## Native close icon and historical patch
 

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "io.miilo.desktop",
+  "name": "Miilo",
+  "version": "0.1.0",
+  "author": "Miilo",
+  "license": "MIT",
+  "description": "Animated automation widgets, dashboard, and work attention.",
+  "kinds": [
+    "panel"
+  ],
+  "entryPoints": {
+    "panel": "omarchy/Desktop.qml"
+  }
+}

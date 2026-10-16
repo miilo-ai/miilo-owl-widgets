@@ -40,6 +40,6 @@ GitHub releases can remain private for rehearsal. Public registries, AUR and tap
 
 Trusted-publisher variables are confirmations of completed registry setup, not automatic account provisioning. Configure npm's publisher close to launch because a new configuration has a limited first-publish window. Do not supply both a static registry credential and an OIDC configuration unnecessarily. Runtime/provider/device tokens belong in user-managed credential files, not these secrets.
 
-Local checks: `python -m pip install -r .github/release-tools/requirements.txt`, then `python -m unittest discover -s .github/release-tools -p 'test_*.py'`. `lint_workflows.py` runs pinned Actionlint for workflow syntax/context; ShellCheck/Pyflakes remain separate checks. Linux/Windows/Omarchy/MSI installation and directory approval are not established by local macOS tests.
+Local checks: `cargo test --locked --manifest-path xtask/Cargo.toml`. `cargo xtask release lint-workflows` runs pinned Actionlint for workflow syntax/context; ShellCheck remain separate checks. Linux/Windows/Omarchy/MSI installation and directory approval are not established by local macOS tests.
 
 Sources: [GitHub token scope/events](https://docs.github.com/en/actions/concepts/security/github_token), [cargo-dist configuration](https://axodotdev.github.io/cargo-dist/book/reference/config.html), [Actionlint](https://github.com/rhysd/actionlint), and the inspected PII-Codex/Praxa release workflows. No upstream plugin directory approval is automated by these definitions.

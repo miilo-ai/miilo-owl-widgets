@@ -12,7 +12,7 @@ private class FixtureHost(val program: Program, fixture: String, val width: Doub
     init {
         program.globals.forEachIndexed { i, g ->
             if (g is Global.State) slots[i] = g.init(Env.root(this))
-            if (g is Global.Source && g.name == "feed") slots[i] = Obj(mapOf("ok" to TRUE, "out" to Str(File(fixture).readText())))
+            if (g is Global.Source && g.name == "feed") slots[i] = Obj(mapOf("ok" to Bool(true), "out" to Str(File(fixture).readText())))
         }
         val data = Json.parse(File(fixture).readText()) as Obj
         val snap = data.fields["snapshot"] as Obj
@@ -21,7 +21,7 @@ private class FixtureHost(val program: Program, fixture: String, val width: Doub
         val item = first("workItems")
         if (scenario in listOf("detail", "confirm", "interaction") && item != null) {
             state("selectedWork", item.fields["_key"] ?: Null)
-            state("evidenceOpen", TRUE)
+            state("evidenceOpen", Bool(true))
             if (scenario == "confirm") {
                 val action = (item.fields["actions"] as? Lst)?.items?.firstOrNull() as? Obj
                 state("proposed", action?.fields?.get("_key") ?: Str(""))
@@ -37,15 +37,15 @@ private class FixtureHost(val program: Program, fixture: String, val width: Doub
             state("workflowActor", first("actors")?.fields?.get("_key") ?: Str(""))
         }
         if (scenario == "left-hand") {
-            state("leftHanded", TRUE)
+            state("leftHanded", Bool(true))
             state("expandedSystem", first("providers")?.fields?.get("id") ?: Str(""))
         }
-        if (scenario == "preview") state("previewRobots", TRUE)
+        if (scenario == "preview") state("previewRobots", Bool(true))
         if (scenario == "colors") {
-            state("setupOpen", TRUE)
+            state("setupOpen", Bool(true))
             state("colorAgent", first("actors")?.fields?.get("_key") ?: Str(""))
         }
-        if (scenario == "needs") state("needsOnly", TRUE)
+        if (scenario == "needs") state("needsOnly", Bool(true))
         if (scenario == "search") state("query", Str(item?.fields?.get("title")?.toString()?.uppercase().orEmpty()))
         if (scenario == "no-match") state("query", Str("__no_such_work__"))
     }
@@ -109,7 +109,7 @@ fun main(args: Array<String>) {
             check(host.runs.size == index + 1 && host.runs.last().startsWith("miilo-owl action "))
             check(!click(p.screen.orEmpty(), Env.root(host), label)) { "Pending requests must disable actions" }
             state("reply", Str("{\"status\":\"accepted\",\"message\":\"Queued by provider\"}"))
-            state("requestPending", FALSE)
+            state("requestPending", Bool(false))
         }
         check(click(p.screen.orEmpty(), Env.root(host), "Approve"))
         state("proposalRevision", Str("stale-revision"))
