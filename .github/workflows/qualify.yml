@@ -1,0 +1,71 @@
+name: Candidate qualification
+'on':
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        default: ''
+    secrets: {}
+    outputs:
+      ready:
+        value: ${{ jobs.qualify.outputs.ready }}
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CARGO_BUILD_JOBS: '2'
+    outputs:
+      ready: ${{ steps.result.outputs.ready }}
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+        ref: ${{ inputs.ref || github.sha }}
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+      with:
+        python-version: '3.13'
+    - run: python -m pip install -r .github/release-tools/requirements.txt
+    - run: python .github/release-tools/lint_workflows.py
+    - run: python -m unittest discover -s .github/release-tools -p "test_*.py" -v
+    - run: python .github/release-tools/version.py --tag "$RELEASE_TAG"
+      env:
+        RELEASE_TAG: ${{ startsWith(inputs.ref, 'refs/tags/') && inputs.ref || startsWith(inputs.ref, 'v') && inputs.ref ||
+          '' }}
+    - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+      with:
+        toolchain: 1.96.1
+        components: rustfmt, clippy
+    - run: 'cargo fmt --manifest-path helper/Cargo.toml --check
+
+        cargo clippy --locked --manifest-path helper/Cargo.toml --all-targets -- -D warnings
+
+        make test
+
+        python tools/assemble.py
+
+        git diff --exit-code -- "*.owl"
+
+        bash -n install.sh tools/*.sh'
+    - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+      with:
+        distribution: temurin
+        java-version: '21'
+    - name: Compile with pinned official OWL checker
+      shell: bash
+      env:
+        OWL_URL: https://raw.githubusercontent.com/SimonSchubert/omarchy-widgets/34c08fd6a9de020a7a9fcd6f397d493c3351a8fd/tools/owl.jar
+        OWL_SHA256: bfc294234f6cc2ab2024271cb6d55b5259513db0647ac8f636c85997b4f5f0cf
+      run: 'curl --fail --silent --show-error --location "$OWL_URL" -o "$RUNNER_TEMP/owl.jar"
+
+        printf ''%s  %s\n'' "$OWL_SHA256" "$RUNNER_TEMP/owl.jar" | sha256sum -c -
+
+        for widget in *.owl; do java -jar "$RUNNER_TEMP/owl.jar" check "$widget"; done'
+    - run: echo "ready=$READY" >> "$GITHUB_OUTPUT"
+      id: result
+      env:
+        READY: 'true'

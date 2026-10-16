@@ -146,3 +146,7 @@ Actions are opt-in per connection in setup. With observation-only configuration,
 Search toolbar behavior and launcher-owned close icon: see [launcher-header.md](docs/launcher-header.md).
 
 Search shares one compact row with cog/refresh (and a system filter for multiple systems). Tap it to expand a focused input; submit or ✓ restores the controls without clearing the query. The stock launcher does not expose blur callbacks, so keyboard dismissal alone leaves editing active. This works with the default OWL6 install; no custom launcher is needed.
+
+## Release automation
+
+See [.github/RELEASING.md](.github/RELEASING.md) for private-repository rehearsals, manifest-driven tags, credential-missing skips and activation. Publication stays disabled until explicitly requested/configured.
