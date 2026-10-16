@@ -96,7 +96,7 @@ jobs:
         path: release
     - run: sha256sum -c SHA256SUMS
       working-directory: release
-    - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+    - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
       if: github.event.repository.private == false
       with:
         subject-path: release/*
