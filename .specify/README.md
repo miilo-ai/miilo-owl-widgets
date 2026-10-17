@@ -7,3 +7,5 @@ Repository responsibility: Local/remote consumer adapters and robot surfaces; na
 
 Acceptance status belongs in tasks.md with commands, commit, OS and evidence.
 A checklist is not proof. Do not publish/tag or change repository visibility automatically.
+
+Native animation design: [ORBIT-001](specs/005-orbit-presentation/spec.md) and its [checkpoints](specs/005-orbit-presentation/tasks.md).
