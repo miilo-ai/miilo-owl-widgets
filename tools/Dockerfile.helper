@@ -1,4 +1,4 @@
-FROM rust:1.96.1-bookworm@sha256:a339861ae23e9abb272cea45dfafde21760d2ce6577a70f8a926153677902663
+FROM rust:1.99.0-bookworm@sha256:114c7a4425406451c2866b6aafe69fe29b1b298832db1277d411ac73c82d04d6
 RUN apt-get update && apt-get install -y --no-install-recommends musl-tools git ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add aarch64-unknown-linux-musl
