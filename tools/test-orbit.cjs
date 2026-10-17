@@ -33,6 +33,17 @@ for (const path of [paths[0], ...paths.slice(2)]) for (const [x,y] of path.point
     const v=(-dx*Math.sin(tilt)+dy*Math.cos(tilt))/48;
     assert(Math.abs(u*u+v*v-1)<1e-9, 'Glow/rail must follow the same smooth ellipse');
 }
+// Both rails close, the secondary ellipse rocks without clipping, and owns task glyphs.
+const rocking = scene();
+assert.deepEqual(paths[1].points[0], paths[1].points.at(-1));
+assert.notDeepEqual(rocking.draw(.2)[0][1].points, rocking.draw(5)[0][1].points);
+for (let t=0; t<=20; t+=.5) {
+    const frame=rocking.draw(t)[0], cross=frame.filter(op=>op.op==='path')[1];
+    for(const [x,y] of cross.points) assert(x>=0 && x<=340 && y>=0 && y<=192, 'Cross rail must fit');
+}
+const icons=scene().render(1).filter(n=>n.kind==='Canvas'&&n.p?.height===14);
+assert(icons.length>0, 'State labels must have discreet icons');
+for(const icon of icons) assert(icon.draw(14,14).length>0);
 for(const light of [false,true]) {
     const s=scene({light});const a=s.draw(.2), b=s.draw(1.4);
     assert.equal(a.length,2);assert.notDeepEqual(a,b,'Full scene should move');

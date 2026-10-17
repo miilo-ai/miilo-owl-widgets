@@ -12,21 +12,29 @@
         let rx = max(30, min(width * 0.38, 142))
         let ry = 48
         let tilt = -0.12
+        // A 20-second, +/-45 degree rock; freeze with the existing motion policy.
+        let crossTilt = sin(clock * 2 * pi / 20 + pi / 4 + slot * 0.3) * pi / 4
         let points = items.map(w => {
           key: w._key,
+          lane: indexOf(items.map(q => q._key), w._key) % 2,
           angle: indexOf(items.map(q => q._key), w._key) * 2 * pi / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
           active: w.lifecycle == "active",
           attention: w.attention != "none" || w.lifecycle == "failed"
         }).map(p => {
+          key: p.key, angle: p.angle, active: p.active, attention: p.attention,
+          radius: p.lane == 0 ? rx : rx * 0.72,
+          rise: p.lane == 0 ? ry : 30,
+          tilt: p.lane == 0 ? tilt : crossTilt
+        }).map(p => {
           key: p.key, active: p.active, attention: p.attention,
           z: sin(p.angle),
-          px: cx + cos(p.angle) * rx * cos(tilt) - sin(p.angle) * ry * sin(tilt),
-          py: cy + cos(p.angle) * rx * sin(tilt) + sin(p.angle) * ry * cos(tilt)
+          px: cx + cos(p.angle) * p.radius * cos(p.tilt) - sin(p.angle) * p.rise * sin(p.tilt),
+          py: cy + cos(p.angle) * p.radius * sin(p.tilt) + sin(p.angle) * p.rise * cos(p.tilt)
         })
         let ring = range(129).map(i => {x: cos((i % 128) * 2 * pi / 128) * rx, y: sin((i % 128) * 2 * pi / 128) * ry}).map(p => [cx + p.x * cos(tilt) - p.y * sin(tilt), cy + p.x * sin(tilt) + p.y * cos(tilt)])
         path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1, cap: round)
-        let inner = range(97).map(i => [cx + cos((i % 96) * 2 * pi / 96) * rx * 0.72, cy + sin((i % 96) * 2 * pi / 96) * 26 - cos((i % 96) * 2 * pi / 96) * 14])
-        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8, cap: round)
+        let inner = range(129).map(i => {x: cos((i % 128) * 2 * pi / 128) * rx * 0.72, y: sin((i % 128) * 2 * pi / 128) * 30}).map(p => [cx + p.x * cos(crossTilt) - p.y * sin(crossTilt), cy + p.x * sin(crossTilt) + p.y * cos(crossTilt)])
+        path(inner, stroke: alpha(accent, offline ? 0.06 : 0.22), width: 1, cap: round)
         if moving && energized && slot < 3 {
           let cycle = (clock + slot * 1.7) % 5
           if cycle < 0.7 {

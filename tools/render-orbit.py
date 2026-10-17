@@ -39,7 +39,7 @@ problems = []
 engine.warnings.connect(lambda items: problems.extend(item.toString() for item in items))
 engine.rootContext().setContextProperty('widgetSource', (root / '70-miilo-fleet.owl').read_text())
 engine.rootContext().setContextProperty('sceneData', data)
-engine.setInitialProperties({'width': int(os.environ.get('MIILO_PREVIEW_WIDTH', '900'))})
+engine.setInitialProperties({'width': int(os.environ.get('MIILO_PREVIEW_WIDTH', '900')), 'height': int(os.environ.get('MIILO_PREVIEW_HEIGHT', '850'))})
 engine.load(QUrl.fromLocalFile(str(folder / 'orbit.qml')))
 if not engine.rootObjects():
     raise SystemExit('Orbit QML fixture failed to load')
@@ -64,6 +64,14 @@ def validate():
         QMetaObject.invokeMethod(window, 'advance', Qt.DirectConnection, Q_ARG('QVariant', 1.4))
         QTest.qWait(80)
         capture('orbit-next-frame.png')
+        if os.environ.get('MIILO_PREVIEW_RECORD') == '1':
+            frames = output / 'frames'
+            frames.mkdir(exist_ok=True)
+            # Deterministic source time, not a native frame-rate benchmark.
+            for index in range(241):
+                QMetaObject.invokeMethod(window, 'advance', Qt.DirectConnection, Q_ARG('QVariant', index / 12))
+                QTest.qWait(20)
+                capture('frames/%04d.png' % index)
         label = next(i for i in descendants(window.contentItem()) if i.property('text') == 'Review streaming checks')
         point = label.mapToScene(label.boundingRect().center())
         QTest.mouseClick(window, Qt.LeftButton, Qt.NoModifier, QPoint(round(point.x()), round(point.y())))

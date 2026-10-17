@@ -42,7 +42,12 @@
           align: center
           onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
           Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1 }
-          Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+          Row {
+            gap: 4
+            align: center
+            OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed" }
+            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+          }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }

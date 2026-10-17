@@ -487,21 +487,29 @@ widget "miilo" {
         let rx = max(30, min(width * 0.38, 142))
         let ry = 48
         let tilt = -0.12
+        // A 20-second, +/-45 degree rock; freeze with the existing motion policy.
+        let crossTilt = sin(clock * 2 * pi / 20 + pi / 4 + slot * 0.3) * pi / 4
         let points = items.map(w => {
           key: w._key,
+          lane: indexOf(items.map(q => q._key), w._key) % 2,
           angle: indexOf(items.map(q => q._key), w._key) * 2 * pi / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
           active: w.lifecycle == "active",
           attention: w.attention != "none" || w.lifecycle == "failed"
         }).map(p => {
+          key: p.key, angle: p.angle, active: p.active, attention: p.attention,
+          radius: p.lane == 0 ? rx : rx * 0.72,
+          rise: p.lane == 0 ? ry : 30,
+          tilt: p.lane == 0 ? tilt : crossTilt
+        }).map(p => {
           key: p.key, active: p.active, attention: p.attention,
           z: sin(p.angle),
-          px: cx + cos(p.angle) * rx * cos(tilt) - sin(p.angle) * ry * sin(tilt),
-          py: cy + cos(p.angle) * rx * sin(tilt) + sin(p.angle) * ry * cos(tilt)
+          px: cx + cos(p.angle) * p.radius * cos(p.tilt) - sin(p.angle) * p.rise * sin(p.tilt),
+          py: cy + cos(p.angle) * p.radius * sin(p.tilt) + sin(p.angle) * p.rise * cos(p.tilt)
         })
         let ring = range(129).map(i => {x: cos((i % 128) * 2 * pi / 128) * rx, y: sin((i % 128) * 2 * pi / 128) * ry}).map(p => [cx + p.x * cos(tilt) - p.y * sin(tilt), cy + p.x * sin(tilt) + p.y * cos(tilt)])
         path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1, cap: round)
-        let inner = range(97).map(i => [cx + cos((i % 96) * 2 * pi / 96) * rx * 0.72, cy + sin((i % 96) * 2 * pi / 96) * 26 - cos((i % 96) * 2 * pi / 96) * 14])
-        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8, cap: round)
+        let inner = range(129).map(i => {x: cos((i % 128) * 2 * pi / 128) * rx * 0.72, y: sin((i % 128) * 2 * pi / 128) * 30}).map(p => [cx + p.x * cos(crossTilt) - p.y * sin(crossTilt), cy + p.x * sin(crossTilt) + p.y * cos(crossTilt)])
+        path(inner, stroke: alpha(accent, offline ? 0.06 : 0.22), width: 1, cap: round)
         if moving && energized && slot < 3 {
           let cycle = (clock + slot * 1.7) % 5
           if cycle < 0.7 {
@@ -527,6 +535,35 @@ widget "miilo" {
         fill: true
         align: center
         Bot { agent: anchor; s: 93; slot: slot }
+      }
+    }
+  }
+
+  // Presentation only: labels and provider action policy remain authoritative.
+  component OrbitStateIcon(phase, attention, offline, failed) {
+    Canvas {
+      width: 14
+      height: 14
+      let ink = offline ? muted : accent
+      if offline {
+        circle(7, 7, 4.5, stroke: ink, width: 1)
+        line(3, 11, 11, 3, stroke: ink, width: 1)
+      } else if failed {
+        line(3.5, 3.5, 10.5, 10.5, stroke: ink, width: 1.3)
+        line(3.5, 10.5, 10.5, 3.5, stroke: ink, width: 1.3)
+      } else if attention != "none" {
+        line(7, 2.5, 7, 8, stroke: ink, width: 1.4)
+        circle(7, 11, 0.9, fill: ink)
+      } else if phase == "implementing" {
+        path([[4.5, 3], [1.5, 7], [4.5, 11]], stroke: ink, width: 1.1, cap: round)
+        path([[9.5, 3], [12.5, 7], [9.5, 11]], stroke: ink, width: 1.1, cap: round)
+        line(8, 3.5, 6, 10.5, stroke: ink, width: 1)
+      } else if contains(["verifying", "reviewing", "review"], phase) {
+        circle(6, 6, 3.5, stroke: ink, width: 1)
+        line(8.5, 8.5, 12, 12, stroke: ink, width: 1.2)
+      } else {
+        circle(7, 7, 4.5, stroke: ink, width: 1)
+        path([[7, 4], [7, 7], [9, 8]], stroke: ink, width: 1, cap: round)
       }
     }
   }
@@ -575,7 +612,12 @@ widget "miilo" {
           align: center
           onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
           Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1 }
-          Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+          Row {
+            gap: 4
+            align: center
+            OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed" }
+            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+          }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }

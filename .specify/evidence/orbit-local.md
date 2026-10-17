@@ -54,3 +54,24 @@ row with Quiet/Orbit right-aligned and 44 dp hit targets. Actual Qt screenshots
 inspected at 900 and 360 px; native row selection passed at both widths. View
 switching/persistence, task labels, renderer/motion/portrait and official syntax
 checks passed. Omarchy shell-specific gates are unchanged.
+
+## Crossed paths and state icons
+
+The secondary ellipse now rocks through +/-45 degrees over 20 seconds at normal
+pace. Alternating task glyphs follow the two exact ellipses. The primary rail and
+its travelling light retain identical geometry. Reduced/Off and stale sources
+freeze the secondary rail; motion never issues provider commands.
+
+Small accent-colored icons accompany state text: attention mark, implementation
+chevrons, verification magnifier, failed cross, stale slash and waiting clock.
+Labels remain visible and existing work-row selection opens the same detail view.
+
+Validated generated OWL geometry/closure/bounds, state icons, static motion modes,
+36 Linux evaluator scenarios, original portrait parity, official OWL syntax and
+actual Qt renders at 900px and 360px, including native detail selection.
+A deterministic 241-frame Qt recording covers a full 20-second cycle at 12fps.
+This is synthetic inventory with software Qt rendering, not native performance
+or provider-operation evidence. Installed Omarchy acceptance remains pending.
+
+Reproduce with `MIILO_PREVIEW_RECORD=1 MIILO_PREVIEW_HEIGHT=550 python3
+tools/render-orbit.py /tmp/orbit-capture` using the documented Qt environment.
