@@ -21,5 +21,5 @@ Legacy dashboard/desktop entry points need deliberate migration if still desired
 
 Widgets remains under EdyVision until its owner transfers it to miilo-ai. Do not
 pretend the transfer happened or change remotes before confirming it. All intended
-open-source repos can be opened together; private-application must remain private.
+open-source repos can be opened together after their release gates pass.
 No release has been made, no visibility changed and no marketplace issue submitted.

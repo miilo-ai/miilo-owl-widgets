@@ -18,7 +18,7 @@ miilo-local as a second binary; local import creates version-2 mode=local config
 snapshotFile and explicit sessions/groups. Local observer uses the shared runtime
 and atomic private cache; CE is absent. Widget helper connect-local handles the
 cache, not a URL/token. Existing remote connections and version-1 configurations
-remain intact. Use installed candidate binaries, not a private systems build.
+remain intact. Use the installed candidate binaries listed below.
 
 ## Validate and record
 
@@ -51,15 +51,14 @@ Do not commit credentials, private transcripts or raw screenshots with secrets.
 ## Sunday recording
 
 Capture expressive compact robots, native local import, clear groups, real natural
-updates and progressive detail. Voice/GenUI/action scenes are conditional on their
-separate qualified paths; do not simulate unsupported behavior. Use a sanitized
+updates and progressive detail. Action scenes require a separately qualified provider; do not simulate unsupported behavior. Use a sanitized
 demo workspace. Report blockers immediately with exact redacted error and scope.
 
 ## Candidate source and commands
 
 Fetch `codex/standalone-runtime` in SDK, CLI, CE, widgets and systems. Preserve
 your current uncommitted work; do not reset it. CLI/CE resolve the full SDK commit
-from GitHub, not a private systems path. Until public, use your existing authorized
+from the declared GitHub source. Until public, use your existing authorized
 SSH identity or the documented contents-read credential; never paste secrets.
 
 Build CLI: `cargo build --workspace --locked -j2` in miilo-cli.
@@ -77,7 +76,7 @@ service environment. File updates use native notifications plus a 5-second cache
 heartbeat; stale cutoff is 15 seconds. Test future groups through the 60-second
 discovery cycle, including an excluded pre-existing session.
 
-Do not install the old private systems `miilo-local` binary over the public one.
+Do not replace the candidate `miilo-local` binary with an incompatible legacy build.
 Do not stop production CE/services just to test absence; use isolated XDG paths
 and make the CE executable unavailable for the test. Record any service readiness
 failure exactly (redacted). SDK/CLI/CE source candidates are 0.2.0; helper is 1.4.0.

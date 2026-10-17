@@ -76,32 +76,16 @@ removed independently; keep `~/.config/miilo-owl` if you want to retain connecti
 
 ## Connect existing local agents
 
-The dashboard offers **I found your local agent setups** when it detects existing
-agent folders. Choose **Review sessions**, select the existing Codex or Cursor
-sessions you want, and choose **Import selected**. The native `miilo-local`
-connector lives in the sibling `private-application/bridges/desktop` project.
+The dashboard detects existing agent setups and offers **Review sessions**.
+Detection reads filesystem metadata only. It does not enroll sessions, open
+credentials or start work. Select existing Codex/Cursor sessions explicitly.
+Devin/Claude setup detection does not imply live observation support.
 
-Opening the dashboard automatically detects known Codex, Cursor, Devin, and
-Claude Code folders and executables. This reads filesystem metadata only and
-shows their locations; detection does not open credentials, read transcripts,
-start agent commands, or register sessions. **Not now** remembers the dismissal;
-a newly detected setup triggers another invitation. **Local agents** in the
-dashboard header lets you return to session selection.
-
-Build that binary with `cargo build -p miilo-local -j 2` from private-application. Build
-`miilo-ce` from its repository. Supply both binaries when installing:
-
-```sh
-MIILO_LOCAL_BINARY=/path/to/miilo-local MIILO_CE_BINARY=/path/to/miilo-ce \
-  tools/install-desktop.sh omarchy
-```
-
-Confirmed imports save selected sessions in `~/.config/miilo/desktop-local.json`,
-start the `miilo-local-desktop.service` systemd user service with a loopback-only
-CE, and connect the widget automatically. No terminal setup is needed. Existing
-widget endpoints are preserved, actions remain disabled, and credentials stay in
-protected files. Only explicitly selected sessions are enrolled; later imports
-add to that selection. Agent credentials stay in their original locations.
+Install `miilo-local` from miilo-cli and `miilo-owl` from this repository. Use the
+candidate versions and native instructions in the separate Omarchy plugin handoff.
+Confirmed local imports write version-2 `~/.config/miilo/local.json`, start the
+owned collector service and connect its private snapshot cache. CE is not required.
+Existing remote endpoints and version-1 configurations remain intact.
 
 Sessions are grouped by agent and project folder. **Add group** creates named
 rules such as Codex under `~/Work` (enter the absolute path), or projects matching
