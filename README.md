@@ -203,3 +203,10 @@ an approval receipt. Event-driven completion/recovery reactions remain planned.
 Validation: official OWL syntax checks, Linux evaluator scenarios and controlled
 clock draw tests. Android and live Omarchy visual/performance checks remain native
 testing gates. `make check-desktop` includes the robot drawing regressions.
+
+### Negotiated compression
+
+The helper now decodes negotiated gzip/Brotli/zstd JSON with the same decoded
+response limit. See [compression validation](docs/compression.md) for the real
+socket/ARM64 Linux checks and local CLI export/restore workflow. Live speech and
+SSE are not implicitly compressed; no provider account or observation state changes.
