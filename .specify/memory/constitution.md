@@ -1,5 +1,9 @@
 # Engineering constitution
 
+Use succinct `feat/<topic>`, `fix/<topic>` or `chore/<topic>` branches for new
+work. Keep implementation and testing commits off `main`; preserve other agents'
+changes and integrate branches deliberately when requested.
+
 ## Dependency direction
 
 - Domain and application use cases depend inward on contracts and explicit ports.
