@@ -10,6 +10,7 @@ required for building, testing, installing, or releasing this repository.
 make test
 make assemble
 make check-desktop
+MIILO_LOCAL_EXECUTABLE=/path/to/miilo-local make check-keyboard
 make build
 ```
 
@@ -69,15 +70,17 @@ removed independently; keep `~/.config/miilo-owl` if you want to retain connecti
 
 ## Connect existing local agents
 
-The dashboard's **Connect local agents** control runs the native `miilo-local`
-setup. Its source belongs in the sibling `private-application/bridges/desktop` project,
-with the existing Codex and Cursor observation adapters.
+The dashboard offers **I found your local agent setups** when it detects existing
+agent folders. Choose **Review sessions**, select the existing Codex or Cursor
+sessions you want, and choose **Import selected**. The native `miilo-local`
+connector lives in the sibling `private-application/bridges/desktop` project.
 
 Opening the dashboard automatically detects known Codex, Cursor, Devin, and
 Claude Code folders and executables. This reads filesystem metadata only and
-displays **Found locally**; it does not open credentials, read transcripts, start
-agent commands, or register sessions. The settings cog uses a drawn monochrome
-outline and the desktop controls use square, flat theme colors.
+shows their locations; detection does not open credentials, read transcripts,
+start agent commands, or register sessions. **Not now** remembers the dismissal;
+a newly detected setup triggers another invitation. **Local agents** in the
+dashboard header lets you return to session selection.
 
 Build that binary with `cargo build -p miilo-local -j 2` from private-application. Build
 `miilo-ce` from its repository. Supply both binaries when installing:
@@ -85,17 +88,43 @@ Build that binary with `cargo build -p miilo-local -j 2` from private-applicatio
 ```sh
 MIILO_LOCAL_BINARY=/path/to/miilo-local MIILO_CE_BINARY=/path/to/miilo-ce \
   tools/install-desktop.sh omarchy
-miilo-local setup /path/to/project
-miilo-local run
-miilo-owl setup
 ```
 
-Setup discovers existing Codex sessions and Cursor transcripts, asks which to
-observe, and stores their explicit selection in `~/.config/miilo/local.json`.
-It can own a loopback-only CE process, or use an existing CE. In widget setup,
-add the CE endpoint, enter `@/absolute/path/to/ce.token` instead of copying the
-credential, then select its registered providers. Actions remain disabled for CE.
-Credential-file references are reread on each HTTP request so rotation works.
+Confirmed imports save selected sessions in `~/.config/miilo/desktop-local.json`,
+start the `miilo-local-desktop.service` systemd user service with a loopback-only
+CE, and connect the widget automatically. No terminal setup is needed. Existing
+widget endpoints are preserved, actions remain disabled, and credentials stay in
+protected files. Only explicitly selected sessions are enrolled; later imports
+add to that selection. Agent credentials stay in their original locations.
+
+Sessions are grouped by agent and project folder. **Add group** creates named
+rules such as Codex under `~/Work` (enter the absolute path), or projects matching
+`vave-*` / `miilo-*` beneath that folder. `*` and `?` match project-name text.
+Group headings select all supported sessions; individual selections remain
+available, and the +/- control folds a group. **Edit group** changes or removes
+rules. Changes are saved only when you confirm **Apply groups & import**.
+
+**Include future matching sessions** is off by default. Explicitly opted-in rules
+are checked every minute and enroll newly discovered matching sessions, up to
+100 total. Existing unchecked sessions stay excluded. Disabling or removing a
+rule stops future enrollment after confirmation and retains existing selections.
+Cursor folder grouping requires its workspace path to resolve within the chosen
+discovery directory; unresolved workspaces remain individually selectable.
+
+Keyboard controls: **Tab / Shift+Tab** move between controls; **Up / Down** move
+through groups and sessions; **Space** toggles a selection; **Enter** folds a group
+or activates a control; **Left / Right** collapse/expand a group; **Escape** goes
+back or closes the dashboard. **Ctrl+L** opens local agents, **Ctrl+G** adds a
+group, **Ctrl+R** rescans, and **Ctrl+Enter** confirms import. Focus uses accent
+markers and a tint; selection stays visible through checkboxes, with a dash for
+partially selected groups. The Omarchy dashboard reads native shell interaction
+tokens; portable hosts use theme-derived defaults. `make check-keyboard` sends actual key events through QtTest inside
+Quickshell, using isolated metadata and the real Rust group preview command.
+
+To stop background observation, run
+`systemctl --user disable --now miilo-local-desktop.service`.
+The separate `miilo-local setup` terminal workflow remains available for custom
+CE connections; it uses `~/.config/miilo/local.json`.
 
 Devin discovery uses its official directory-scoped list command. Its live
 observation adapter is not implemented and is labelled discovery-only. No agent
@@ -106,10 +135,12 @@ movement reflects recently observed public activity, not authoritative execution
 
 On this Linux x86-64 Omarchy machine: Rust suites, credential-file rotation, 36
 Linux evaluator scenarios, 264 official OWL tile/screen evaluations of all three widgets,
-headless Qt rendering, native manifest validation, dashboard and desktop-layer
+headless Qt rendering and invitation/review/import UI automation, native manifest validation, dashboard and desktop-layer
 loading, and a Rust journey through a real temporary CE process passed. The CE
 journey used two synthetic sessions and checked public/private content boundaries,
 robot/work association, independent disconnect, and rotated/rejected credentials.
+An isolated import journey also checks selection validation, service startup,
+automatic widget configuration, and preservation of existing endpoints.
 Read-only discovery found eight existing local Codex sessions. No user's sessions
 were automatically enrolled. Devin returned no sessions in the two projects
 checked; that does not establish that none exist elsewhere.

@@ -1,29 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
-import Quickshell.Io
 
 FloatingWindow {
     id: root
     title: "Miilo"
-    implicitWidth: 720
-    implicitHeight: 760
+    // Initial floating size only; the compositor owns the actual viewport.
+    implicitWidth: screen ? Math.round(screen.width * 0.65) : 0
+    implicitHeight: screen ? Math.round(screen.height * 0.8) : 0
     property alias surface: surface
-    property var localAgents: []
-    readonly property string detectedNames: localAgents.filter(a => a.found).map(a => a.name).join(" · ")
-    Process {
-        command: ["miilo-owl", "local-agents"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    root.localAgents = JSON.parse(text).agents || [];
-                } catch (error) {
-                    root.localAgents = [];
-                }
-            }
-        }
-    }
+    property alias importer: importer
+    property int importedCount: 0
+    property QtObject interactionTheme: InteractionTheme { widget: surface.widget }
+    Shortcut { sequence: "Ctrl+L"; enabled: root.visible && !importer.busy; onActivated: importer.review() }
+    Shortcut { sequence: "Escape"; enabled: root.visible && !importer.visible; onActivated: root.visible = false }
     Item {
         anchors.fill: parent
         Rectangle {
@@ -33,7 +23,7 @@ FloatingWindow {
                 left: parent.left
                 right: parent.right
             }
-            height: 76
+            height: 56
             color: surface.widget.ink("background")
             Text {
                 anchors {
@@ -46,44 +36,34 @@ FloatingWindow {
                 font.pixelSize: 18
             }
             Button {
-                id: connectButton
+                id: localButton
                 anchors {
                     right: parent.right
                     rightMargin: 12
                     verticalCenter: parent.verticalCenter
                 }
-                text: "Connect local agents"
+                text: "Local agents · Ctrl+L"
+                focusPolicy: Qt.StrongFocus
+                Keys.onReturnPressed: clicked()
                 implicitHeight: 36
                 horizontalPadding: 12
-                onClicked: Quickshell.execDetached(["xdg-terminal-exec", "miilo-local", "setup"])
+                onClicked: importer.review()
+                enabled: !importer.busy
                 flat: true
                 background: Rectangle {
-                    color: connectButton.hovered ? surface.widget.ink("lighter_background") : "transparent"
-                    border.color: surface.widget.ink("muted")
+                    color: localButton.down ? root.interactionTheme.pressedFill : localButton.activeFocus ? root.interactionTheme.focusFill : localButton.hovered ? root.interactionTheme.hoverFill : "transparent"
+                    border.color: root.interactionTheme.border
                     border.width: 1
                     radius: 0
+                    Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: parent.width - 16; height: 2; visible: localButton.activeFocus; color: root.interactionTheme.accent }
                 }
                 contentItem: Text {
-                    text: connectButton.text
-                    color: surface.widget.ink("foreground")
+                    text: localButton.text
+                    color: localButton.activeFocus ? root.interactionTheme.focusText : root.interactionTheme.foreground
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-            }
-            Text {
-                anchors {
-                    left: parent.left
-                    right: connectButton.left
-                    bottom: parent.bottom
-                    leftMargin: 16
-                    rightMargin: 12
-                    bottomMargin: 8
-                }
-                text: root.detectedNames ? "Found locally: " + root.detectedNames : "Connect existing sessions on this computer"
-                color: surface.widget.ink("foreground")
-                font.pixelSize: 11
-                elide: Text.ElideRight
             }
         }
         MiiloSurface {
@@ -94,10 +74,25 @@ FloatingWindow {
                 left: parent.left
                 right: parent.right
             }
-            active: root.visible
+            active: root.visible && !importer.visible
+            visible: !importer.visible
             expanded: true
+            configureLocal: () => importer.review()
+            interactionTheme: root.interactionTheme
             focus: true
             Keys.onEscapePressed: root.visible = false
+        }
+        LocalImport {
+            id: importer
+            anchors.fill: surface
+            widget: surface.widget
+            theme: root.interactionTheme
+            active: root.visible
+            onVisibleChanged: if (!visible && root.visible) localButton.forceActiveFocus()
+            onConnected: count => {
+                root.importedCount = count;
+                surface.widget.refresh();
+            }
         }
     }
     onVisibleChanged: if (visible && surface.widget.program)

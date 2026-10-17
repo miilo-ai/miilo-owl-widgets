@@ -8,6 +8,8 @@ Item {
     id: root
     property bool active: visible
     property bool expanded: false
+    property var configureLocal: null
+    property var interactionTheme: null
     property string widgetPath: Quickshell.env("MIILO_WIDGET_PATH") || decodeURIComponent(String(Qt.resolvedUrl("70-miilo-fleet.owl")).replace(/^file:\/\//, ""))
     readonly property alias widget: widget
     // Theme muted colors often target borders; lift text to readable contrast.
@@ -54,11 +56,13 @@ Item {
         host: host
         palette: root.owlPalette
         active: root.active
+        configureLocal: root.configureLocal
+        interactionTheme: root.interactionTheme
         cols: 3
         rows: 2
         dp: 1
-        screenWidth: root.width - 24
-        screenHeight: root.height - 24
+        screenWidth: Math.max(1, width)
+        screenHeight: Math.max(1, height)
         onScreenRequested: root.expanded = true
         onScreenClosed: root.expanded = false
         onProgramChanged: if (program && root.expanded) Qt.callLater(openScreen)

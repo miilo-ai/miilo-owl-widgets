@@ -1,4 +1,4 @@
-.PHONY: assemble test check-owl check-desktop build build-linux package
+.PHONY: assemble test check-owl check-desktop check-keyboard build build-linux package
 assemble:
 	cargo xtask assemble
 
@@ -20,3 +20,6 @@ check-owl:
 
 check-desktop:
 	cargo xtask check-desktop
+
+check-keyboard:
+	tools/test-desktop-keyboard.sh

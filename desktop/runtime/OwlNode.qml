@@ -30,6 +30,10 @@ Item {
   readonly property string kind: root.node ? String(root.node.kind) : ""
   readonly property var children_: root.node && root.node.c ? root.node.c : []
   readonly property real dp: root.widget ? root.widget.dp : 1
+  activeFocusOnTab: !!root.handlers.onTap && root.kind !== "Canvas"
+  Keys.onSpacePressed: event => { if (root.handlers.onTap) { root.handlers.onTap(width / root.dp / 2, height / root.dp / 2); event.accepted = true } }
+  Keys.onReturnPressed: event => { if (root.handlers.onTap) { root.handlers.onTap(width / root.dp / 2, height / root.dp / 2); event.accepted = true } }
+  Keys.onEnterPressed: event => { if (root.handlers.onTap) { root.handlers.onTap(width / root.dp / 2, height / root.dp / 2); event.accepted = true } }
   readonly property var pad: L.padding(root.p.padding)
   readonly property real fixedW: L.fixedWidth(root.p)
   readonly property real fixedH: L.fixedHeight(root.p)
@@ -95,6 +99,15 @@ Item {
   }
 
   // ------------------------------------------------------------- content
+  Rectangle {
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 3
+    height: Math.min(24 * root.dp, root.height)
+    z: 100
+    visible: root.activeFocus
+    color: root.widget ? root.widget.ink("accent") : "white"
+  }
 
   Loader {
     id: body
@@ -686,9 +699,29 @@ Item {
 
   Component {
     id: terminalC
-    OwlTerminal {
-      node: root.node
-      widget: root.widget
+    Loader {
+      sourceComponent: root.widget && root.widget.configureLocal && root.p.command === "miilo-owl setup" ? nativeSetupC : legacySetupC
+      Component {
+        id: nativeSetupC
+        Rectangle {
+          color: root.widget.ink("background")
+          activeFocusOnTab: true
+          Rectangle { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; width: 3; height: 24; visible: parent.activeFocus; color: root.widget.ink("accent") }
+          Keys.onReturnPressed: root.widget.configureLocal()
+          Keys.onSpacePressed: root.widget.configureLocal()
+          Component.onCompleted: Qt.callLater(root.widget.configureLocal)
+          Text {
+            anchors.centerIn: parent
+            text: "Import local agents"
+            color: root.widget.ink("foreground")
+          }
+          MouseArea { anchors.fill: parent; onClicked: root.widget.configureLocal() }
+        }
+      }
+      Component {
+        id: legacySetupC
+        OwlTerminal { node: root.node; widget: root.widget }
+      }
     }
   }
 
@@ -756,6 +789,7 @@ Item {
       border.color: root.widget ? root.widget.alpha(root.widget.ink("foreground"), field.activeFocus ? 0.5 : 0.2) : "grey"
       TextInput {
         id: field
+        activeFocusOnTab: true
         anchors.fill: parent
         anchors.margins: 6 * root.dp
         verticalAlignment: TextInput.AlignVCenter

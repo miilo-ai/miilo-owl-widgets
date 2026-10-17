@@ -6,6 +6,7 @@ pub mod desktop_install;
 pub mod display_names;
 pub mod graph;
 pub mod local_agents;
+pub mod local_import;
 pub mod operations;
 pub mod projection;
 pub mod setup;

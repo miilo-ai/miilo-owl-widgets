@@ -10,11 +10,12 @@ Item {
     function close() { opened = false }
     function toggle() { opened = !opened }
     PanelWindow {
+        id: panel
         visible: root.opened
         anchors { bottom: true; right: true }
         margins { bottom: 24; right: 24 }
-        implicitWidth: surface.expanded ? 620 : 260
-        implicitHeight: surface.expanded ? 720 : 180
+        implicitWidth: screen ? Math.max(1, Math.round((screen.width - margins.right) * (surface.expanded ? 0.45 : 0.18))) : 0
+        implicitHeight: screen ? Math.max(1, Math.round((screen.height - margins.bottom) * (surface.expanded ? 0.8 : 0.2))) : 0
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.keyboardFocus: surface.expanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None

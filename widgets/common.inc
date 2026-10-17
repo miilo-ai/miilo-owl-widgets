@@ -128,7 +128,7 @@
     if setupOpen {
       Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
       Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
-      Terminal { command: "miilo-owl setup"; height: 340 }
+      Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
       Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
       Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
     }

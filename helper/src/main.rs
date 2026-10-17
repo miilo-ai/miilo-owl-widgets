@@ -17,7 +17,27 @@ fn run(args: &[String]) -> Result<Option<Value>> {
                 std::path::PathBuf::from(std::env::var_os("HOME").ok_or("Home unavailable")?);
             let paths = std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default())
                 .collect::<Vec<_>>();
-            Ok(Some(miilo_owl::local_agents::detect(&home, &paths)))
+            let mut detected = miilo_owl::local_agents::detect(&home, &paths);
+            let fingerprint = miilo_owl::key(&detected["agents"]);
+            let dismissed =
+                miilo_owl::config::private_file(&store.directory.join("local-discovery.json"))
+                    .ok()
+                    .and_then(|file| {
+                        serde_json::from_reader::<_, Value>(std::io::Read::take(file, 4096)).ok()
+                    })
+                    .is_some_and(|value| value["fingerprint"] == fingerprint);
+            detected["fingerprint"] = json!(fingerprint);
+            detected["dismissed"] = json!(dismissed);
+            Ok(Some(detected))
+        }
+        ["dismiss-local", fingerprint]
+            if fingerprint.len() == 32 && fingerprint.bytes().all(|b| b.is_ascii_hexdigit()) =>
+        {
+            store.write("local-discovery.json", &json!({"fingerprint":fingerprint}))?;
+            Ok(Some(json!({"status":"saved"})))
+        }
+        ["connect-local", path] => {
+            miilo_owl::local_import::connect(&store, &http, std::path::Path::new(path)).map(Some)
         }
         ["install-desktop", root, mode] if matches!(*mode, "portable" | "omarchy") => {
             miilo_owl::desktop_install::install(

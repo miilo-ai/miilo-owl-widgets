@@ -30,6 +30,9 @@ Item {
   property var palette: ({})
   // Sources run and animations play only while this is true: the board is up.
   property bool active: false
+  // Desktop hosts can replace the shared terminal setup with native onboarding.
+  property var configureLocal: null
+  property var interactionTheme: null
   // The tile in grid cells, and one cell's side in px.
   property int cols: 3
   property int rows: 2
