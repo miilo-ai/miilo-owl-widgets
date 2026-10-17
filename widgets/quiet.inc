@@ -38,7 +38,7 @@
         Column {
           align: center
           gap: 2
-          onTap: { expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
+          onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
           QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: screenWidth < 360 ? 72 : 88 }
           Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
         }
@@ -50,7 +50,7 @@
   component QuietSystemTasks(provider, list) {
     let team = actors.filter(a => a.providerId == provider.id)
     let tasks = list.filter(w => w.providerId == provider.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
-    Button { text: "← Systems"; onTap: { expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
+    Button { text: inspectionView == "orbit" ? "← Back to Orbit" : "← Systems"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
     Text { text: provider.name; style: body; maxLines: 2 }
     Flow {
       fill: width

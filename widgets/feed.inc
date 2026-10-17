@@ -64,7 +64,7 @@
           Column {
             align: center
             gap: 2
-            onTap: { expandedSystem = a.providerId; workflowActor = (a._preview ?? false) ? "" : a._key; selectedActor = ""; selectedWork = ""; needsOnly = false; query = ""; pageSize = 5; screen() }
+            onTap: { inspectionView = observatoryView; expandedSystem = a.providerId; workflowActor = (a._preview ?? false) ? "" : a._key; selectedActor = ""; selectedWork = ""; needsOnly = false; query = ""; pageSize = 5; screen() }
             Box {
               width: robotSize + 10
               height: robotSize

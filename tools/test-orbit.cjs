@@ -114,22 +114,7 @@ assert(many.render(1).some(n=>n.p?.text==='+1 task · inspect system'));
 many.set('orbitPage',8);assert.equal(many.draw(.2).length,2);
 many.data.snapshot.providers=many.data.snapshot.providers.slice(0,1);many.update();assert.equal(many.draw(.2).length,1,'Page clamps after removal');
 const none=scene({count:0});assert(none.render(1).some(n=>n.p?.text==='No systems to display'));
-// Orbit clusters must expose the same task drill-down as Quiet robots.
-for (const work of [0, 1, 9]) {
-    const tileScene=scene({count:2,work});
-    const tile=tileScene.render(1).find(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.kind==='Row'&&c.c?.some(t=>t.p?.text==='System 0')));
-    assert(tile,'Animated Orbit tile has an activation handler');
-    tile.h.onTap(0,0);
-    assert.equal(tileScene.instance.values[tileScene.slot('expandedSystem')],'p0');
-    assert.equal(tileScene.instance.values[tileScene.slot('observatoryView')],'orbit','Inspection preserves the chosen Orbit preference');
-    const detail=tileScene.render(2);
-    assert(detail.some(n=>n.p?.text==='← Systems'),'Tile opens system task list');
-    assert(!detail.some(n=>n.p?.text==='Task p1 0'),'Other systems stay excluded');
-    assert(detail.some(n=>n.p?.text===(work ? 'Task p0 0' : 'No work in flight')));
-    detail.find(n=>n.p?.text==='← Systems').h.onTap(0,0);
-    assert.equal(tileScene.draw(3).length,2,'Back returns to the Orbit tiles');
-    assert.deepEqual(tileScene.commands,[],'Navigation must not invoke a provider');
-}
+require('./test-orbit-navigation.cjs')(scene);
 const quiet=scene({view:'quiet'});assert.equal(quiet.draw(1).length,0,'Quiet must retain the current work view');
 const quietBots = s => s.render(1).filter(n => n.kind === 'Canvas' && n.p?.height === 88);
 assert.equal(quietBots(quiet).length, 2, 'Quiet initially shows the robot fleet');
