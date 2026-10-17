@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
                     advance(index/12.0);capture(QString("frames/%1.png").arg(index,4,10,QChar('0')));
                 }
             }
-            if(qEnvironmentVariable("MIILO_PREVIEW_VIEW")=="quiet") {
+            if(qEnvironmentVariable("MIILO_PREVIEW_VIEW")=="quiet" || qEnvironmentVariable("MIILO_PREVIEW_VIEW")=="quiet-expanded") {
                 window->setHeight(680);QTest::qWait(100);
                 click(window,find(window->contentItem(),[](QQuickItem *item){return item->property("text").toString()=="Automation factory";}));
             }

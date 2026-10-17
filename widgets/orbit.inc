@@ -9,7 +9,7 @@
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
+        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } }
         Text { text: "Orbit"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
       }
     }

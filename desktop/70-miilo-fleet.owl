@@ -642,7 +642,7 @@ widget "miilo" {
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
+        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } }
         Text { text: "Orbit"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
       }
     }
@@ -710,6 +710,81 @@ widget "miilo" {
       }
     }
     Text { text: "Motion reflects observed activity. Select work to inspect it."; fontSize: 10; color: muted; maxLines: 2 }
+  }
+
+  component AgentRows(list) {
+    for a in list.take(agentLimit) key a._key {
+      Row {
+        gap: 8
+        fill: width
+        align: center
+        onTap: { selectedActor = a._key; selectedWork = ""; renameOpen = false; proposed = "" }
+        Bot { agent: a; s: 38 }
+        Column {
+          weight: 1
+          gap: 1
+          Text { text: a.name; style: body; maxLines: 1 }
+          Text { text: a.status; style: small; color: muted; maxLines: 1 }
+        }
+        Text { text: "›"; width: 10; style: small; color: muted }
+      }
+    }
+    if len(list) > agentLimit { Button { text: "+${len(list) - agentLimit} agents"; onTap: agentLimit = agentLimit + 5 } }
+  }
+  component QuietPortrait(provider, items, s = 80) {
+    let team = actors.filter(a => a.providerId == provider.id)
+    let representative = len(team) > 0 ? team[0] : {_key: provider.id, name: provider.name, health: provider.health ?? "unknown"}
+    let offline = contains(["offline", "unreachable", "unknown", "stale"], provider.health ?? "") || contains(["offline", "unreachable", "stale"], provider.status ?? "") || any(team, a => contains(["offline", "unreachable", "unknown"], a.health ?? ""))
+    let errors = any(items, w => w.lifecycle == "failed") || any(team, a => contains(["failed", "error"], a.status))
+    let warning = any(items, w => w.attention != "none") || any(team, a => a.status == "blocked")
+    let working = any(items, w => w.lifecycle == "active") || any(team, a => contains(["working", "running"], a.status))
+    let portrait = {_key: representative._key, providerId: provider.id, name: provider.name, health: offline ? "unreachable" : representative.health, status: offline ? "offline" : errors ? "failed" : warning ? "blocked" : working ? "working" : "resting"}
+    Bot { agent: portrait; s: s; slot: indexOf(allProviders.map(p => p.id), provider.id); alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+  }
+  component QuietFleet(list) {
+    let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
+    let columns = max(1, min(3, min(len(systems), floor(max(screenWidth - 24, 1) / 104))))
+    Grid {
+      fill: width
+      columns: columns
+      gap: 8
+      for p in systems.take(providerLimit) key p.id {
+        Column {
+          align: center
+          gap: 2
+          onTap: { expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
+          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: screenWidth < 360 ? 72 : 88 }
+          Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
+        }
+      }
+    }
+    if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }
+    if len(systems) > providerLimit { Button { text: "More systems"; onTap: providerLimit = providerLimit + 6 } }
+  }
+  component QuietSystemTasks(provider, list) {
+    let team = actors.filter(a => a.providerId == provider.id)
+    let tasks = list.filter(w => w.providerId == provider.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
+    Button { text: "← Systems"; onTap: { expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
+    Text { text: provider.name; style: body; maxLines: 2 }
+    Flow {
+      fill: width
+      gap: 8
+      for a in team.take(4) key a._key {
+        Column {
+          width: 76
+          align: center
+          gap: 2
+          onTap: { workflowActor = workflowActor == a._key ? "" : a._key; pageSize = 5 }
+          Bot { agent: a; s: 42 }
+          Text { text: replace(a.name, "-", " "); width: 76; align: center; fontSize: 10; color: workflowActor == a._key ? accent : muted; maxLines: 2 }
+          if workflowActor == a._key { Spacer { width: 30; height: 2; background: accent } }
+        }
+      }
+    }
+    WorkRows { list: tasks }
+    if len(tasks) == 0 { Text { text: workflowActor != "" ? "No assigned work reported" : "No work in flight"; style: small; color: muted } }
+    if len(team) > 4 { Button { text: agentsOpen ? "Hide agents" : "More agents"; onTap: agentsOpen = !agentsOpen } }
+    if agentsOpen { AgentRows { list: team } }
   }
 
   let tileActors = (previewRobots ? actors.take(1) : actors) + (previewRobots ? [
@@ -806,25 +881,6 @@ widget "miilo" {
       Text { text: "miilo.tech"; width: 64; height: 12; fontSize: 9; color: alpha(muted, 0.65); align: end; maxLines: 1 }
     }
   }
-  component AgentRows(list) {
-    for a in list.take(agentLimit) key a._key {
-      Row {
-        gap: 8
-        fill: width
-        align: center
-        onTap: { selectedActor = a._key; selectedWork = ""; renameOpen = false; proposed = "" }
-        Bot { agent: a; s: 38 }
-        Column {
-          weight: 1
-          gap: 1
-          Text { text: a.name; style: body; maxLines: 1 }
-          Text { text: a.status; style: small; color: muted; maxLines: 1 }
-        }
-        Text { text: "›"; width: 10; style: small; color: muted }
-      }
-    }
-    if len(list) > agentLimit { Button { text: "+${len(list) - agentLimit} agents"; onTap: agentLimit = agentLimit + 5 } }
-  }
   screen {
     title: "miilo"
     Column {
@@ -860,37 +916,10 @@ widget "miilo" {
           if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
           WorkRows { list: visible; showSystem: true }
           if len(visible) == 0 && (needsOnly || len(matches) == 0) { Text { text: "No matches"; style: small; color: muted } }
+        } else if expandedSystem == "" || !any(provs, p => p.id == expandedSystem) {
+          QuietFleet { list: visible }
         } else {
-          for p in provs.filter(p => !needsOnly || any(visible, w => w.providerId == p.id)).take(providerLimit) key p.id {
-            let team = actors.filter(a => a.providerId == p.id)
-            let tasks = visible.filter(w => w.providerId == p.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
-            let urgent = actionable.filter(w => w.providerId == p.id)
-            SystemRow { provider: p; count: len(urgent) > 0 ? "${len(urgent)} needs you" : "${len(tasks)} ${len(tasks) == 1 ? "task" : "tasks"}" }
-            if expandedSystem == p.id {
-              Row {
-                fill: width
-                gap: 8
-                for a in team.take(4) key a._key {
-                  Column {
-                    weight: 1
-                    align: center
-                    gap: 2
-                    onTap: { workflowActor = workflowActor == a._key ? "" : a._key; pageSize = 5 }
-                    Bot { agent: a; s: 42 }
-                    Text { text: replace(a.name, "-", " "); width: 76; align: center; fontSize: 10; color: workflowActor == a._key ? accent : muted; maxLines: 2 }
-                    if workflowActor == a._key { Spacer { width: 30; height: 2; background: accent } }
-                  }
-                }
-              }
-              Text { text: "${len(tasks.filter(w => w.lifecycle == "active"))} working · ${len(tasks.filter(w => w.lifecycle == "waiting"))} waiting"; style: small; color: muted }
-              WorkRows { list: tasks }
-              if len(tasks) == 0 { Text { text: workflowActor != "" ? "No assigned work reported" : "No work in flight"; style: small; color: muted } }
-              if len(team) > 4 { Button { text: agentsOpen ? "Hide agents" : "More agents"; onTap: agentsOpen = !agentsOpen } }
-              if agentsOpen { AgentRows { list: team } }
-            }
-          }
-          if needsOnly && len(visible) == 0 { Text { text: "Nothing needs you"; style: small; color: muted } }
-          if len(provs) > providerLimit { Button { text: "More systems"; onTap: providerLimit = providerLimit + 5 } }
+          QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
         }
       }
     }

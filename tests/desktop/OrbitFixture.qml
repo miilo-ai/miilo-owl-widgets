@@ -53,7 +53,7 @@ Window {
     theme:n=>palette[n]===undefined?null:palette[n],
     tile:n=>({linux:true,tileWidth:root.width-36,tileHeight:root.height-36,screenWidth:root.width-36,screenHeight:root.height-36})[n] || null,
     report:e=>root.errors.push(e),changed:()=>Qt.callLater(()=>widget.renderAt(root.sceneTime)),act:(name)=>{ if(name==="screen"){root.showScreen=true;widget.renderAt(root.sceneTime)} },runInto:()=>root.errors.push("Unexpected process")
-   },{observatoryView:"orbit",robotMotion:sceneMotion});
+   },{observatoryView:sceneView === "quiet-expanded" ? "quiet" : "orbit",robotMotion:sceneMotion});
    var slot=program.globals.findIndex(g=>g.name==="feed");
    instance.setSource(slot,Owl.fromJson({ok:true,out:JSON.stringify(sceneData),code:0,err:""}));
    renderAt(.2);
