@@ -175,3 +175,10 @@ confirmation, revision and provider receipt.
 
 Actual Omarchy theme/focus/keyboard and service install/update/removal acceptance
 is tracked in `.specify`; passing macOS helper tests is not native Linux sign-off.
+
+## Architecture checks
+
+The [engineering constitution](.specify/memory/constitution.md) defines the
+boundaries. Run `python3 tools/check_architecture.py` and
+`python3 tools/test_architecture.py`; CI qualification runs both. These are
+development checks, not runtime dependencies.

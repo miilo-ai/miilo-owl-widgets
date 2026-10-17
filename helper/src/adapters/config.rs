@@ -1,5 +1,4 @@
 use crate::Result;
-use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Write},
@@ -8,31 +7,10 @@ use std::{
 };
 use tempfile::NamedTempFile;
 
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Endpoint {
-    pub id: String,
-    pub url: String,
-    #[serde(default)]
-    pub token: String,
-    #[serde(default, rename = "tokenFile", skip_serializing_if = "Option::is_none")]
-    pub token_file: Option<PathBuf>,
-    #[serde(
-        default,
-        rename = "localSnapshotFile",
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub local_snapshot_file: Option<PathBuf>,
-    pub providers: Vec<String>,
-    #[serde(default, rename = "allowActions")]
-    pub allow_actions: bool,
-    #[serde(
-        default,
-        rename = "actorNames",
-        skip_serializing_if = "std::collections::BTreeMap::is_empty"
-    )]
-    pub actor_names: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
-}
-
+pub use crate::domain::{
+    config_policy::{safe_url, validate},
+    connection::{Config, Endpoint},
+};
 impl Endpoint {
     pub fn credential(&self) -> Result<String> {
         let Some(path) = &self.token_file else {
@@ -49,74 +27,6 @@ impl Endpoint {
         }
         Ok(token.into())
     }
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub version: u32,
-    pub endpoints: Vec<Endpoint>,
-}
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            version: 1,
-            endpoints: vec![],
-        }
-    }
-}
-
-pub fn safe_url(value: &str) -> Result<String> {
-    let u = url::Url::parse(value).map_err(|_| "Invalid endpoint URL")?;
-    if !matches!(u.scheme(), "http" | "https")
-        || u.host_str().is_none()
-        || !u.username().is_empty()
-        || u.password().is_some()
-        || u.query().is_some()
-        || u.fragment().is_some()
-    {
-        return Err("Use an http(s) endpoint without credentials, query or fragment".into());
-    }
-    Ok(value.trim_end_matches('/').into())
-}
-
-pub fn validate(config: &Config) -> Result<()> {
-    if config.version != 1 || config.endpoints.len() > 8 {
-        return Err("At most eight endpoints are supported".into());
-    }
-    let mut seen = std::collections::HashSet::new();
-    for e in &config.endpoints {
-        let valid = !e.id.is_empty()
-            && e.id.len() <= 40
-            && e.id
-                .bytes()
-                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
-            && e.id.as_bytes()[0].is_ascii_alphanumeric();
-        if !valid || !seen.insert(&e.id) {
-            return Err("Endpoint names must be unique lowercase words/dashes".into());
-        }
-        if let Some(path) = &e.local_snapshot_file {
-            if !path.is_absolute()
-                || !e.token.is_empty()
-                || e.token_file.is_some()
-                || e.allow_actions
-                || e.url != "local://desktop"
-            {
-                return Err("Local snapshot sources require an absolute file, no credential, and read-only access".into());
-            }
-        } else {
-            safe_url(&e.url)?;
-        }
-        if e.token_file.is_some() && !e.token.is_empty() {
-            return Err("Choose a credential or a credential file, not both".into());
-        }
-        if e.token_file.as_ref().is_some_and(|p| !p.is_absolute()) {
-            return Err("Credential file paths must be absolute".into());
-        }
-        if e.token.contains(['\r', '\n']) {
-            return Err("Invalid credential".into());
-        }
-    }
-    Ok(())
 }
 
 pub struct Store {

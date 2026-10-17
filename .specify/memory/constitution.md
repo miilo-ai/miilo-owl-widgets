@@ -43,3 +43,12 @@
 ## Repository responsibility
 
 Separate projection/action policy domain, application use cases/ports, and config/file/HTTP/local-cache/process adapters. UI owns presentation. Native Omarchy distribution is handled by its separate plugin repository.
+
+## Automated boundary gate
+
+Run `python3 tools/check_architecture.py` and `python3 tools/test_architecture.py`.
+The architecture workflow enforces `.specify/architecture.json`. Existing size
+exceptions are explicit, bounded debt and cannot grow. Do not expand exceptions
+to bypass a failing refactor. These source checks supplement behavioral tests.
+
+Release qualification also runs the architecture gate before reporting readiness.

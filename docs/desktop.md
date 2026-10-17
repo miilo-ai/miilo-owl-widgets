@@ -7,8 +7,8 @@
 > Existing desktop source/installers remain for compatibility during migration.
 
 The application helper and developer tooling are Rust. OWL is the shared widget
-source; the pinned upstream Quickshell runtime renders it on Linux. Python is not
-required for building, testing, installing, or releasing this repository.
+source; the pinned upstream Quickshell runtime renders it on Linux. Python is not required by the application or installation. Python 3 is a
+development-only dependency for the architecture CI checks.
 
 ## Build and test
 
