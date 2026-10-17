@@ -40,3 +40,7 @@ Remaining follow-ups: direct glyph picking, event-identity-driven one-shots,
 smooth membership transitions and measured adaptive effect density. System motion
 preference detection and complete zero-frame scheduling in Off are not yet qualified.
 Qt 6 ignores Canvas.FramebufferObject; do not advertise guaranteed GPU Canvas speed.
+
+Onboarding portraits must use desktop/RobotProgram.js, generated from the exact
+shared Bot and palette source by make assemble. Do not redraw a simplified QML
+robot. tools/test-portrait.cjs compares exact drawing operations to the fleet Bot.

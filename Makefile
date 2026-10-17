@@ -23,6 +23,7 @@ check-desktop:
 	cargo xtask check-desktop
 	node tools/test-robot-motion.cjs
 	node tools/test-orbit.cjs
+	node tools/test-portrait.cjs
 
 check-keyboard:
 	tools/test-desktop-keyboard.sh

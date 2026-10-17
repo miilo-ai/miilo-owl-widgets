@@ -29,3 +29,11 @@ fractional scaling, native frame/CPU/RSS measurements and Android remain pending
 Canvas glyph picking is deferred; accessible stationary work rows are functional.
 No event flashes or dependency edges are invented when source data lacks identity.
 Do not mark all ORBIT-001 tasks complete or claim a measured percentage finished.
+
+## Original robot identity correction
+
+A generated portrait program now embeds the exact shared Bot, appearance controls
+and palette from authored OWL. No second character geometry is maintained.
+Official Kotlin checker accepted the standalone program. Drawing parity passed
+18 state/theme/motion combinations at 3 controlled frames (54 comparisons), with
+no external sources or I/O. Existing renderer/Orbit/motion and xtask tests passed.

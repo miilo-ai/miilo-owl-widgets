@@ -1,4 +1,5 @@
 mod fixtures;
+mod portrait;
 mod release;
 mod validation;
 use serde_json::{Value, json};
@@ -22,6 +23,7 @@ fn output(command: &mut Command) -> Result<String> {
     Ok(String::from_utf8(out.stdout)?)
 }
 fn assemble() -> Result<()> {
+    portrait::assemble()?;
     let root = root();
     let manifest = fs::read_to_string(root.join("helper/Cargo.toml"))?;
     let version = manifest
