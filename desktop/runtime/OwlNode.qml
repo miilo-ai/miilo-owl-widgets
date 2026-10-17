@@ -481,6 +481,8 @@ Item {
   // --------------------------------------------------------------- leaves
 
   readonly property var textStyle: L.style(root.p.style)
+  property MiiloTypography fallbackTypography: MiiloTypography {}
+  readonly property var typography: root.widget && root.widget.typography ? root.widget.typography : fallbackTypography
   function family(f) {
     if (!root.widget) return ""
     return f === "sans" ? root.widget.sansFamily : f === "serif" ? "serif"
@@ -489,22 +491,21 @@ Item {
 
   Component {
     id: textC
-    // Sized as the launcher's lines are: Android's system monospace spaces
-    // lines about 1.17 em apart against this font's 1.32, and a Qt Text keeps
-    // its font's own height on a single line whatever lineHeight says. So the
-    // box is lines x 1.17 em, and the glyphs sit centred in each line.
+    // Use measured font height: fallback glyphs must not be clipped.
     Item {
       id: textBox
-      readonly property real line: label.font.pixelSize * 1.17
+      readonly property real line: label.font.pixelSize * root.typography.leading(root.p.style)
       implicitWidth: label.implicitWidth
-      implicitHeight: Math.max(1, label.lineCount) * textBox.line
+      implicitHeight: label.implicitHeight
       Text {
         id: label
         width: parent.width
         anchors.verticalCenter: parent.verticalCenter
         text: root.p.text === undefined || root.p.text === null ? "\u2026" : String(root.p.text)
         color: root.p.color || (root.widget ? root.widget.ink(root.textStyle[1] ? "muted" : "foreground") : "white")
-        font.pixelSize: Math.max(1, L.num(root.p.fontSize, root.textStyle[0]) * root.dp)
+        font.pixelSize: root.p.fontSize === undefined ? root.typography.size(root.p.style)
+          : Math.max(1, Math.round(L.num(root.p.fontSize, 13) * root.typography.effectiveScale))
+        textFormat: Text.PlainText
         font.weight: root.p.bold === true ? Font.Bold : Font.Normal
         font.italic: root.p.italic === true
         font.family: root.family(root.p.font)
@@ -541,7 +542,7 @@ Item {
         anchors.centerIn: parent
         text: root.p.text === undefined || root.p.text === null ? "…" : String(root.p.text)
         color: root.p.color || (root.widget ? root.widget.ink("accent") : "white")
-        font.pixelSize: 13 * root.dp
+        font.pixelSize: root.typography.size("body")
         font.family: root.family("mono")
       }
     }
@@ -794,7 +795,8 @@ Item {
         anchors.margins: 6 * root.dp
         verticalAlignment: TextInput.AlignVCenter
         color: root.p.color || (root.widget ? root.widget.ink("foreground") : "white")
-        font.pixelSize: L.num(root.p.fontSize, 14) * root.dp
+        font.pixelSize: root.p.fontSize === undefined ? root.typography.size("body")
+          : Math.max(1, Math.round(L.num(root.p.fontSize, 13) * root.typography.effectiveScale))
         font.family: root.family("sans")
         clip: true
         text: root.p.text === undefined || root.p.text === null || root.p.text === "…" ? "" : String(root.p.text)

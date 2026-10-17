@@ -1,8 +1,11 @@
 import QtQuick
+import "runtime" as Owl
 
 // Portable defaults; the Omarchy host supplies its live shell tokens.
 QtObject {
     id: root
+    property QtObject fallbackTypography: Owl.MiiloTypography {}
+    property var typography: widget && widget.typography ? widget.typography : fallbackTypography
     property var widget
     function tint(name, opacity) {
         var color = Qt.color(widget.ink(name));
@@ -10,6 +13,7 @@ QtObject {
     }
     property color foreground: widget.ink("foreground")
     property color accent: widget.ink("accent")
+    property color pathText: accent
     property color border: tint("foreground", 0.22)
     property color hoverFill: tint("foreground", 0.06)
     property color focusFill: tint("foreground", 0.1)

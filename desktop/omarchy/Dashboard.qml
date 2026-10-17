@@ -10,6 +10,8 @@ Item {
     function toggle() { opened = !opened }
     Miilo.Dashboard {
         id: dashboard
+        textScale: Style.fontScale
+        textFamily: Style.font.family
         interactionTheme: Miilo.InteractionTheme {
             widget: dashboard.surface.widget
             foreground: Color.foreground

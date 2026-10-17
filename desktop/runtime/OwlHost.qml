@@ -23,6 +23,9 @@ QtObject {
   // One OWL dp, in px. A board usually sets OwlWidget.dp from its cell size
   // instead, so widgets keep the launcher's proportions.
   property real dp: 1
+  property string typographyProfile: "desktop"
+  // Hosts may bind their accessibility preference here; never multiply by DPR.
+  property real textScale: 1
 
   property string sansFamily: "sans-serif"
   property string monoFamily: "monospace"

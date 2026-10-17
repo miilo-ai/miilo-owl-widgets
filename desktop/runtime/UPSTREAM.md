@@ -10,3 +10,11 @@ terminal to native onboarding when supplied, retaining the terminal otherwise.
 Interactive OwlNode elements support Tab focus, Enter/Space activation, and
 compact focus markers; text inputs participate in Tab navigation.
 Local hosts and integration live one directory up.
+
+Miilo typography patch: shared semantic desktop/phone roles and a host text-scale
+port, independent of grid dp and device-pixel ratio. OwlNode measures multiline
+text height, gives body text additional leading and renders observation text
+literally. Explicit OWL fontSize remains an authored logical-size override; it
+still follows the host text scale. New MiiloTypography.qml/MiiloTypeScale.js are
+Miilo-authored additions. Android Compose/Omalauncher is a separate renderer and
+requires its own host integration and on-device acceptance.

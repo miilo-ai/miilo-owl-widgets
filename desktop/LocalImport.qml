@@ -8,7 +8,7 @@ import Quickshell.Io
 FocusScope {
     id: root
     property var widget
-    property QtObject theme: InteractionTheme { widget: root.widget }
+    property InteractionTheme theme: InteractionTheme { widget: root.widget }
     property bool active: true
     property string mode: ""
     property var agents: []
@@ -225,8 +225,11 @@ FocusScope {
         color: root.widget.ink("background")
     }
     component Action: Button {
+        Layout.minimumWidth: 0
+        Layout.preferredWidth: 180
+        Layout.fillWidth: true
         id: control
-        implicitHeight: 40
+        implicitHeight: Math.max(root.theme.typography.touchTarget, contentItem.implicitHeight + 16)
         horizontalPadding: 14
         flat: true
         focusPolicy: Qt.StrongFocus
@@ -240,22 +243,26 @@ FocusScope {
             opacity: control.enabled ? 1 : 0.5
             Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: parent.width - 16; height: 2; visible: control.activeFocus; color: root.theme.accent }
         }
-        contentItem: Text {
+        contentItem: TypeText { typography: root.theme.typography;
             text: control.text
             color: control.activeFocus ? root.theme.focusText : root.theme.foreground
             opacity: control.enabled ? 1 : 0.5
-            font.pixelSize: 13
+            role: "body"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
     }
     component Field: TextField {
+        Layout.minimumWidth: 0
         id: field
         Layout.fillWidth: true
         color: root.widget.ink("foreground")
         placeholderTextColor: root.widget.ink("muted")
         selectionColor: root.theme.selectionFill
         selectedTextColor: root.widget.ink("foreground")
+        font.family: root.theme.typography.family
+        font.pixelSize: root.theme.typography.size("body")
+        implicitHeight: Math.max(root.theme.typography.touchTarget, contentHeight + topPadding + bottomPadding)
         selectByMouse: true
         background: Rectangle {
             color: field.activeFocus ? root.theme.focusFill : root.widget.ink("lighter_background")
@@ -275,9 +282,11 @@ FocusScope {
         background: Rectangle { color: root.widget.ink("dark_background") }
     }
     component Choice: ComboBox {
-        id: control
+        Layout.minimumWidth: 0
+        Layout.preferredWidth: 180
         Layout.fillWidth: true
-        implicitHeight: 40
+        id: control
+        implicitHeight: Math.max(root.theme.typography.touchTarget, contentItem.implicitHeight + 16)
         focusPolicy: Qt.StrongFocus
         leftPadding: 12
         rightPadding: 32
@@ -287,14 +296,14 @@ FocusScope {
             border.width: 1
             Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: parent.width - 16; height: 2; visible: control.activeFocus; color: root.theme.accent }
         }
-        contentItem: Text {
+        contentItem: TypeText { typography: root.theme.typography;
             text: control.count ? control.displayText : "No saved groups"
             color: !control.enabled ? root.widget.ink("muted") : control.activeFocus ? root.theme.focusText : root.theme.foreground
-            font.pixelSize: 13
+            role: "body"
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
         }
-        indicator: Text {
+        indicator: TypeText { typography: root.theme.typography;
             x: control.width - width - 12
             anchors.verticalCenter: parent.verticalCenter
             text: control.popup.visible ? "▴" : "▾"
@@ -305,12 +314,12 @@ FocusScope {
             required property var modelData
             required property int index
             width: control.width
-            implicitHeight: 40
+            implicitHeight: Math.max(root.theme.typography.touchTarget, contentItem.implicitHeight + 16)
             highlighted: control.highlightedIndex === index
-            contentItem: Text {
+            contentItem: TypeText { typography: root.theme.typography;
                 text: option.modelData
                 color: option.highlighted ? root.theme.focusText : root.theme.foreground
-                font.pixelSize: 13
+                role: "body"
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
@@ -337,264 +346,269 @@ FocusScope {
             }
         }
     }
-    ColumnLayout {
+    ScrollView {
+        id: pageScroll
+        objectName: "onboardingScroll"
         anchors.fill: parent
-        anchors.margins: 24
-        spacing: 16
-        Text {
-            Layout.fillWidth: true
-            text: root.mode === "invite" ? "I found your local agent setups" : root.mode === "importing" ? "Importing selected sessions…" : root.mode === "group" ? "Define an agent group" : "Import local agents"
-            color: root.widget.ink("foreground")
-            font.pixelSize: 22
-            wrapMode: Text.WordWrap
-        }
-        Text {
-            Layout.fillWidth: true
-            text: root.mode === "invite" ? "Would you like to import them into Miilo?" : root.mode === "importing" ? "Starting local observation and saving your Miilo connection." : root.mode === "group" ? "Match projects within a folder. * matches any text; ? matches one character." : "↑/↓ navigate · Space selects · Enter folds groups · Ctrl+G adds a group"
-            color: root.widget.ink("foreground")
-            font.pixelSize: 14
-            wrapMode: Text.WordWrap
-        }
+        clip: true
+        contentWidth: availableWidth
+        contentHeight: page.implicitHeight + 32
         ColumnLayout {
-            visible: root.mode === "invite"
-            Layout.fillWidth: true
-            spacing: 14
-            Repeater {
-                model: root.agents
-                delegate: ColumnLayout {
-                    required property var modelData
+            id: page
+            x: 16; y: 16
+            width: Math.max(0, pageScroll.availableWidth - 32)
+            spacing: 12
+            TypeText { typography: root.theme.typography;
+                Layout.fillWidth: true
+                text: root.mode === "invite" ? "I found your local agent setups" : root.mode === "importing" ? "Importing selected sessions…" : root.mode === "group" ? "Define an agent group" : "Import local agents"
+                color: root.widget.ink("foreground")
+                role: "title"
+                wrapMode: Text.WordWrap
+            }
+            TypeText { typography: root.theme.typography;
+                Layout.fillWidth: true
+                text: root.mode === "invite" ? (root.agents.some(a => a.observationSupported === true) ? "Would you like to import them into Miilo?" : "These setups were found, but importing them is not available yet.") : root.mode === "importing" ? "Starting local observation and saving your Miilo connection." : root.mode === "group" ? "Match projects within a folder. * matches any text; ? matches one character." : "↑/↓ navigate · Space selects · Enter folds groups · Ctrl+G adds a group"
+                color: root.widget.ink("foreground")
+                role: "body"
+                wrapMode: Text.WordWrap
+            }
+            SetupListing {
+                visible: root.mode === "invite"
+                Layout.fillWidth: true
+                agents: root.agents
+                widget: root.widget
+                theme: root.theme
+            }
+            GridLayout {
+                columns: Math.max(1, Math.min(3, Math.floor(width / (180 * root.theme.typography.effectiveScale))))
+                columnSpacing: 8; rowSpacing: 8
+                visible: root.mode === "review"
+                Layout.fillWidth: true
+                Field {
+                    text: root.project
+                    placeholderText: "Project directory"
+                    onTextEdited: root.project = text
+                    onAccepted: root.review()
+                }
+                Action {
+                    text: "Rescan"
+                    enabled: !root.busy
+                    onClicked: root.review()
+                }
+            }
+            GridLayout {
+                columns: Math.max(1, Math.min(3, Math.floor(width / (180 * root.theme.typography.effectiveScale))))
+                columnSpacing: 8; rowSpacing: 8
+                visible: root.mode === "review"
+                Layout.fillWidth: true
+                Action { text: "Add group"; onClicked: root.editGroup(-1) }
+                Choice {
+                    id: existingGroup
                     Layout.fillWidth: true
-                    spacing: 4
-                    Text {
-                        text: modelData.name + (modelData.observationSupported ? "" : " · import not available yet")
-                        color: root.widget.ink("foreground")
-                        font.pixelSize: 14
+                    model: root.groups.map(g => g.name + (g.future ? " · future matches on" : ""))
+                    enabled: root.groups.length > 0
+                    Accessible.name: "Saved group to edit"
+                }
+                Action { text: "Edit group"; enabled: root.groups.length > 0; onClicked: root.editGroup(existingGroup.currentIndex) }
+            }
+            ScrollView {
+                visible: root.mode === "group"
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.max(180, root.height * 0.45)
+                contentWidth: availableWidth
+                ScrollBar.vertical: ThemeScrollBar {}
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 12
+                    Field { id: groupName; objectName: "groupName"; placeholderText: "Group name, e.g. Vave"; Accessible.name: "Group name" }
+                    Field { id: groupFolder; objectName: "groupFolder"; placeholderText: "Absolute folder, e.g. /home/me/Work"; Accessible.name: "Group folder" }
+                    Field { id: groupPattern; objectName: "groupPattern"; placeholderText: "Project pattern, e.g. vave-* (blank matches all)"; Accessible.name: "Project pattern" }
+                    Choice { id: groupKind; objectName: "groupKind"; model: ["All supported agents", "Codex", "Cursor"]; Accessible.name: "Agent type" }
+                    CheckBox {
+                        id: futureMatches
+                        objectName: "futureMatches"
+                        text: "Include future matching sessions"
+                        focusPolicy: Qt.StrongFocus
+                        indicator: Rectangle {
+                            implicitWidth: 20
+                            implicitHeight: 20
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: root.widget.ink("background")
+                            border.width: futureMatches.activeFocus ? 2 : 1
+                            border.color: root.widget.ink(futureMatches.activeFocus ? "accent" : "foreground")
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 10; height: 10
+                                visible: futureMatches.checked
+                                color: root.widget.ink("accent")
+                            }
+                        }
+                        contentItem: TypeText { typography: root.theme.typography; leftPadding: 32; text: futureMatches.text; color: root.widget.ink(futureMatches.activeFocus ? "accent" : "foreground"); wrapMode: Text.WordWrap }
                     }
-                    Text {
+                    TypeText { typography: root.theme.typography;
                         Layout.fillWidth: true
-                        text: (modelData.locations || []).map(p => p.replace(Quickshell.env("HOME"), "~")).join(" · ") || "Installed command found"
+                        text: "Off by default. When enabled, Miilo checks every minute and enrolls new matching sessions, up to 100 total. Unchecking this on a later import stops future enrollment; existing selections remain."
+                        wrapMode: Text.WordWrap
                         color: root.widget.ink("muted")
-                        font.pixelSize: 12
-                        wrapMode: Text.WrapAnywhere
                     }
                 }
             }
-        }
-        RowLayout {
-            visible: root.mode === "review"
-            Layout.fillWidth: true
-            Field {
-                text: root.project
-                placeholderText: "Project directory"
-                onTextEdited: root.project = text
-                onAccepted: root.review()
-            }
-            Action {
-                text: "Rescan"
-                enabled: !root.busy
-                onClicked: root.review()
-            }
-        }
-        RowLayout {
-            visible: root.mode === "review"
-            Layout.fillWidth: true
-            Action { text: "Add group"; onClicked: root.editGroup(-1) }
-            Choice {
-                id: existingGroup
+            TypeText { typography: root.theme.typography;
+                visible: root.mode === "loading"
                 Layout.fillWidth: true
-                model: root.groups.map(g => g.name + (g.future ? " · future matches on" : ""))
-                enabled: root.groups.length > 0
-                Accessible.name: "Saved group to edit"
+                text: "Looking for existing sessions…"
+                color: root.widget.ink("foreground")
             }
-            Action { text: "Edit group"; enabled: root.groups.length > 0; onClicked: root.editGroup(existingGroup.currentIndex) }
-        }
-        ScrollView {
-            visible: root.mode === "group"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            contentWidth: availableWidth
-            ScrollBar.vertical: ThemeScrollBar {}
-            ColumnLayout {
-                width: parent.width
-                spacing: 12
-                Field { id: groupName; objectName: "groupName"; placeholderText: "Group name, e.g. Vave"; Accessible.name: "Group name" }
-                Field { id: groupFolder; objectName: "groupFolder"; placeholderText: "Absolute folder, e.g. /home/me/Work"; Accessible.name: "Group folder" }
-                Field { id: groupPattern; objectName: "groupPattern"; placeholderText: "Project pattern, e.g. vave-* (blank matches all)"; Accessible.name: "Project pattern" }
-                Choice { id: groupKind; objectName: "groupKind"; model: ["All supported agents", "Codex", "Cursor"]; Accessible.name: "Agent type" }
-                CheckBox {
-                    id: futureMatches
-                    objectName: "futureMatches"
-                    text: "Include future matching sessions"
-                    focusPolicy: Qt.StrongFocus
-                    indicator: Rectangle {
-                        implicitWidth: 20
-                        implicitHeight: 20
+            ListView {
+                id: sessionList
+                objectName: "sessionList"
+                visible: root.mode === "review"
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.max(180, root.height * 0.45)
+                clip: true
+                spacing: 4
+                model: root.rows
+                activeFocusOnTab: true
+                keyNavigationEnabled: true
+                highlightMoveDuration: 0
+                Keys.onSpacePressed: root.activateRow()
+                Keys.onReturnPressed: {
+                    var row = root.rows[currentIndex];
+                    if (row && row.header) root.collapseGroup(row.group); else root.activateRow();
+                }
+                Keys.onLeftPressed: { var row = root.rows[currentIndex]; if (row) root.collapseGroup(row.group,true); }
+                Keys.onRightPressed: { var row = root.rows[currentIndex]; if (row) root.collapseGroup(row.group,false); }
+                delegate: ItemDelegate {
+                    id: choice
+                    required property var modelData
+                    required property int index
+                    enabled: modelData.header || modelData.session.observable === true
+                    width: ListView.view.width
+                    Accessible.role: modelData.header ? Accessible.Grouping : Accessible.CheckBox
+                    Accessible.checkable: selectable
+                    Accessible.checked: checked
+                    focusPolicy: Qt.NoFocus
+                    readonly property var groupSessions: root.grouped[modelData.group] ? root.grouped[modelData.group].sessions.filter(s => s.observable) : []
+                    readonly property bool selectable: modelData.header ? groupSessions.length > 0 : modelData.session.observable === true
+                    readonly property int selectedCount: groupSessions.filter(s => root.selected.indexOf(s.kind + ":" + s.id) >= 0).length
+                    readonly property bool partial: modelData.header && selectedCount > 0 && selectedCount < groupSessions.length
+                    readonly property bool cursor: sessionList.activeFocus && sessionList.currentIndex === index
+                    checked: modelData.header ? groupSessions.length > 0 && groupSessions.every(s => root.selected.indexOf(s.kind + ":" + s.id) >= 0) : root.selected.indexOf(modelData.session.kind + ":" + modelData.session.id) >= 0
+                    onClicked: { sessionList.currentIndex = index; sessionList.forceActiveFocus(); root.activateRow(); }
+                    implicitHeight: Math.max(root.theme.typography.touchTarget, contentItem.implicitHeight + 16)
+                    background: Rectangle {
+                        color: choice.down ? root.theme.pressedFill : choice.cursor ? root.theme.focusFill : choice.checked || choice.partial ? root.theme.selectedFill : choice.hovered ? root.theme.hoverFill : choice.modelData.header ? root.widget.ink("lighter_background") : "transparent"
+                        Rectangle { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; width: 3; height: 24; visible: choice.cursor; color: root.theme.accent }
+                    }
+                    ToolButton {
+                        id: foldButton
+                        visible: choice.modelData.header
+                        anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        color: root.widget.ink("background")
-                        border.width: futureMatches.activeFocus ? 2 : 1
-                        border.color: root.widget.ink(futureMatches.activeFocus ? "accent" : "foreground")
+                        text: root.collapsed[choice.modelData.name] ? "+" : "−"
+                        Accessible.name: "Expand or collapse " + choice.modelData.name
+                        focusPolicy: Qt.NoFocus
+                        contentItem: TypeText { typography: root.theme.typography; text: foldButton.text; color: root.widget.ink("foreground"); horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
+                        background: Rectangle { color: root.widget.ink(foldButton.hovered ? "selection" : "lighter_background") }
+                        onClicked: root.collapseGroup(choice.modelData.group)
+                    }
+                    Rectangle {
+                        x: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 20
+                        height: 20
+                        visible: choice.selectable
+                        radius: 0
+                        color: "transparent"
+                        border.width: 1
+                        border.color: root.widget.ink(choice.modelData.header || choice.modelData.session.observable ? "foreground" : "muted")
                         Rectangle {
                             anchors.centerIn: parent
-                            width: 10; height: 10
-                            visible: futureMatches.checked
-                            color: root.widget.ink("accent")
+                            width: 10
+                            height: choice.partial ? 2 : 10
+                            visible: choice.checked || choice.partial
+                            color: root.theme.accent
                         }
                     }
-                    contentItem: Text { leftPadding: 32; text: futureMatches.text; color: root.widget.ink(futureMatches.activeFocus ? "accent" : "foreground"); wrapMode: Text.WordWrap }
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: "Off by default. When enabled, Miilo checks every minute and enrolls new matching sessions, up to 100 total. Unchecking this on a later import stops future enrollment; existing selections remain."
-                    wrapMode: Text.WordWrap
-                    color: root.widget.ink("muted")
-                }
-            }
-        }
-        Text {
-            visible: root.mode === "loading"
-            Layout.fillWidth: true
-            text: "Looking for existing sessions…"
-            color: root.widget.ink("foreground")
-        }
-        ListView {
-            id: sessionList
-            objectName: "sessionList"
-            visible: root.mode === "review"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            clip: true
-            spacing: 4
-            model: root.rows
-            activeFocusOnTab: true
-            keyNavigationEnabled: true
-            highlightMoveDuration: 0
-            Keys.onSpacePressed: root.activateRow()
-            Keys.onReturnPressed: {
-                var row = root.rows[currentIndex];
-                if (row && row.header) root.collapseGroup(row.group); else root.activateRow();
-            }
-            Keys.onLeftPressed: { var row = root.rows[currentIndex]; if (row) root.collapseGroup(row.group,true); }
-            Keys.onRightPressed: { var row = root.rows[currentIndex]; if (row) root.collapseGroup(row.group,false); }
-            delegate: ItemDelegate {
-                id: choice
-                required property var modelData
-                required property int index
-                width: ListView.view.width
-                focusPolicy: Qt.NoFocus
-                readonly property var groupSessions: root.grouped[modelData.group] ? root.grouped[modelData.group].sessions.filter(s => s.observable) : []
-                readonly property int selectedCount: groupSessions.filter(s => root.selected.indexOf(s.kind + ":" + s.id) >= 0).length
-                readonly property bool partial: modelData.header && selectedCount > 0 && selectedCount < groupSessions.length
-                readonly property bool cursor: sessionList.activeFocus && sessionList.currentIndex === index
-                checked: modelData.header ? groupSessions.length > 0 && groupSessions.every(s => root.selected.indexOf(s.kind + ":" + s.id) >= 0) : root.selected.indexOf(modelData.session.kind + ":" + modelData.session.id) >= 0
-                onClicked: { sessionList.currentIndex = index; sessionList.forceActiveFocus(); root.activateRow(); }
-                implicitHeight: modelData.header ? 48 : 64
-                background: Rectangle {
-                    color: choice.down ? root.theme.pressedFill : choice.cursor ? root.theme.focusFill : choice.checked || choice.partial ? root.theme.selectedFill : choice.hovered ? root.theme.hoverFill : choice.modelData.header ? root.widget.ink("lighter_background") : "transparent"
-                    Rectangle { anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; width: 3; height: 24; visible: choice.cursor; color: root.theme.accent }
-                }
-                ToolButton {
-                    id: foldButton
-                    visible: choice.modelData.header
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.collapsed[choice.modelData.name] ? "+" : "−"
-                    Accessible.name: "Expand or collapse " + choice.modelData.name
-                    focusPolicy: Qt.NoFocus
-                    contentItem: Text { text: foldButton.text; color: root.widget.ink("foreground"); horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
-                    background: Rectangle { color: root.widget.ink(foldButton.hovered ? "selection" : "lighter_background") }
-                    onClicked: root.collapseGroup(choice.modelData.group)
-                }
-                Rectangle {
-                    x: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 20
-                    height: 20
-                    radius: 0
-                    color: "transparent"
-                    border.width: 1
-                    border.color: root.widget.ink(choice.modelData.header || choice.modelData.session.observable ? "foreground" : "muted")
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 10
-                        height: choice.partial ? 2 : 10
-                        visible: choice.checked || choice.partial
-                        color: root.theme.accent
+                    AvailabilityIcon {
+                        x: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !choice.selectable
+                        available: false
+                        ink: root.widget.ink("muted")
+                    }
+                    contentItem: Column {
+                        leftPadding: 42
+                        spacing: 3
+                        TypeText { typography: root.theme.typography;
+                            width: parent.width - (choice.modelData.header ? 76 : 32)
+                            text: choice.modelData.header ? (root.collapsed[choice.modelData.name] ? "▸ " : "▾ ") + choice.modelData.name + " (" + choice.modelData.count + ")" : choice.modelData.session.name || "Unnamed session"
+                            wrapMode: Text.Wrap
+                            color: !choice.selectable ? root.widget.ink("muted") : choice.cursor ? root.theme.focusText : root.theme.foreground
+                            role: "body"
+                        }
+                        TypeText { typography: root.theme.typography;
+                            visible: !choice.modelData.header
+                            width: parent.width - 32
+                            text: choice.modelData.header ? "" : choice.modelData.session.kind + " · " + (choice.modelData.session.cwd || choice.modelData.session.id) + (choice.modelData.session.observable ? "" : " · import not available yet")
+                            wrapMode: Text.WrapAnywhere
+                            color: root.widget.ink("muted")
+                            role: "small"
+                        }
                     }
                 }
-                contentItem: Column {
-                    leftPadding: 42
-                    spacing: 3
-                    Text {
-                        width: parent.width - (choice.modelData.header ? 76 : 32)
-                        text: choice.modelData.header ? (root.collapsed[choice.modelData.name] ? "▸ " : "▾ ") + choice.modelData.name + " (" + choice.modelData.count + ")" : choice.modelData.session.name || "Unnamed session"
-                        elide: Text.ElideRight
-                        color: choice.cursor ? root.theme.focusText : root.theme.foreground
-                        font.pixelSize: 14
-                    }
-                    Text {
-                        visible: !choice.modelData.header
-                        width: parent.width - 32
-                        text: choice.modelData.header ? "" : choice.modelData.session.kind + " · " + (choice.modelData.session.cwd || choice.modelData.session.id) + (choice.modelData.session.observable ? "" : " · import not available yet")
-                        elide: Text.ElideMiddle
-                        color: root.widget.ink("muted")
-                        font.pixelSize: 11
-                    }
-                }
+                ScrollBar.vertical: ThemeScrollBar {}
             }
-            ScrollBar.vertical: ThemeScrollBar {}
-        }
-        Text {
-            visible: root.mode === "review" && !root.sessions.length
-            Layout.fillWidth: true
-            text: root.error ? "" : "No supported sessions were found here. Choose a project directory and rescan."
-            color: root.widget.ink("foreground")
-            wrapMode: Text.WordWrap
-        }
-        Item {
-            visible: root.mode !== "review" && root.mode !== "group"
-            Layout.fillHeight: true
-        }
-        Text {
-            visible: !!root.error
-            Layout.fillWidth: true
-            text: root.error
-            color: root.widget.ink("red")
-            wrapMode: Text.WordWrap
-        }
-        Text {
-            Layout.fillWidth: true
-            text: root.groupsDirty ? "Group changes are saved when you confirm below. Future enrollment requires its own opt-in. Ctrl+Enter confirms; Escape goes back." : "Only selected sessions are imported, plus future matches of opted-in groups. Tab moves focus; Ctrl+Enter confirms. Agent credentials stay in place."
-            color: root.widget.ink("muted")
-            font.pixelSize: 12
-            wrapMode: Text.WordWrap
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            Action {
-                id: reviewButton
-                visible: root.mode === "invite"
-                text: "Review sessions"
-                onClicked: root.review()
-            }
-            Action { visible: root.mode === "group"; text: "Save group"; onClicked: root.saveGroup() }
-            Action {
-                visible: root.mode === "group" && root.editIndex >= 0
-                text: "Remove group"
-                onClicked: { var next = root.groups.slice(); next.splice(root.editIndex,1); root.pendingGroups = next; root.regroup(); }
-            }
-            Action {
-                visible: root.mode === "review"
-                text: (root.groupsDirty ? "Apply groups & import (" : "Import selected (") + root.selected.length + ")"
-                enabled: (root.selected.length > 0 || root.groupsDirty) && !root.busy
-                onClicked: root.importSelected()
-            }
-            Item {
+            TypeText { typography: root.theme.typography;
+                visible: root.mode === "review" && !root.sessions.length
                 Layout.fillWidth: true
+                text: root.error ? "" : "No supported sessions were found here. Choose a project directory and rescan."
+                color: root.widget.ink("foreground")
+                wrapMode: Text.WordWrap
             }
-            Action {
-                visible: !root.busy
-                text: root.mode === "invite" ? "Not now" : "Cancel"
-                onClicked: { if (root.mode === "group") root.mode = "review"; else root.dismiss(); }
+            TypeText { typography: root.theme.typography;
+                visible: !!root.error
+                Layout.fillWidth: true
+                text: root.error
+                color: root.widget.ink("red")
+                wrapMode: Text.WordWrap
+            }
+            TypeText { typography: root.theme.typography;
+                Layout.fillWidth: true
+                text: root.groupsDirty ? "Group changes are saved when you confirm below. Future enrollment requires its own opt-in. Ctrl+Enter confirms; Escape goes back." : "Only selected sessions are imported, plus future matches of opted-in groups. Tab moves focus; Ctrl+Enter confirms. Agent credentials stay in place."
+                color: root.widget.ink("muted")
+                role: "small"
+                wrapMode: Text.WordWrap
+            }
+            GridLayout {
+                columns: Math.max(1, Math.min(3, Math.floor(width / (180 * root.theme.typography.effectiveScale))))
+                columnSpacing: 8; rowSpacing: 8
+                Layout.fillWidth: true
+                Action {
+                    id: reviewButton
+                    objectName: "reviewButton"
+                    visible: root.mode === "invite"
+                    text: "Review sessions"
+                    enabled: root.agents.some(a => a.observationSupported === true) && !root.busy
+                    onClicked: root.review()
+                }
+                Action { visible: root.mode === "group"; text: "Save group"; onClicked: root.saveGroup() }
+                Action {
+                    visible: root.mode === "group" && root.editIndex >= 0
+                    text: "Remove group"
+                    onClicked: { var next = root.groups.slice(); next.splice(root.editIndex,1); root.pendingGroups = next; root.regroup(); }
+                }
+                Action {
+                    visible: root.mode === "review"
+                    text: (root.groupsDirty ? "Apply groups & import (" : "Import selected (") + root.selected.length + ")"
+                    enabled: (root.selected.length > 0 || root.groupsDirty) && !root.busy
+                    onClicked: root.importSelected()
+                }
+                Action {
+                    visible: !root.busy
+                    text: root.mode === "invite" ? "Not now" : "Cancel"
+                    onClicked: { if (root.mode === "group") root.mode = "review"; else root.dismiss(); }
+                }
             }
         }
     }

@@ -6,6 +6,8 @@ import "runtime/Owl.js" as OwlJs
 
 Item {
     id: root
+    property real hostTextScale: 1
+    property string hostFontFamily: Qt.application.font.family
     property bool active: visible
     property bool expanded: false
     property var configureLocal: null
@@ -43,7 +45,13 @@ Item {
     }
     Owl.OwlHost {
         id: host
-        monoFamily: "JetBrainsMono Nerd Font"
+        typographyProfile: Quickshell.env("MIILO_TEXT_PROFILE") === "phone" ? "phone" : "desktop"
+        textScale: {
+            var requested = Number(Quickshell.env("MIILO_TEXT_SCALE") || "1");
+            return root.hostTextScale * (isFinite(requested) && requested > 0 ? requested : 1);
+        }
+        sansFamily: root.hostFontFamily
+        monoFamily: "monospace"
         stateDir: (Quickshell.env("XDG_STATE_HOME") || home + "/.local/state") + "/miilo/widgets"
     }
     Rectangle { anchors.fill: parent; color: widget.ink("background") }
@@ -54,6 +62,7 @@ Item {
         path: root.widgetPath
         errorDir: host.stateDir + "/errors"
         host: host
+        typography.family: root.hostFontFamily
         palette: root.owlPalette
         active: root.active
         configureLocal: root.configureLocal
@@ -82,7 +91,8 @@ Item {
                 : { kind: "Column", p: { gap: 0 }, h: {}, a: {}, c: tree.children }
         }
     }
-    Text {
+    TypeText {
+        typography: widget.typography
         anchors.fill: widget
         visible: !!widget.error
         text: widget.error

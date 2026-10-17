@@ -1,10 +1,13 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 
 FloatingWindow {
     id: root
     title: "Miilo"
+    property real textScale: 1
+    property string textFamily: Qt.application.font.family
     // Initial floating size only; the compositor owns the actual viewport.
     implicitWidth: screen ? Math.round(screen.width * 0.65) : 0
     implicitHeight: screen ? Math.round(screen.height * 0.8) : 0
@@ -23,29 +26,27 @@ FloatingWindow {
                 left: parent.left
                 right: parent.right
             }
-            height: 56
+            height: headerContent.implicitHeight + 16
             color: surface.widget.ink("background")
-            Text {
-                anchors {
-                    left: parent.left
-                    leftMargin: 16
-                    verticalCenter: parent.verticalCenter
-                }
+            GridLayout {
+                id: headerContent
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                columns: width < 480 * root.interactionTheme.typography.effectiveScale ? 1 : 2
+                TypeText {
+                typography: root.interactionTheme.typography
+                role: "title"
+                Layout.fillWidth: true
                 text: "Miilo"
                 color: surface.widget.ink("foreground")
-                font.pixelSize: 18
             }
             Button {
                 id: localButton
-                anchors {
-                    right: parent.right
-                    rightMargin: 12
-                    verticalCenter: parent.verticalCenter
-                }
-                text: "Local agents · Ctrl+L"
+                Layout.minimumWidth: 0
+                Layout.fillWidth: headerContent.columns === 1
+                text: root.width < 480 ? "Local agents" : "Local agents · Ctrl+L"
                 focusPolicy: Qt.StrongFocus
                 Keys.onReturnPressed: clicked()
-                implicitHeight: 36
+                implicitHeight: Math.max(root.interactionTheme.typography.touchTarget, contentItem.implicitHeight + 16)
                 horizontalPadding: 12
                 onClicked: importer.review()
                 enabled: !importer.busy
@@ -57,13 +58,15 @@ FloatingWindow {
                     radius: 0
                     Rectangle { anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter; width: parent.width - 16; height: 2; visible: localButton.activeFocus; color: root.interactionTheme.accent }
                 }
-                contentItem: Text {
+                contentItem: TypeText {
+                    typography: root.interactionTheme.typography
+                    role: "label"
                     text: localButton.text
                     color: localButton.activeFocus ? root.interactionTheme.focusText : root.interactionTheme.foreground
-                    font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
+            }
             }
         }
         MiiloSurface {
@@ -74,6 +77,8 @@ FloatingWindow {
                 left: parent.left
                 right: parent.right
             }
+            hostTextScale: root.textScale
+            hostFontFamily: root.textFamily
             active: root.visible && !importer.visible
             visible: !importer.visible
             expanded: true

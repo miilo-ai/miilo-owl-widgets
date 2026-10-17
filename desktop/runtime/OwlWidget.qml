@@ -26,6 +26,10 @@ Item {
   property string errorDir: root.dir + "/.errors"
   // The shell's side: fonts, actions, media. An OwlHost.
   property OwlHost host: OwlHost {}
+  property MiiloTypography typography: MiiloTypography {
+    profile: root.host.typographyProfile
+    textScale: root.host.textScale
+  }
   // name -> ARGB, from OwlTheme.
   property var palette: ({})
   // Sources run and animations play only while this is true: the board is up.
