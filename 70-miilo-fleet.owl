@@ -423,10 +423,6 @@ widget "miilo" {
         circle(cx - r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
         circle(cx + r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
       }
-      if blocked && !resting && !unavailable && !failed {
-        // Raised brow asks for attention; it never implies a new provider event.
-        line(cx + r * 0.18, y - r * 0.34, cx + r * 0.48, y - r * 0.42, stroke: led, width: 1.5, cap: round)
-      }
       if alert != "" {
         let markSize = min(s * 0.34, max(19.2, s * 0.288))
         let markX = cx + r * 0.88 - 8
