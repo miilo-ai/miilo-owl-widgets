@@ -15,14 +15,14 @@
             onSubmit: { query = trim(value); pageSize = 5; searchEditing = false }
           }
         }
-        Box { width: 36; height: 44; align: center; onTap: searchEditing = false
+        Box { width: 36; height: fieldHeight; align: center; onTap: searchEditing = false
           Text { text: "✓"; width: 36; fontSize: 22; align: center; color: accent }
         }
       } else {
-        Box { weight: 1; height: 44; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
+        Box { weight: 1; height: fieldHeight; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
           Text { text: query == "" ? placeholder : query; fill: width; fontSize: 13; color: query == "" ? muted : foreground; maxLines: 1 }
         }
-        if needle != "" { Box { width: 30; height: 44; align: center; onTap: { query = ""; pageSize = 5 }
+        if needle != "" { Box { width: 30; height: fieldHeight; align: center; onTap: { query = ""; pageSize = 5 }
           Text { text: "×"; width: 30; fontSize: 22; align: center; color: muted }
         } }
         if !leftHanded && configured { ToolbarControls { } }

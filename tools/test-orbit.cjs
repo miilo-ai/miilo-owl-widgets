@@ -5,9 +5,9 @@ const root = path.resolve(__dirname, '..'), module_ = new Module('owl');
 module_._compile(fs.readFileSync(path.join(root,'desktop/runtime/Owl.js'),'utf8').replace(/^\.pragma library/,'//'),'owl');
 const Owl = module_.exports, program = Owl.compile(fs.readFileSync(path.join(root,'70-miilo-fleet.owl'),'utf8'));
 function* walk(n) { yield n; for (const c of n.c || n.children || []) yield* walk(c); }
-function scene({count=2, work=9, motion='full', stale=false, light=false, view='orbit'}={}) {
-    const errors=[], commands=[], palette=Owl.themeFromToml(light?'background="#ffffff"\nforeground="#111111"\naccent="#9c245b"':'accent="#58c4b8"');
-    const host={theme:k=>palette[k]??null,tile:k=>({linux:true,tileWidth:260,tileHeight:180,screenWidth:900,screenHeight:760})[k]??null,
+function scene({count=2, work=9, motion='full', stale=false, light=false, view='orbit', linux=true, screenWidth=900}={}) {
+    const errors=[], commands=[], palette=Owl.themeFromToml(light?'background="#ffffff"\nforeground="#111111"\naccent="#9c245b"\ngreen="#206844"\nred="#a12635"':'accent="#58c4b8"\ngreen="#9ece6a"\nred="#f7768e"');
+    const host={theme:k=>palette[k]??null,tile:k=>({linux,tileWidth:260,tileHeight:180,screenWidth,screenHeight:760})[k]??null,
         report:e=>errors.push(e),changed(){},act(){},runInto:c=>commands.push(c)};
     const instance=new Owl.Instance(program,host,{observatoryView:view,robotMotion:motion});
     const slot=k=>program.globals.findIndex(g=>g.name===k);
@@ -19,7 +19,7 @@ function scene({count=2, work=9, motion='full', stale=false, light=false, view='
     const data={configured:true,errors:[],snapshot:{providers,actors,workItems,attention:[]}};
     const update=()=>instance.setSource(slot('feed'),Owl.fromJson({ok:true,out:JSON.stringify(data),code:0,err:''}));update();
     const render=t=>{instance.frame(t);const tree=instance.render(true);assert.deepEqual(errors,[]);return [...walk(tree)];};
-    const draw=t=>render(t).filter(n=>n.kind==='Canvas'&&n.p?.height===192).map(n=>n.draw(340,192));
+    const draw=t=>render(t).filter(n=>n.kind==='Canvas'&&n.p?.height===164).map(n=>n.draw(340,164));
     return {instance,slot,set,data,update,render,draw,commands,errors};
 }
 // Golden frames come from the approved browser projection, not a second native scene.
@@ -34,21 +34,21 @@ for(const expected of golden.frames) {
         const group=rails.slice(index*4,index*4+4);
         group.forEach(op=>assert.deepEqual(op.points,group[0].points,'Glow and core share geometry'));
         for(const p of rail.points) {
-            near(group[0].points[p.index][0],p.x+10,'Rail x');
-            near(group[0].points[p.index][1],p.y,'Rail y');
+            near(group[0].points[p.index][0],170+(p.x-160)*.85,'Rail x');
+            near(group[0].points[p.index][1],82+(p.y-96)*.85,'Rail y');
         }
         for(const [x,y] of group[0].points) {
-            assert(x>=0&&x<=340&&y>=0&&y<=192,'Ring bounds');
-            assert(Math.hypot(x-170,y-96)>=52-1e-7,'Open nucleus clears original robot');
+            assert(x>=0&&x<=340&&y>=0&&y<=164,'Ring bounds');
+            assert(Math.hypot(x-170,y-82)>=52*.85-1e-7,'Open nucleus clears original robot');
         }
     });
     // The solid task circles are distinguishable from halos/attention outlines.
     const orbs=ops.filter(op=>op.op==='circle' && op.args[2]>3 && op.args[2]<6);
     assert(orbs.length>=3 && orbs.length<=4, 'Three task cores and an optional antenna flash');
     for(const p of expected.orbs) {
-        const orb=orbs.find(op=>Math.hypot(op.args[0]-(p.x+10),op.args[1]-p.y)<1e-7);
+        const orb=orbs.find(op=>Math.hypot(op.args[0]-(170+(p.x-160)*.85),op.args[1]-(82+(p.y-96)*.85))<1e-7);
         assert(orb,'Each task stays on its assigned, projected ring');
-        near(orb.args[2],4.5*p.scale,'Orb depth scale');
+        near(orb.args[2],4.5*p.scale*.85,'Orb depth scale');
     }
 }
 const pathsAt=t=>scene({work:3}).draw(t)[0].filter(op=>op.op==='path'&&op.points.length===65);
@@ -62,6 +62,16 @@ const filtered=scene({count:3,work:3});
 const unfilteredFrame=filtered.draw(5)[2];
 filtered.set('system','p2');
 assert.deepEqual(filtered.draw(5)[0],unfilteredFrame,'System filtering preserves each provider phase');
+// Attention marks follow system work, including tasks outside the eight-orb cap.
+const marks=s=>s.render(1).filter(n=>n.kind==='Canvas'&&n.p?.width===95.2).flatMap(n=>n.draw(95.2,95.2)).filter(op=>op.op==='text').map(op=>op.text);
+const attentionScene=scene({count:1});
+assert(marks(attentionScene).includes('?!'),'Needs-you systems must show their attention mark');
+attentionScene.data.snapshot.workItems[8].lifecycle='failed';attentionScene.update();
+assert.deepEqual(marks(attentionScene).filter(t=>t==='!'),['!','!'],'Failures beyond visible orbs take priority with !!');
+assert(!marks(attentionScene).includes('?!'));
+const clearScene=scene({count:1,work:3});clearScene.data.snapshot.workItems.forEach(w=>w.attention='none');clearScene.update();
+assert(!marks(clearScene).some(t=>t==='?!'||t==='!'),'Working systems must not retain attention marks');
+assert(!marks(scene({count:1,stale:true})).some(t=>t==='?!'||t==='!'),'Stale systems cannot advertise actionable marks');
 const icons=scene().render(1).filter(n=>n.kind==='Canvas'&&n.p?.height===14);
 assert(icons.length>0, 'State labels must have discreet icons');
 for(const icon of icons) assert(icon.draw(14,14).length>0);
@@ -81,15 +91,14 @@ assert.equal(zapPaths(restingZap.draw(2.49)[0]).length,0,'Resting robots must no
 const waitingZap=scene({work:3});waitingZap.data.snapshot.workItems.forEach(w=>{w.attention='review';});waitingZap.update();
 assert.equal(zapPaths(waitingZap.draw(2.49)[0]).length,0,'Awaiting-action orbs must not zap');
 assert.deepEqual(zapScene.commands,[]);
-const statusLabels=scene().render(1).filter(n=>n.kind==='Text'&&n.p?.width===78);
-assert(statusLabels.length>0&&statusLabels.every(n=>n.p.align==='start'),'State text must align directly beside its icon');
+assert(!scene().render(1).some(n=>n.kind==='Text'&&n.p?.width===78),'Orbit must not repeat state labels beneath titles');
 for(const light of [false,true]) {
     const s=scene({light});const a=s.draw(.2), b=s.draw(1.4);
     assert.equal(a.length,2);assert.notDeepEqual(a,b,'Full scene should move');
     for(const frame of [...a,...b])for(const op of frame)for(const arg of op.args||[]) {
         const check=v=>{if(typeof v==='number')assert(Number.isFinite(v));else if(Array.isArray(v))v.forEach(check);};check(arg);
     }
-    const nodes=s.render(1), row=nodes.find(n=>n.kind==='Row'&&n.h?.onTap&&(n.c||[]).some(c=>c.p.text==='Task p0 0'));
+    const nodes=s.render(1), row=nodes.find(n=>n.kind==='Row'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text==='Task p0 0'));
     assert(row,'Stationary work selection missing'); row.h.onTap(0,0);
     assert.equal(s.instance.values[s.slot('selectedWork')],'p0w0');
     assert(s.render(2).some(n=>n.p?.text==='Task p0 0'),'Existing detail must open');
@@ -117,3 +126,44 @@ assert(scene({work:3}).render(1).some(n=>n.p?.text==='3 tasks'),'Plural task cou
 const unsupported=scene({view:'unknown'});assert.equal(unsupported.draw(1).length,0,'Unknown saved views fall back to Quiet');
 assert(program.globals.find(g=>g.name==='observatoryView').persist);
 console.log('Orbit generated-renderer checks passed: themes, motion, stale state, bounds, pagination, detail selection and no frame I/O.');
+
+for(const [width,columns]of [[360,1],[440,1],[540,2],[600,2],[684,3],[900,3],[1400,3]]) {
+ const grid=scene({count:3,screenWidth:width}).render(1).find(n=>n.kind==='Grid' && n.c?.some(c=>c.kind==='Column'));
+ assert(grid,'Orbit grid must render');assert.equal(grid.p.columns,columns,'Content-based column count at '+width);
+ assert(grid.p.width<=width && grid.p.width<=1010,'Tile group stays bounded');
+}
+assert.equal(scene({count:1,screenWidth:1400}).render(1).find(n=>n.kind==='Grid').p.width,330,'One system must not stretch across the desktop');
+
+// Compact desktop rows retain full touch targets on Android.
+for(const [linux,height]of [[true,22],[false,44]]) {
+ const nodes=scene({count:3,work:3,screenWidth:684,linux}).render(1);
+ const rows=nodes.filter(n=>n.kind==='Row'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text?.startsWith('Task p')));
+ assert.equal(rows.length,9);assert(rows.every(n=>n.p.height===height));
+ const grid=nodes.find(n=>n.kind==='Grid');const cell=(grid.p.width-20)/3-20;
+ for(const field of nodes.filter(n=>n.kind==='Canvas'&&n.p?.height===164)) {
+  for(const op of field.draw(cell,164))for(const [x,y] of op.points||[])assert(x>=0&&x<=cell&&y>=0&&y<=164,'Narrow rails stay inside their own tile');
+ }
+}
+// Smooth hump sampling is independent of panel width; only the orb breathes.
+for(const width of [260,684,1440]) {
+ const s=scene({count:1,work:1});s.set('selectedWork','p0w0');
+ const draw=t=>s.render(t).find(n=>n.kind==='Canvas'&&n.p?.height===25).draw(width,25);
+ const first=draw(.2),later=draw(1.4),rail=first.find(op=>op.op==='path');
+ assert.deepEqual(rail,later.find(op=>op.op==='path'),'The curve must stay still');
+ const orb=first.find(op=>op.op==='circle');
+ const hump=rail.points.filter(p=>Math.abs(p[0]-orb.args[0])<=18.001);
+ assert.equal(hump.length,65,'The hump keeps all local samples even on wide panels');
+ for(const [x,y]of hump)assert(x>=0&&x<=width&&y<=17&&y>=9.5);
+ assert(Math.min(...hump.map(p=>Math.hypot(p[0]-orb.args[0],p[1]-17)))-3.8-.75>2.8,'Curve clears the maximum pulsing orb');
+}
+// Unified diff markers color additions/removals without coloring ordinary output.
+const details=scene({count:1,work:1});
+details.data.snapshot.workItems[0]._artifactKeys=['diff'];
+details.data.snapshot.artifacts=[{_key:'diff',name:'demo.ts',kind:'change_set',_url:'',_previewTruncated:false,_preview:'--- a/demo.ts\n+++ b/demo.ts\n-old\n+new\n unchanged'}];details.update();details.set('selectedWork','p0w0');
+const diffText=details.render(1).filter(n=>n.kind==='Text');
+const color=t=>diffText.find(n=>n.p?.text===t)?.p.color;
+assert(color('-old')&&color('+new')&&color(' unchanged'));
+assert.notEqual(color('-old'),color('+new'));
+assert.notEqual(color('+new'),color(' unchanged'));
+assert.equal(color('--- a/demo.ts'),color('+++ b/demo.ts'),'File headers share neutral accent ink');
+assert.deepEqual(details.commands,[],'Inspecting a diff must remain read-only');

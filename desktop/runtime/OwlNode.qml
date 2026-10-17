@@ -528,7 +528,7 @@ Item {
     id: buttonC
     Item {
       implicitWidth: label.implicitWidth + 20 * root.dp
-      implicitHeight: label.implicitHeight + 12 * root.dp
+      implicitHeight: root.typography.controlHeight(label.implicitHeight / root.dp, 6) * root.dp
       Rectangle {
         anchors.fill: parent
         // The launcher's corners follow its style, and Omarchy's is square.
@@ -783,7 +783,7 @@ Item {
     id: inputC
     Rectangle {
       implicitWidth: 120 * root.dp
-      implicitHeight: field.implicitHeight + 12 * root.dp
+      implicitHeight: root.typography.controlHeight(field.implicitHeight / root.dp, 6) * root.dp
       radius: 6 * root.dp
       color: "transparent"
       border.width: Math.max(1, root.dp)
@@ -792,7 +792,10 @@ Item {
         id: field
         activeFocusOnTab: true
         anchors.fill: parent
-        anchors.margins: 6 * root.dp
+        anchors.leftMargin: 6 * root.dp
+        anchors.rightMargin: 6 * root.dp
+        anchors.topMargin: 3 * root.dp
+        anchors.bottomMargin: 3 * root.dp
         verticalAlignment: TextInput.AlignVCenter
         color: root.p.color || (root.widget ? root.widget.ink("foreground") : "white")
         font.pixelSize: root.p.fontSize === undefined ? root.typography.size("body")

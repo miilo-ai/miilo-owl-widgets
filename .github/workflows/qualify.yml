@@ -36,7 +36,7 @@ jobs:
         token: ${{ github.event_name != 'pull_request' && (secrets.MIILO_SDK_READ_TOKEN
           || secrets.MIILO_WORKSPACE_READ_TOKEN) || '' }}
     - name: Architecture boundary gate
-      run: python3 tools/check_architecture.py && python3 tools/test_architecture.py
+      run: node tools/check-architecture.cjs && node --test tools/architecture.test.cjs && node tools/check-no-python.cjs
     - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
       with:
         toolchain: 1.96.1

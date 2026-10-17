@@ -55,3 +55,19 @@ The native implementation keeps that principle and the existing OWL renderer.
 Final official validation: `cargo xtask check-owl` passed all 264 tile/screen
 compiler/evaluator cases across the three generated widgets. Existing approval,
 confirmation, evidence, search and responsive collapsed-tile assertions passed.
+
+## Attention consistency follow-up
+
+Orbit now passes the shared robot's attention/error mark explicitly, aggregating
+all system items before the eight-orb display cap. Needs-you work shows ?!, failed
+work takes priority with !!, and stale/offline sources suppress actionable marks.
+The shared robot also uses a supplied mark for its blocked/error expression.
+Regression draw tests cover attention, failures outside the visible cap, cleared
+work and stale sources. Existing motion, geometry, portrait parity and portable
+interaction checks pass. Official syntax checks pass for all three widgets.
+
+Controlled-time recording now uses the same sample task/state distribution as
+the browser: one factory review, coding tasks implementing, one dormant system.
+The toolbar order is Settings, Refresh, then the system selector. Plugin source
+provenance includes the local presentation-consistency patch until a new source
+revision is committed and pinned. Installed machine acceptance remains separate.

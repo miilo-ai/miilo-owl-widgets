@@ -11,8 +11,11 @@ outputs:
 runs:
   using: composite
   steps:
+  - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+    with:
+      node-version: 22
   - id: access
     shell: bash
-    run: python .github/release-tools/sdk_access.py
+    run: node .github/release-tools/sdk-access.cjs
     env:
       SDK_READ_TOKEN: ${{ inputs.token }}

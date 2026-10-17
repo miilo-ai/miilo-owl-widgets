@@ -7,5 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - run: python3 tools/check_architecture.py
-      - run: python3 tools/test_architecture.py
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - run: node tools/check-architecture.cjs
+      - run: node --test tools/architecture.test.cjs
+      - run: node tools/check-no-python.cjs

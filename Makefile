@@ -1,9 +1,12 @@
-PYTHON ?= python3
 .PHONY: assemble test check-owl check-desktop check-keyboard check-typography build build-linux package
 assemble:
 	cargo xtask assemble
 
 test:
+	node tools/check-no-python.cjs
+	node --test tools/no-python.test.cjs
+	node tools/check-architecture.cjs
+	node --test tools/architecture.test.cjs .github/release-tools/sdk-access.test.cjs
 	cargo test --locked --manifest-path helper/Cargo.toml -j 2
 	cargo test --locked --manifest-path xtask/Cargo.toml -j 2
 
@@ -33,4 +36,4 @@ check-typography:
 
 .PHONY: render-design
 render-design:
-	$(PYTHON) tools/render-orbit.py
+	node tools/render-orbit.cjs

@@ -83,6 +83,9 @@ widget "miilo" {
   let actor = find(actors, a => a._key == selectedActor)
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
+  let toolbarHeight = linux ? 34 : 44
+  let fieldHeight = linux ? 32 : 44
+  let tabHeight = linux ? 28 : 44
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
@@ -106,7 +109,7 @@ widget "miilo" {
     Row {
       gap: 4
       align: center
-      Box { width: 44; height: 44; align: center; onTap: setupOpen = !setupOpen
+      Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
         Canvas {
           width: 24
           height: 24
@@ -118,14 +121,14 @@ widget "miilo" {
           }
         }
       }
-      if len(allProviders) > 1 {
-        Box { width: 44; height: 44; align: center; onTap: systemsOpen = !systemsOpen
-          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
+      if !requestPending {
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
         }
       }
-      if !requestPending {
-        Box { width: 44; height: 44; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
-          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
+      if len(allProviders) > 1 {
+        Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
+          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
         }
       }
     }
@@ -138,8 +141,8 @@ widget "miilo" {
         gap: 4
         align: center
         if !leftHanded { Spacer { weight: 1 } }
-        if focused != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-        else if actor != null { Text { text: "←"; width: 44; height: 44; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+        if focused != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
+        else if actor != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
         ToolbarControls { }
         if leftHanded { Spacer { weight: 1 } }
       }
@@ -172,23 +175,6 @@ widget "miilo" {
     }
   }
 
-  component Arc(phase, moving) {
-    Canvas {
-      fill: width
-      height: 25
-      let index = indexOf(phases, phase)
-      let cx = 12 + clamp(index, 0, 4) / 4 * max(width - 24, 1)
-      let xs = range(81).map(i => i * width / 80)
-      let points = xs.map(x => [x, 17 - (abs(x - cx) < 12 ? 9 * (1 + cos(abs(x - cx) / 12 * 3.14159)) / 2 : 0)])
-      if index >= 0 {
-        path(points, stroke: alpha(accent, 0.7), width: 1.5)
-        circle(cx, 17, moving ? 3.4 + 0.4 * sin(time * 2) : 3.4, fill: accent)
-      } else {
-        line(0, 17, width, 17, stroke: alpha(muted, 0.25), width: 1.5)
-      }
-    }
-  }
-
   component WorkRows(list, showSystem = false) {
     for w in list.take(pageSize) key w._key {
       Column {
@@ -214,18 +200,57 @@ widget "miilo" {
     }
   }
 
+  component Arc(phase, moving) {
+    Canvas {
+      fill: width
+      height: 25
+      let index = indexOf(phases, phase)
+      let cx = 18 + clamp(index, 0, 4) / 4 * max(width - 36, 1)
+      // Sample the hump locally, so a wide panel never turns it into a triangle.
+      let hump = range(65).map(i => { t: i / 64 }).map(p => [cx - 18 + p.t * 36, 17 - 7.5 * (1 - cos(p.t * 2 * pi)) / 2])
+      let points = [[0, 17]] + hump + [[width, 17]]
+      if index >= 0 {
+        path(points, stroke: alpha(accent, 0.7), width: 1.5, cap: round)
+        circle(cx, 17, moving ? 3.4 + 0.4 * sin(time * 2) : 3.4, fill: accent)
+      } else {
+        line(0, 17, width, 17, stroke: alpha(muted, 0.25), width: 1.5)
+      }
+    }
+  }
+
+  component ArtifactPreview(a) {
+    let lines = split(a._preview ?? "", "\n")
+    for line in lines.take(80) {
+      let add = a.kind == "change_set" && startsWith(line, "+") && !startsWith(line, "+++ ")
+      let remove = a.kind == "change_set" && startsWith(line, "-") && !startsWith(line, "--- ")
+      let hunk = a.kind == "change_set" && (startsWith(line, "@@") || startsWith(line, "+++ ") || startsWith(line, "--- "))
+      Text { text: line == "" ? " " : line; fill: width; font: mono; fontSize: 11; maxLines: 8; padding: 3; color: add ? mix(green, foreground, 0.3) : remove ? mix(red, foreground, 0.2) : hunk ? accent : foreground; background: add ? alpha(green, 0.08) : remove ? alpha(red, 0.08) : transparent }
+    }
+    if len(lines) > 80 || a._previewTruncated { Text { text: "Preview shortened"; fontSize: 10; color: muted } }
+  }
   component TaskArtifacts() {
     let linked = artifacts.filter(a => contains(focused._artifactKeys ?? [], a._key))
-    Text { text: "Files & changes"; style: small; color: muted }
+    Spacer { height: 6 }
+    Text { text: "Files & changes"; font: sans; fontSize: 12; color: accent }
     if len(linked) == 0 { Text { text: "No files or change sets supplied"; style: small; color: muted } }
     for a in linked.take(pageSize) key a._key {
       Column {
-        gap: 4
-        Text { text: a.name; style: small; maxLines: 4 }
-        Text { text: a.kind == "change_set" ? "Change set" : a.kind; style: small; color: muted }
-        if a._preview != "" {
-          Text { text: a._preview; style: small; maxLines: 400 }
-          if a._previewTruncated { Text { text: "Preview shortened"; style: small; color: muted } }
+        fill: width
+        gap: 5
+        padding: 10
+        border: 1
+        borderColor: alpha(accent, 0.22)
+        background: alpha(accent, 0.025)
+        radius: 8
+        Row {
+          fill: width
+          gap: 8
+          Text { text: a.name; weight: 1; font: mono; fontSize: 12; color: foreground; maxLines: 4 }
+          Text { text: a.kind == "change_set" ? "Diff" : a.kind; width: 44; fontSize: 10; align: end; color: muted; maxLines: 1 }
+        }
+        Spacer { height: 1; fill: width; background: alpha(accent, 0.13) }
+        if (a._preview ?? "") != "" {
+          ArtifactPreview { a: a }
         } else if a.kind == "file" || a.kind == "change_set" {
           Text { text: "Diff not supplied"; style: small; color: muted }
         }
@@ -238,14 +263,19 @@ widget "miilo" {
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
-      Text { text: focused.title; style: body; maxLines: 4 }
-      Text { text: "${get(find(allProviders, p => p.id == focused.providerId), "name", "System")} · ${focused.phase}"; style: small; color: muted; maxLines: 1 }
+      Text { text: focused.title; font: sans; fontSize: 17; color: foreground; maxLines: 4 }
+      Row {
+        fill: width
+        gap: 8
+        Text { text: get(find(allProviders, p => p.id == focused.providerId), "name", "System"); weight: 1; fontSize: 11; color: muted; maxLines: 1 }
+        Text { text: focused.phase; width: 90; height: 22; align: center; fontSize: 10; color: accent; background: alpha(accent, 0.1); radius: 4 }
+      }
       Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
       if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 8 } }
       if !requestPending {
         Flow {
           gap: 6
-          Button { text: "Explain"; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          Button { text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
           for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
             Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
           }
@@ -276,11 +306,25 @@ widget "miilo" {
       }
       Column {
         gap: 6
-        Text { text: "Evidence"; style: small; color: muted }
+        Spacer { height: 6 }
+        Text { text: "Evidence"; font: sans; fontSize: 12; color: accent }
         let taskEvidence = evidence.filter(e => contains(focused._evidenceKeys ?? [], e._key))
         if len(taskEvidence) == 0 { Text { text: "No evidence supplied"; style: small; color: muted } }
         for e in taskEvidence.take(pageSize) key e._key {
-          Text { text: "${e.outcome} · ${e.summary}"; style: small; maxLines: 8 }
+          Row {
+            fill: width
+            padding: 10
+            gap: 10
+            radius: 7
+            background: alpha(accent, 0.035)
+            border: 1
+            borderColor: alpha(accent, 0.14)
+            let passed = contains(["passed", "pass", "success"], lower(e.outcome))
+            let failed = contains(["failed", "fail", "error"], lower(e.outcome))
+            let ink = passed ? mix(green, foreground, 0.25) : failed ? mix(red, foreground, 0.15) : accent
+            Text { text: e.outcome; width: 58; height: 22; align: center; fontSize: 10; color: ink; background: alpha(ink, 0.09); radius: 4 }
+            Text { text: e.summary; weight: 1; fontSize: 12; maxLines: 8 }
+          }
           if (e._missingArtifactCount ?? 0) > 0 { Text { text: "${e._missingArtifactCount} referenced artifacts unavailable"; style: small; color: muted } }
         }
         if len(taskEvidence) > pageSize { Button { text: "More evidence"; onTap: pageSize = pageSize + 5 } }
@@ -314,14 +358,14 @@ widget "miilo" {
             onSubmit: { query = trim(value); pageSize = 5; searchEditing = false }
           }
         }
-        Box { width: 36; height: 44; align: center; onTap: searchEditing = false
+        Box { width: 36; height: fieldHeight; align: center; onTap: searchEditing = false
           Text { text: "✓"; width: 36; fontSize: 22; align: center; color: accent }
         }
       } else {
-        Box { weight: 1; height: 44; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
+        Box { weight: 1; height: fieldHeight; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
           Text { text: query == "" ? placeholder : query; fill: width; fontSize: 13; color: query == "" ? muted : foreground; maxLines: 1 }
         }
-        if needle != "" { Box { width: 30; height: 44; align: center; onTap: { query = ""; pageSize = 5 }
+        if needle != "" { Box { width: 30; height: fieldHeight; align: center; onTap: { query = ""; pageSize = 5 }
           Text { text: "×"; width: 30; fontSize: 22; align: center; color: muted }
         } }
         if !leftHanded && configured { ToolbarControls { } }
@@ -369,9 +413,9 @@ widget "miilo" {
       let clock = motion ? time * robotSpeed : 0
       let unavailable = contains(["offline", "unreachable", "disconnected"], agent.status) || contains(["offline", "unreachable", "unknown"], agent.health)
       let owned = works.filter(w => contains(w._actorKeys ?? [], agent._key ?? ""))
-      let failed = agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
+      let failed = alert == "!!" || agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
       let focused = !unavailable && !failed && (agent.status == "reviewing" || any(owned, w => w.lifecycle == "active" && contains(["verifying", "reviewing"], w.phase)))
-      let blocked = contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
+      let blocked = alert != "" || contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
       let wistful = expressive && !unavailable && blocked && (clock + max(slot, 0) * 3.7) % 23 < 2.5
       let cx = width / 2
       let cy = height * (anchored ? 0.5 : 0.48)
@@ -470,19 +514,18 @@ widget "miilo" {
   }
 
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0) {
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
     Box {
       fill: width
-      height: 192
+      height: 164
       Canvas {
         fill: true
-        height: 192
+        height: 164
         let cx = width / 2
         let cy = height / 2
-        let fit = 1
         let phase = max(slot, 0) * 2.399963229728653
         let sweep = sin(clock * 2 * pi / 30 + phase) * 0.17
         let planes = [0, 1].map(lane => {
@@ -549,17 +592,18 @@ widget "miilo" {
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112; slot: slot; anchored: true }
+        Bot { agent: anchor; s: 112 * fit; slot: slot; anchored: true; alert: alert }
       }
     }
   }
 
   // Presentation only: labels and provider action policy remain authoritative.
-  component OrbitStateIcon(phase, attention, offline, failed) {
+  component OrbitStateIcon(phase, attention, offline, failed, ink = accent) {
     Canvas {
       width: 14
       height: 14
-      let ink = offline ? muted : accent
+      // Optical alignment with the title glyphs, rather than the line box.
+      offset: [0, 1]
       if offline {
         circle(7, 7, 4.5, stroke: ink, width: 1)
         line(3, 11, 11, 3, stroke: ink, width: 1)
@@ -567,13 +611,17 @@ widget "miilo" {
         line(3.5, 3.5, 10.5, 10.5, stroke: ink, width: 1.3)
         line(3.5, 10.5, 10.5, 3.5, stroke: ink, width: 1.3)
       } else if attention != "none" {
-        line(7, 2.5, 7, 8, stroke: ink, width: 1.4)
-        circle(7, 11, 0.9, fill: ink)
+        // Canvas text has different ascent from vector strokes.
+        text("?!", 7, 10, size: 12, bold: true, align: center, color: ink)
       } else if phase == "implementing" {
         path([[4.5, 3], [1.5, 7], [4.5, 11]], stroke: ink, width: 1.1, cap: round)
         path([[9.5, 3], [12.5, 7], [9.5, 11]], stroke: ink, width: 1.1, cap: round)
         line(8, 3.5, 6, 10.5, stroke: ink, width: 1)
-      } else if contains(["verifying", "reviewing", "review"], phase) {
+      } else if phase == "verifying" {
+        path([[6, 2], [6, 7], [2.5, 11], [3.5, 12], [10.5, 12], [11.5, 11], [8, 7], [8, 2]], stroke: ink, width: 1, cap: round)
+        line(5, 2, 9, 2, stroke: ink, width: 1)
+        line(5, 8, 9, 8, stroke: ink, width: 1)
+      } else if contains(["reviewing", "review"], phase) {
         circle(6, 6, 3.5, stroke: ink, width: 1)
         line(8.5, 8.5, 12, 12, stroke: ink, width: 1.2)
       } else {
@@ -589,50 +637,50 @@ widget "miilo" {
     Row {
       fill: width
       gap: 6
-      Text { text: "All work"; width: 72; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
-      Text { text: "Needs you ${count}"; width: max(84, 64 + len("${count}") * 7); height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
+      Text { text: "All work"; width: 72; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
+      Text { text: "Needs you ${count}"; width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Text { text: "Quiet"; width: 48; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
-        Text { text: "Orbit"; width: 48; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
+        Text { text: "Orbit"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
       }
     }
   }
-  component OrbitCluster(provider, items, slot = 0) {
+  component OrbitCluster(provider, items, slot = 0, fit = 0.85) {
     let team = actors.filter(a => a.providerId == provider.id)
     let offline = contains(["offline", "unreachable", "unknown", "stale"], provider.health ?? "") || contains(["offline", "unreachable", "stale"], provider.status ?? "") || any(team, a => contains(["offline", "unreachable", "unknown"], a.health ?? ""))
     let representative = len(team) > 0 ? team[0] : {_key: provider.id, providerId: provider.id, name: provider.name, status: "ready", health: "unknown"}
     let anchor = offline ? {_key: representative._key, providerId: provider.id, name: representative.name, status: "offline", health: "unreachable"} : representative
+    let errors = any(items, w => w.lifecycle == "failed") || any(team, a => contains(["failed", "error"], a.status))
+    let warning = any(items, w => w.attention != "none") || any(team, a => a.status == "blocked")
+    let mark = offline ? "" : errors ? "!!" : warning ? "?!" : ""
     let current = items.sortBy(w => w._key).take(8)
     Column {
       fill: width
-      padding: 12
-      gap: 3
+      padding: 10
+      gap: 1
       background: alpha(accent, 0.035)
       radius: 12
       Row {
         fill: width
         align: center
-        Text { text: provider.name; weight: 1; fontSize: 14; maxLines: 1 }
-        Text { text: offline ? "Unavailable" : "${len(items)} ${len(items) == 1 ? "task" : "tasks"}"; width: 92; align: end; fontSize: 10; color: muted; maxLines: 1 }
+        Text { text: provider.name; weight: 1; fontSize: 11; maxLines: 1 }
+        Text { text: offline ? "Unavailable" : "${len(items)} ${len(items) == 1 ? "task" : "tasks"}"; width: 60; align: end; fontSize: 10; color: muted; maxLines: 1 }
       }
-      OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot }
+      OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot; alert: mark; fit: fit }
       if len(items) == 0 { Text { text: offline ? "Waiting for a fresh observation" : "No tasks in flight"; style: small; color: muted } }
       for w in current key w._key {
         Row {
           fill: width
-          height: 44
+          height: linux ? 22 : 44
           gap: 6
           align: center
           onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
-          Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1 }
-          Row {
-            gap: 4
-            align: center
-            OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed" }
-            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: start; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
-          }
+          let rowInk = offline ? muted : w.lifecycle == "failed" ? mix(red, foreground, 0.15) : w.attention != "none" ? accent : w.phase == "verifying" ? mix(cyan, foreground, 0.4) : foreground
+          OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed"; ink: rowInk }
+          // Match visible title glyphs to the icon center; Qt line leading sits above it.
+          Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
@@ -641,12 +689,14 @@ widget "miilo" {
   component OrbitView(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
     let page = min(orbitPage, max(0, ceil(len(systems) / 6) - 1))
+    // Content-sized columns, not a desktop/mobile breakpoint.
+    let columns = max(1, min(len(systems), min(3, floor((screenWidth - 14) / 218))))
     Grid {
-      fill: width
-      columns: screenWidth >= 760 ? 2 : 1
-      gap: 12
+      width: min(max(screenWidth - 24, 100), columns * 330 + (columns - 1) * 10)
+      columns: columns
+      gap: 10
       for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
-        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id) }
+        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * 330 + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
       }
     }
     if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }

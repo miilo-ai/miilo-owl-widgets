@@ -62,7 +62,14 @@ fn assemble() -> Result<()> {
             "widget \"{title}\" {{\n  meta {{ owl: 6; description: \"{description}\"; version: \"{version}\"; license: \"MIT\"; category: \"dev\" }}\n  page: 1\n  order: {}\n  size: 3x2\n  minSize: 3x2\n  padding: 8\n",
             index - 63
         );
-        let mut parts = vec!["appearance", "common", "discovery"];
+        let mut parts = vec![
+            "appearance",
+            "common",
+            "progress",
+            "artifacts",
+            "work-detail",
+            "discovery",
+        ];
         if index != 72 {
             parts.extend(["robot", "colors"]);
         }
@@ -72,14 +79,7 @@ fn assemble() -> Result<()> {
         parts.push(name);
         let mut fragments = vec![];
         for part in parts {
-            let mut source = fs::read_to_string(root.join(format!("widgets/{part}.inc")))?;
-            if part == "common" {
-                source = source.replace(
-                    "  component WorkDetail()",
-                    &(fs::read_to_string(root.join("widgets/artifacts.inc"))?
-                        + "\n  component WorkDetail()"),
-                );
-            }
+            let source = fs::read_to_string(root.join(format!("widgets/{part}.inc")))?;
             fragments.push(source);
         }
         text.push_str(&fragments.join("\n"));

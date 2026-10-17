@@ -10,9 +10,9 @@
       let clock = motion ? time * robotSpeed : 0
       let unavailable = contains(["offline", "unreachable", "disconnected"], agent.status) || contains(["offline", "unreachable", "unknown"], agent.health)
       let owned = works.filter(w => contains(w._actorKeys ?? [], agent._key ?? ""))
-      let failed = agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
+      let failed = alert == "!!" || agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
       let focused = !unavailable && !failed && (agent.status == "reviewing" || any(owned, w => w.lifecycle == "active" && contains(["verifying", "reviewing"], w.phase)))
-      let blocked = contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
+      let blocked = alert != "" || contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
       let wistful = expressive && !unavailable && blocked && (clock + max(slot, 0) * 3.7) % 23 < 2.5
       let cx = width / 2
       let cy = height * (anchored ? 0.5 : 0.48)

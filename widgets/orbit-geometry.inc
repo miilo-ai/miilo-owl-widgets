@@ -1,17 +1,16 @@
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0) {
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
     Box {
       fill: width
-      height: 192
+      height: 164
       Canvas {
         fill: true
-        height: 192
+        height: 164
         let cx = width / 2
         let cy = height / 2
-        let fit = 1
         let phase = max(slot, 0) * 2.399963229728653
         let sweep = sin(clock * 2 * pi / 30 + phase) * 0.17
         let planes = [0, 1].map(lane => {
@@ -78,7 +77,7 @@
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112; slot: slot; anchored: true }
+        Bot { agent: anchor; s: 112 * fit; slot: slot; anchored: true; alert: alert }
       }
     }
   }

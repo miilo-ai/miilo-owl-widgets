@@ -46,9 +46,17 @@ Separate projection/action policy domain, application use cases/ports, and confi
 
 ## Automated boundary gate
 
-Run `python3 tools/check_architecture.py` and `python3 tools/test_architecture.py`.
+Run `node tools/check-architecture.cjs` and `node --test tools/architecture.test.cjs`.
 The architecture workflow enforces `.specify/architecture.json`. Existing size
 exceptions are explicit, bounded debt and cannot grow. Do not expand exceptions
 to bypass a failing refactor. These source checks supplement behavioral tests.
 
 Release qualification also runs the architecture gate before reporting readiness.
+
+## Toolchain boundary
+
+No Python source or tooling dependency in this repository, including CI, installers,
+checks, tests and preview capture. Use Rust for application behavior, Node built-ins
+for portable development tooling, shell orchestration and native Qt for rendering.
+Run `node tools/check-no-python.cjs`; do not bypass it or replace acceptance with a
+static image. Historical evidence remains dated and is not rewritten as a new run.

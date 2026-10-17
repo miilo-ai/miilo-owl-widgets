@@ -2,7 +2,7 @@
 
 Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
-Application logic, installation, assembly, validation orchestration, and tests are Rust. Run `make test` and `cargo xtask assemble`; Python is not required. OWL remains the shared declarative UI format. Its official Android compiler and the Linux Quickshell renderer are upstream platform tools.
+Application logic and device installation use Rust. Assembly and release orchestration use Rust xtask; portable source/CI checks use Node built-ins, and preview capture uses native Qt. Run `make test` and `cargo xtask assemble`. OWL remains the shared declarative UI format. Its official Android compiler and the Linux Quickshell renderer are upstream platform tools.
 
 The Linux dashboard, native Omarchy bar and desktop tile, and existing-session connection flow are documented in [Miilo on Linux](docs/desktop.md).
 
@@ -179,8 +179,8 @@ is tracked in `.specify`; passing macOS helper tests is not native Linux sign-of
 ## Architecture checks
 
 The [engineering constitution](.specify/memory/constitution.md) defines the
-boundaries. Run `python3 tools/check_architecture.py` and
-`python3 tools/test_architecture.py`; CI qualification runs both. These are
+boundaries. Run `node tools/check-architecture.cjs` and
+`node --test tools/architecture.test.cjs`; CI qualification runs both. These are
 development checks, not runtime dependencies.
 
 Text chat helper checkpoint and setup: [launcher chat](docs/launcher-chat.md). Graphical chat and voice acceptance remain pending.
@@ -213,3 +213,5 @@ SSE are not implicitly compressed; no provider account or observation state chan
 
 Expanded native design: [Quiet and Orbit](docs/orbit.md), including local Qt
 rendering and remaining native acceptance gates.
+
+Development and preview tooling: [toolchain guide](docs/development-toolchain.md).
