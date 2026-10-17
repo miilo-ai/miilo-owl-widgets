@@ -39,6 +39,7 @@ problems = []
 engine.warnings.connect(lambda items: problems.extend(item.toString() for item in items))
 engine.rootContext().setContextProperty('widgetSource', (root / '70-miilo-fleet.owl').read_text())
 engine.rootContext().setContextProperty('sceneData', data)
+engine.setInitialProperties({'width': int(os.environ.get('MIILO_PREVIEW_WIDTH', '900'))})
 engine.load(QUrl.fromLocalFile(str(folder / 'orbit.qml')))
 if not engine.rootObjects():
     raise SystemExit('Orbit QML fixture failed to load')

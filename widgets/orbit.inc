@@ -1,12 +1,17 @@
   state observatoryView = "quiet" persist
   state orbitPage = 0
-  component ViewChoice() {
+  component WorkViewToolbar(count) {
     Row {
       fill: width
       gap: 6
-      Button { text: "Quiet"; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
-      Button { text: "Orbit"; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+      Text { text: "All work"; width: 72; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
+      Text { text: "Needs you ${count}"; width: max(84, 64 + len("${count}") * 7); height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
       Spacer { weight: 1 }
+      Row {
+        gap: 4
+        Text { text: "Quiet"; width: 48; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
+        Text { text: "Orbit"; width: 48; height: 44; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+      }
     }
   }
   component OrbitCluster(provider, items, slot = 0) {
@@ -25,10 +30,10 @@
         fill: width
         align: center
         Text { text: provider.name; weight: 1; fontSize: 14; maxLines: 1 }
-        Text { text: offline ? "Unavailable" : "${len(items)} work"; width: 92; align: end; fontSize: 10; color: muted; maxLines: 1 }
+        Text { text: offline ? "Unavailable" : "${len(items)} ${len(items) == 1 ? "task" : "tasks"}"; width: 92; align: end; fontSize: 10; color: muted; maxLines: 1 }
       }
       OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot }
-      if len(items) == 0 { Text { text: offline ? "Waiting for a fresh observation" : "No work in flight"; style: small; color: muted } }
+      if len(items) == 0 { Text { text: offline ? "Waiting for a fresh observation" : "No tasks in flight"; style: small; color: muted } }
       for w in current key w._key {
         Row {
           fill: width
@@ -40,7 +45,7 @@
           Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
         }
       }
-      if len(items) > 8 { Button { text: "+${len(items) - 8} work · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
+      if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
     }
   }
   component OrbitView(list) {

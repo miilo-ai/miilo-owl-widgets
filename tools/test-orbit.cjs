@@ -51,11 +51,19 @@ for(const motion of ['reduced','off']) {
 const stale=scene({stale:true});assert.deepEqual(stale.draw(.2),stale.draw(9),'Stale geometry must stop');
 assert(stale.render(1).some(n=>n.p?.text==='Unavailable'));
 const many=scene({count:50});assert.equal(many.draw(.2).length,6,'Page must bound clusters');
-assert(many.render(1).some(n=>n.p?.text==='+1 work · inspect system'));
+assert(many.render(1).some(n=>n.p?.text==='+1 task · inspect system'));
 many.set('orbitPage',8);assert.equal(many.draw(.2).length,2);
 many.data.snapshot.providers=many.data.snapshot.providers.slice(0,1);many.update();assert.equal(many.draw(.2).length,1,'Page clamps after removal');
 const none=scene({count:0});assert(none.render(1).some(n=>n.p?.text==='No systems to display'));
 const quiet=scene({view:'quiet'});assert.equal(quiet.draw(1).length,0,'Quiet must retain the current work view');
+const toolbar=quiet.render(1).find(n=>n.kind==='Row' && n.c?.some(c=>c.p?.text==='All work'));
+assert(toolbar && toolbar.c.at(-1).c.some(c=>c.p?.text==='Orbit'),'View controls must share the filter row');
+quiet.render(1).find(n=>n.p?.text==='Orbit').h.onTap(0,0);
+assert.equal(quiet.instance.values[quiet.slot('observatoryView')],'orbit');
+assert.equal(quiet.draw(1).length,2);
+assert(scene({work:1}).render(1).some(n=>n.p?.text==='1 task'),'Singular task count');
+assert(scene({work:3}).render(1).some(n=>n.p?.text==='3 tasks'),'Plural task count');
+
 const unsupported=scene({view:'unknown'});assert.equal(unsupported.draw(1).length,0,'Unknown saved views fall back to Quiet');
 assert(program.globals.find(g=>g.name==='observatoryView').persist);
 console.log('Orbit generated-renderer checks passed: themes, motion, stale state, bounds, pagination, detail selection and no frame I/O.');

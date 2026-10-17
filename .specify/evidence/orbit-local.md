@@ -45,3 +45,12 @@ and travelling light now share an exact tilted ellipse. A regression verifies th
 closed seam and the ellipse equation for every rail/highlight sample. Official OWL
 syntax, existing renderer/motion/portrait checks and actual Qt render/selection
 passed; the updated screenshot was inspected. Native machine gates remain open.
+
+## Readability and toolbar follow-up
+
+Center Bot size increased from 62 to 93 dp (same original drawing). Counts use
+singular/plural task labels. Filters and view selection now share one compact
+row with Quiet/Orbit right-aligned and 44 dp hit targets. Actual Qt screenshots
+inspected at 900 and 360 px; native row selection passed at both widths. View
+switching/persistence, task labels, renderer/motion/portrait and official syntax
+checks passed. Omarchy shell-specific gates are unchanged.

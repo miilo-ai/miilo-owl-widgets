@@ -51,7 +51,7 @@
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 62; slot: slot }
+        Bot { agent: anchor; s: 93; slot: slot }
       }
     }
   }
