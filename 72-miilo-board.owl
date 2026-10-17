@@ -1,5 +1,5 @@
 widget "miilo board" {
-  meta { owl: 6; description: "Tasks moving through selected factories"; version: "1.3.0"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Tasks moving through selected factories"; version: "1.4.0"; license: "MIT"; category: "dev" }
   page: 1
   order: 9
   size: 3x2

@@ -7,6 +7,7 @@ pub mod display_names;
 pub mod graph;
 pub mod local_agents;
 pub mod local_import;
+mod local_snapshot;
 pub mod operations;
 pub mod projection;
 pub mod setup;

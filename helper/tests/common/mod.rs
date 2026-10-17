@@ -22,6 +22,7 @@ pub fn endpoint() -> Endpoint {
         token: "private-token".into(),
         providers: vec!["factory".into()],
         allow_actions: true,
+        local_snapshot_file: None,
         actor_names: Default::default(),
     }
 }

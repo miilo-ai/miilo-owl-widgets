@@ -66,6 +66,7 @@ fn add(
         token_file: None,
         providers: vec![],
         allow_actions: false,
+        local_snapshot_file: None,
         actor_names: Default::default(),
     };
     if let Some(file) = endpoint.token.strip_prefix('@') {

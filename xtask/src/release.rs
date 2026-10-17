@@ -204,6 +204,9 @@ fn render_aur(args: &[String]) -> Result<()> {
         )
     };
     text.push_str(&format!("\npackage() {{\n  install -Dm755 \"{source}\" \"$pkgdir/usr/bin/{binary}\"\n  install -Dm644 \"{licensefile}\" \"$pkgdir/usr/share/licenses/$pkgname/LICENSE\"\n}}\n"));
+    if kind == "cli" {
+        text=text.replace("  install -Dm644", "  install -Dm755 \"${srcdir}/miilo-cli-${CARCH}-unknown-linux-gnu/miilo-local\" \"$pkgdir/usr/bin/miilo-local\"\n  install -Dm644");
+    }
     fs::create_dir_all(&destination)?;
     fs::write(destination.join("PKGBUILD"), text)?;
     println!("Rendered {package} {tag}");

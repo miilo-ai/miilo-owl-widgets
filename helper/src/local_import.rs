@@ -14,6 +14,9 @@ use std::{
 pub fn connect(store: &Store, http: &dyn Transport, path: &Path) -> Result<Value> {
     let local: Value = serde_json::from_reader(private_file(path)?.take(2_000_001))
         .map_err(|_| "Invalid local import configuration")?;
+    if local["version"] == 2 && local["mode"] == "local" {
+        return crate::local_snapshot::connect(store, http, &local);
+    }
     if local["version"] != 1 {
         return Err("Unsupported local configuration".into());
     }
@@ -64,6 +67,7 @@ pub fn connect(store: &Store, http: &dyn Transport, path: &Path) -> Result<Value
         token_file: Some(token_file),
         providers,
         allow_actions: false,
+        local_snapshot_file: None,
         actor_names: Default::default(),
     };
     endpoint.credential()?;

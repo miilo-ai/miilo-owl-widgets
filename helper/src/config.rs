@@ -16,6 +16,12 @@ pub struct Endpoint {
     pub token: String,
     #[serde(default, rename = "tokenFile", skip_serializing_if = "Option::is_none")]
     pub token_file: Option<PathBuf>,
+    #[serde(
+        default,
+        rename = "localSnapshotFile",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub local_snapshot_file: Option<PathBuf>,
     pub providers: Vec<String>,
     #[serde(default, rename = "allowActions")]
     pub allow_actions: bool,
@@ -88,7 +94,18 @@ pub fn validate(config: &Config) -> Result<()> {
         if !valid || !seen.insert(&e.id) {
             return Err("Endpoint names must be unique lowercase words/dashes".into());
         }
-        safe_url(&e.url)?;
+        if let Some(path) = &e.local_snapshot_file {
+            if !path.is_absolute()
+                || !e.token.is_empty()
+                || e.token_file.is_some()
+                || e.allow_actions
+                || e.url != "local://desktop"
+            {
+                return Err("Local snapshot sources require an absolute file, no credential, and read-only access".into());
+            }
+        } else {
+            safe_url(&e.url)?;
+        }
         if e.token_file.is_some() && !e.token.is_empty() {
             return Err("Choose a credential or a credential file, not both".into());
         }

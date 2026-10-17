@@ -26,6 +26,9 @@ impl Http {
 }
 impl Transport for Http {
     fn request(&self, endpoint: &Endpoint, path: &str, body: Option<&Value>) -> Result<Value> {
+        if endpoint.local_snapshot_file.is_some() {
+            return crate::local_snapshot::request(endpoint, path, body);
+        }
         let url = format!("{}{path}", safe_url(&endpoint.url)?);
         let mut request = match body {
             Some(b) => self.client.post(url).json(b),

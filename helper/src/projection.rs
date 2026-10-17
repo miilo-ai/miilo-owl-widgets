@@ -61,12 +61,17 @@ pub fn project(endpoint: &Endpoint, raw: &Value) -> Result<Value> {
         .flatten()
         .filter_map(|p| p["id"].as_str())
         .collect();
-    let chosen: HashSet<_> = endpoint
-        .providers
-        .iter()
-        .map(String::as_str)
-        .filter(|p| available.contains(p))
-        .collect();
+    let chosen: HashSet<_> =
+        if endpoint.local_snapshot_file.is_some() && endpoint.providers.is_empty() {
+            available.clone()
+        } else {
+            endpoint
+                .providers
+                .iter()
+                .map(String::as_str)
+                .filter(|p| available.contains(p))
+                .collect()
+        };
     let mut result = empty();
     for name in COLLECTIONS {
         let mut seen = HashSet::new();

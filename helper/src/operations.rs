@@ -55,6 +55,18 @@ pub fn explain(store: &Store, http: &dyn Transport, item: &str, revision: &str) 
         .filter(|s| !s.is_empty())
         .or_else(|| bundle["cause"].as_str().filter(|s| !s.is_empty()))
         .unwrap_or("No explanation provided");
+    let message = if endpoint.local_snapshot_file.is_some() {
+        let limitations = bundle["limitations"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect::<Vec<_>>()
+            .join(" ");
+        format!("{message} {limitations}")
+    } else {
+        message.to_owned()
+    };
     Ok(
         json!({"status":"completed","message":message,"changes":bundle.get("changes").unwrap_or(&json!([])),"evidence":bundle.get("evidence").unwrap_or(&json!([]))}),
     )

@@ -73,13 +73,25 @@ impl Drop for Server {
     }
 }
 fn handle(mut stream: TcpStream, state: &Mutex<State>) {
+    stream.set_nonblocking(false).unwrap();
     stream
         .set_read_timeout(Some(Duration::from_secs(5)))
         .unwrap();
     let mut data = vec![];
     let mut chunk = [0; 8192];
     let header_end = loop {
-        let n = stream.read(&mut chunk).unwrap();
+        let n = match stream.read(&mut chunk) {
+            Ok(n) => n,
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                ) =>
+            {
+                return;
+            }
+            Err(e) => panic!("fixture read failed: {e}"),
+        };
         if n == 0 {
             return;
         }
@@ -101,7 +113,18 @@ fn handle(mut stream: TcpStream, state: &Mutex<State>) {
         })
         .unwrap_or(0);
     while data.len() < header_end + length {
-        let n = stream.read(&mut chunk).unwrap();
+        let n = match stream.read(&mut chunk) {
+            Ok(n) => n,
+            Err(e)
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                ) =>
+            {
+                return;
+            }
+            Err(e) => panic!("fixture read failed: {e}"),
+        };
         if n == 0 {
             return;
         }

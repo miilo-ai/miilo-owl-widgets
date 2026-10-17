@@ -57,8 +57,13 @@ pub fn collect(config: &Config, http: &dyn Transport) -> Value {
 pub fn snapshot(store: &Store, http: &dyn Transport, force: bool) -> Result<Value> {
     let _lock = store.lock()?;
     let config = store.load()?;
-    let fingerprint = key(&serde_json::to_value(&config).map_err(|_| "Invalid configuration")?);
+    let local_signature = crate::local_snapshot::cache_signature(&config).ok();
+    let fingerprint = key(&json!([
+        serde_json::to_value(&config).map_err(|_| "Invalid configuration")?,
+        local_signature
+    ]));
     if !force
+        && local_signature.is_some()
         && let Ok(file) = private_file(&store.directory.join("snapshot-cache.json"))
         && let Ok(cached) =
             serde_json::from_reader::<_, Value>(std::io::Read::take(file, 20_000_001))
