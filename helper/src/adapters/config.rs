@@ -36,8 +36,35 @@ impl Store {
     pub fn from_env() -> Result<Self> {
         let directory = match std::env::var_os("MIILO_OWL_CONFIG_DIR") {
             Some(p) => PathBuf::from(p),
-            None => PathBuf::from(std::env::var_os("HOME").ok_or("Home directory unavailable")?)
-                .join(".config/miilo-owl"),
+            None => {
+                let home =
+                    PathBuf::from(std::env::var_os("HOME").ok_or("Home directory unavailable")?);
+                let root = std::env::var_os("MIILO_HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| home.join(".miilo"));
+                if !root.is_absolute() {
+                    return Err("MIILO_HOME must be absolute".into());
+                }
+                if fs::symlink_metadata(&root).is_ok_and(|m| !m.is_dir() || m.file_type().is_symlink()) {
+                    return Err("MIILO_HOME must be a directory, not a symlink".into());
+                }
+                let manifest = root.join("config.json");
+                if manifest
+                    .try_exists()
+                    .map_err(|_| "Cannot inspect Miilo configuration")?
+                    || fs::symlink_metadata(&manifest).is_ok()
+                {
+                    let value: serde_json::Value =
+                        serde_json::from_reader(private_file(&manifest)?.take(2_000_001))
+                            .map_err(|_| "Invalid Miilo configuration")?;
+                    if value["schemaVersion"] != 1 {
+                        return Err("Unsupported Miilo configuration".into());
+                    }
+                    root.join("connections")
+                } else {
+                    home.join(".config/miilo-owl")
+                }
+            }
         };
         Ok(Self { directory })
     }
