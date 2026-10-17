@@ -54,7 +54,18 @@ fn unsupported_manifest_and_relative_home_fail_without_overwriting() {
     private(&root.join("config.json"), r#"{"schemaVersion":99}"#);
     let result = command(home).env("MIILO_HOME", &root).output().unwrap();
     assert!(!result.status.success());
-    assert!(String::from_utf8_lossy(&result.stderr).contains("Unsupported Miilo configuration"));
+    // The executable sanitizes internal errors; its public contract is JSON stdout.
+    let failure: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(failure["status"], "failed");
+    assert_eq!(
+        failure["message"],
+        "Request failed. Refresh and check setup/access."
+    );
+    assert!(result.stderr.is_empty());
+    assert_eq!(
+        fs::read_to_string(root.join("config.json")).unwrap(),
+        r#"{"schemaVersion":99}"#
+    );
     assert!(!root.join("connections").exists());
     assert!(
         !command(home)

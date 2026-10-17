@@ -45,7 +45,9 @@ impl Store {
                 if !root.is_absolute() {
                     return Err("MIILO_HOME must be absolute".into());
                 }
-                if fs::symlink_metadata(&root).is_ok_and(|m| !m.is_dir() || m.file_type().is_symlink()) {
+                if fs::symlink_metadata(&root)
+                    .is_ok_and(|m| !m.is_dir() || m.file_type().is_symlink())
+                {
                     return Err("MIILO_HOME must be a directory, not a symlink".into());
                 }
                 let manifest = root.join("config.json");
