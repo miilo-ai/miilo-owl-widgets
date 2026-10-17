@@ -65,3 +65,8 @@ or provider-operation evidence. Installed Omarchy acceptance remains pending.
 
 Reproduce with `MIILO_PREVIEW_RECORD=1 MIILO_PREVIEW_HEIGHT=550 python3
 tools/render-orbit.py /tmp/orbit-capture` using the documented Qt environment.
+
+Expressive Full motion includes an occasional short antenna-to-active-task zap,
+using a cool secondary color blended with the theme accent. It is decorative,
+not a provider event. Calm/Reduced/Off or unavailable/resting sources suppress it.
+State text is left aligned immediately beside its icon.

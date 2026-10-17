@@ -518,6 +518,26 @@ widget "miilo" {
             path(filament, stroke: alpha(mix(accent, foreground, 0.2), fade * 0.85), width: 0.9, cap: round)
           }
         }
+        // Decorative electrical activity, never a provider message or action receipt.
+        // Match the shared 93dp Bot antenna, including its expressive bob.
+        let antennaY = cy + 93 * (0.48 - 0.5 - 0.27 * 1.48) + (robotPersonality != "calm" ? sin(clock * 1.8 + max(slot, 0) * 0.8) * 1.2 : 0)
+        let zapTime = (clock + max(slot, 0) * 2.9) % 9
+        let candidates = points.filter(p => p.active && !p.attention && pow(p.px - cx, 2) + pow(p.py - antennaY, 2) > 576).sortBy(p => pow(p.px - cx, 2) + pow(p.py - antennaY, 2))
+        if moving && energized && robotPersonality != "calm" && contains(["working", "running"], anchor.status) && !contains(["failed", "degraded"], anchor.health) && len(candidates) > 0 && zapTime > 2.4 && zapTime < 2.58 {
+          let target = candidates[0]
+          let dx = target.px - cx
+          let dy = target.py - antennaY
+          let distance = sqrt(dx * dx + dy * dy)
+          let strength = sin((zapTime - 2.4) / 0.18 * pi)
+          // A cool secondary tone remains visible when the host omits ANSI cyan.
+          let electric = mix(accent, mix(cyan, hsl(185, 0.8, 0.65), 0.75), 0.8)
+          let bolt = range(7).map(i => {t: i / 6, bend: i == 0 || i == 6 ? 0 : (i % 2 == 0 ? -1 : 1) * (3 + sin(floor(clock / 9) + i) * 1.5)}).map(p => [cx + dx * p.t - dy / distance * p.bend, antennaY + dy * p.t + dx / distance * p.bend])
+          path(bolt, stroke: alpha(electric, strength * 0.08), width: 5, cap: round)
+          path(bolt, stroke: alpha(electric, strength * 0.28), width: 2.5, cap: round)
+          path(bolt, stroke: alpha(mix(electric, foreground, 0.2), strength * 0.95), width: 1, cap: round)
+          circle(cx, antennaY, 4, fill: alpha(electric, strength * 0.35))
+          circle(target.px, target.py, 7, stroke: alpha(electric, strength * 0.65), width: 1)
+        }
         for p in points.sortBy(p => p.z) {
           let ink = offline ? muted : p.attention ? accent : mix(accent, foreground, 0.15)
           let scale = 1 + p.z * 0.15
@@ -612,7 +632,7 @@ widget "miilo" {
             gap: 4
             align: center
             OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed" }
-            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: start; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
           }
         }
       }

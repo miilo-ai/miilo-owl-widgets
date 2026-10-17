@@ -46,7 +46,7 @@
             gap: 4
             align: center
             OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed" }
-            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+            Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: start; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
           }
         }
       }

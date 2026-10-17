@@ -75,3 +75,20 @@ or provider-operation evidence. Installed Omarchy acceptance remains pending.
 
 Reproduce with `MIILO_PREVIEW_RECORD=1 MIILO_PREVIEW_HEIGHT=550 python3
 tools/render-orbit.py /tmp/orbit-capture` using the documented Qt environment.
+
+## Antenna zap and state alignment
+
+State labels now start beside their 14dp icons with a consistent 4dp gap.
+An expressive, working robot may emit a decorative 180ms antenna-to-task arc
+every nine source-time seconds, staggered per system. The selected destination
+is an active task without attention; the path and endpoint follow that orb.
+A cool secondary theme blend separates it from the rail. The renderer draws
+three short strokes and two endpoint glows, with no provider calls or messages.
+Calm, Reduced/Off, unavailable, degraded, sleeping and attention-only systems
+do not emit arcs. Source pace scales presentation timing.
+
+Generated geometry tests cover burst start/end, staggering, bounds, resting and
+attention suppression, static modes, label alignment and no provider commands.
+Desktop evaluator, robot parity, architecture and official syntax checks pass;
+actual Qt captures verify desktop/narrow layout and native detail selection.
+Recordings use synthetic inventory; installed Omarchy acceptance remains pending.

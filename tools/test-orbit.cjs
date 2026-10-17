@@ -44,6 +44,24 @@ for (let t=0; t<=20; t+=.5) {
 const icons=scene().render(1).filter(n=>n.kind==='Canvas'&&n.p?.height===14);
 assert(icons.length>0, 'State labels must have discreet icons');
 for(const icon of icons) assert(icon.draw(14,14).length>0);
+// Zaps use actual active task positions, are bounded and do not alter provider state.
+const zapPaths = frame => frame.filter(op=>op.op==='path' && op.points.length===7);
+const zapScene=scene({work:3});
+assert.equal(zapPaths(zapScene.draw(2.3)[0]).length,0);
+const bolt=zapPaths(zapScene.draw(2.49)[0]);
+assert.equal(bolt.length,3,'Short burst has a soft halo and fine electrical stroke');
+assert.equal(zapPaths(zapScene.draw(2.7)[0]).length,0,'Burst must end');
+assert.equal(zapPaths(zapScene.draw(2.49)[1]).length,0,'Systems must stagger');
+for(const path of bolt) for(const [x,y] of path.points) assert(x>=0&&x<=340&&y>=0&&y<=192);
+for(const motion of ['reduced','off']) assert.equal(zapPaths(scene({motion}).draw(2.49)[0]).length,0);
+assert.equal(zapPaths(scene({stale:true}).draw(2.49)[0]).length,0);
+const restingZap=scene({work:3});restingZap.data.snapshot.actors[0].status='resting';restingZap.update();
+assert.equal(zapPaths(restingZap.draw(2.49)[0]).length,0,'Resting robots must not zap');
+const waitingZap=scene({work:3});waitingZap.data.snapshot.workItems.forEach(w=>{w.attention='review';});waitingZap.update();
+assert.equal(zapPaths(waitingZap.draw(2.49)[0]).length,0,'Awaiting-action orbs must not zap');
+assert.deepEqual(zapScene.commands,[]);
+const statusLabels=scene().render(1).filter(n=>n.kind==='Text'&&n.p?.width===78);
+assert(statusLabels.length>0&&statusLabels.every(n=>n.p.align==='start'),'State text must align directly beside its icon');
 for(const light of [false,true]) {
     const s=scene({light});const a=s.draw(.2), b=s.draw(1.4);
     assert.equal(a.length,2);assert.notDeepEqual(a,b,'Full scene should move');
