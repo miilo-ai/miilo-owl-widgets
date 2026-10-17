@@ -1,6 +1,6 @@
 # Handoff: native Omarchy acceptance and presentation
 
-Target: actual example-host. Systems baseline 891d278, widgets e92b895.
+Target: actual the designated Omarchy test host. Systems baseline 891d278, widgets e92b895.
 Core extraction is in progress; do not infer standalone acceptance from the old CE-backed path.
 
 ## Ownership
