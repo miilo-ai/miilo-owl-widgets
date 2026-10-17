@@ -473,6 +473,135 @@ widget "miilo" {
     }
   }
 
+  component OrbitField(items, anchor, offline, energized, slot = 0) {
+    let moving = robotMotion == "full" && !offline
+    let clock = moving ? time * robotSpeed : 0
+    Box {
+      fill: width
+      height: 192
+      Canvas {
+        fill: true
+        height: 192
+        let cx = width / 2
+        let cy = height / 2
+        let rx = max(30, min(width * 0.38, 142))
+        let ry = 48
+        let points = items.map(w => {
+          key: w._key,
+          angle: indexOf(items.map(q => q._key), w._key) * 6.283185 / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
+          active: w.lifecycle == "active",
+          attention: w.attention != "none" || w.lifecycle == "failed"
+        }).map(p => {
+          key: p.key, active: p.active, attention: p.attention,
+          z: sin(p.angle),
+          px: cx + cos(p.angle) * rx * (1 + sin(p.angle) * 0.12),
+          py: cy + sin(p.angle) * ry + sin(p.angle * 2) * 9
+        })
+        let ring = range(65).map(i => [cx + cos(i * 6.283185 / 64) * rx * (1 + sin(i * 6.283185 / 64) * 0.12), cy + sin(i * 6.283185 / 64) * ry + sin(i * 6.283185 / 64 * 2) * 9])
+        path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1)
+        let inner = range(49).map(i => [cx + cos(i * 6.283185 / 48) * rx * 0.72, cy + sin(i * 6.283185 / 48) * 26 - cos(i * 6.283185 / 48) * 14])
+        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8)
+        if moving && energized && slot < 3 {
+          let cycle = (clock + slot * 1.7) % 5
+          if cycle < 0.7 {
+            let fade = min(cycle / 0.12, min((0.7 - cycle) / 0.22, 1))
+            let a = floor((clock + slot * 1.7) / 5) * 2.399
+            let filament = range(13).map(k => {
+              u: k / 12,
+              a: a + k / 12 * 0.8,
+              noise: sin(k * 7.1 + floor(clock * 10) * 1.37 + slot) * (1 - (clock * 10) % 1) + sin(k * 7.1 + (floor(clock * 10) + 1) * 1.37 + slot) * ((clock * 10) % 1)
+            }).map(v => [cx + cos(v.a) * rx * (1 + sin(v.a) * 0.12), cy + sin(v.a) * ry + sin(v.a * 2) * 9 + sin(v.u * 3.141593) * v.noise * 2.5])
+            path(filament, stroke: alpha(accent, fade * 0.06), width: 4, cap: round)
+            path(filament, stroke: alpha(accent, fade * 0.2), width: 2, cap: round)
+            path(filament, stroke: alpha(mix(accent, foreground, 0.2), fade * 0.85), width: 0.9, cap: round)
+          }
+        }
+        for p in points.sortBy(p => p.z) {
+          let ink = offline ? muted : p.attention ? accent : mix(accent, foreground, 0.15)
+          let scale = 1 + p.z * 0.15
+          circle(p.px, p.py, 10 * scale, fill: alpha(ink, offline ? 0.03 : 0.07))
+          circle(p.px, p.py, 4.5 * scale, fill: alpha(ink, offline ? 0.35 : 0.9))
+          if p.attention { circle(p.px, p.py, 8 * scale, stroke: ink, width: 1.2) }
+        }
+
+      }
+      Box {
+        fill: true
+        align: center
+        Bot { agent: anchor; s: 62; slot: slot }
+      }
+    }
+  }
+
+  state observatoryView = "quiet" persist
+  state orbitPage = 0
+  component ViewChoice() {
+    Row {
+      fill: width
+      gap: 6
+      Button { text: "Quiet"; color: observatoryView != "orbit" ? accent : muted; onTap: observatoryView = "quiet" }
+      Button { text: "Orbit"; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+      Spacer { weight: 1 }
+    }
+  }
+  component OrbitCluster(provider, items, slot = 0) {
+    let team = actors.filter(a => a.providerId == provider.id)
+    let offline = contains(["offline", "unreachable", "unknown", "stale"], provider.health ?? "") || contains(["offline", "unreachable", "stale"], provider.status ?? "") || any(team, a => contains(["offline", "unreachable", "unknown"], a.health ?? ""))
+    let representative = len(team) > 0 ? team[0] : {_key: provider.id, providerId: provider.id, name: provider.name, status: "ready", health: "unknown"}
+    let anchor = offline ? {_key: representative._key, providerId: provider.id, name: representative.name, status: "offline", health: "unreachable"} : representative
+    let current = items.sortBy(w => w._key).take(8)
+    Column {
+      fill: width
+      padding: 12
+      gap: 3
+      background: alpha(accent, 0.035)
+      radius: 12
+      Row {
+        fill: width
+        align: center
+        Text { text: provider.name; weight: 1; fontSize: 14; maxLines: 1 }
+        Text { text: offline ? "Unavailable" : "${len(items)} work"; width: 92; align: end; fontSize: 10; color: muted; maxLines: 1 }
+      }
+      OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot }
+      if len(items) == 0 { Text { text: offline ? "Waiting for a fresh observation" : "No work in flight"; style: small; color: muted } }
+      for w in current key w._key {
+        Row {
+          fill: width
+          height: 44
+          gap: 6
+          align: center
+          onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
+          Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1 }
+          Text { text: offline ? "Stale" : w.attention != "none" ? "Needs you" : w.phase; width: 78; align: end; fontSize: 10; color: offline ? muted : accent; maxLines: 1 }
+        }
+      }
+      if len(items) > 8 { Button { text: "+${len(items) - 8} work · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
+    }
+  }
+  component OrbitView(list) {
+    let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
+    let page = min(orbitPage, max(0, ceil(len(systems) / 6) - 1))
+    Grid {
+      fill: width
+      columns: screenWidth >= 760 ? 2 : 1
+      gap: 12
+      for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
+        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: i }
+      }
+    }
+    if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }
+    if len(systems) > 6 {
+      Row {
+        fill: width
+        gap: 8
+        Button { text: "Previous"; onTap: orbitPage = max(0, page - 1) }
+        Text { text: "${page + 1} / ${ceil(len(systems) / 6)}"; width: 56; align: center; style: small; color: muted }
+        Button { text: "Next"; onTap: orbitPage = min(ceil(len(systems) / 6) - 1, page + 1) }
+      }
+    }
+    Text { text: "Motion reflects observed activity. Select work to inspect it."; fontSize: 10; color: muted; maxLines: 2 }
+  }
+
   let tileActors = (previewRobots ? actors.take(1) : actors) + (previewRobots ? [
     {_key: "preview-resting", providerId: "", name: "Preview sleep", status: "resting", health: "healthy", _preview: true},
     {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true}
@@ -619,7 +748,10 @@ widget "miilo" {
           Button { text: "All work"; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
           Button { text: "Needs you ${len(actionable)}"; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
         }
-        if needle != "" {
+        ViewChoice { }
+        if observatoryView == "orbit" {
+          OrbitView { list: visible }
+        } else if needle != "" {
           let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
           if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
           WorkRows { list: visible; showSystem: true }

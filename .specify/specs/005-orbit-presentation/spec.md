@@ -1,6 +1,7 @@
 # ORBIT-001 — Quiet / Orbit presentation
 
-Status: specified, not implemented or native-qualified. Decision: 2026-10-17.
+Status: initial candidate implemented; native Omarchy qualification pending.
+Decision: 2026-10-17. See ../../evidence/orbit-local.md for measured scope.
 Native OWL/Omarchy first; Android parity next; web is a later adapter.
 
 ## Visual contract

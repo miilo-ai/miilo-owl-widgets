@@ -144,7 +144,10 @@
           Button { text: "All work"; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
           Button { text: "Needs you ${len(actionable)}"; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
         }
-        if needle != "" {
+        ViewChoice { }
+        if observatoryView == "orbit" {
+          OrbitView { list: visible }
+        } else if needle != "" {
           let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
           if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
           WorkRows { list: visible; showSystem: true }

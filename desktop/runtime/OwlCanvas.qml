@@ -21,9 +21,9 @@ Canvas {
   implicitWidth: 0
   implicitHeight: 0
 
-  // The GPU path: the default Image target rasterises in software, which at
-  // 60 frames a second is the whole budget of a phone CPU.
-  renderTarget: Canvas.FramebufferObject
+  // Qt 6 ignores FramebufferObject and uses Image. Keep operation counts
+  // bounded and qualify actual frame cost; this is not a GPU-path guarantee.
+  renderTarget: Canvas.Image
   renderStrategy: Canvas.Cooperative
 
   readonly property var deps: [root.draw, root.width, root.height, root.widget ? root.widget.frame : 0,

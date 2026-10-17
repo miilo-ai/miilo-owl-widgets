@@ -10,3 +10,6 @@ terminal to native onboarding when supplied, retaining the terminal otherwise.
 Interactive OwlNode elements support Tab focus, Enter/Space activation, and
 compact focus markers; text inputs participate in Tab navigation.
 Local hosts and integration live one directory up.
+
+Canvas explicitly selects Canvas.Image: Qt 6 ignores FramebufferObject. This
+corrects the previous GPU-path comment; native performance still needs measurement.

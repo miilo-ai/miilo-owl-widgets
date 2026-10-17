@@ -1,0 +1,59 @@
+  component OrbitField(items, anchor, offline, energized, slot = 0) {
+    let moving = robotMotion == "full" && !offline
+    let clock = moving ? time * robotSpeed : 0
+    Box {
+      fill: width
+      height: 192
+      Canvas {
+        fill: true
+        height: 192
+        let cx = width / 2
+        let cy = height / 2
+        let rx = max(30, min(width * 0.38, 142))
+        let ry = 48
+        let points = items.map(w => {
+          key: w._key,
+          angle: indexOf(items.map(q => q._key), w._key) * 6.283185 / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
+          active: w.lifecycle == "active",
+          attention: w.attention != "none" || w.lifecycle == "failed"
+        }).map(p => {
+          key: p.key, active: p.active, attention: p.attention,
+          z: sin(p.angle),
+          px: cx + cos(p.angle) * rx * (1 + sin(p.angle) * 0.12),
+          py: cy + sin(p.angle) * ry + sin(p.angle * 2) * 9
+        })
+        let ring = range(65).map(i => [cx + cos(i * 6.283185 / 64) * rx * (1 + sin(i * 6.283185 / 64) * 0.12), cy + sin(i * 6.283185 / 64) * ry + sin(i * 6.283185 / 64 * 2) * 9])
+        path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1)
+        let inner = range(49).map(i => [cx + cos(i * 6.283185 / 48) * rx * 0.72, cy + sin(i * 6.283185 / 48) * 26 - cos(i * 6.283185 / 48) * 14])
+        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8)
+        if moving && energized && slot < 3 {
+          let cycle = (clock + slot * 1.7) % 5
+          if cycle < 0.7 {
+            let fade = min(cycle / 0.12, min((0.7 - cycle) / 0.22, 1))
+            let a = floor((clock + slot * 1.7) / 5) * 2.399
+            let filament = range(13).map(k => {
+              u: k / 12,
+              a: a + k / 12 * 0.8,
+              noise: sin(k * 7.1 + floor(clock * 10) * 1.37 + slot) * (1 - (clock * 10) % 1) + sin(k * 7.1 + (floor(clock * 10) + 1) * 1.37 + slot) * ((clock * 10) % 1)
+            }).map(v => [cx + cos(v.a) * rx * (1 + sin(v.a) * 0.12), cy + sin(v.a) * ry + sin(v.a * 2) * 9 + sin(v.u * 3.141593) * v.noise * 2.5])
+            path(filament, stroke: alpha(accent, fade * 0.06), width: 4, cap: round)
+            path(filament, stroke: alpha(accent, fade * 0.2), width: 2, cap: round)
+            path(filament, stroke: alpha(mix(accent, foreground, 0.2), fade * 0.85), width: 0.9, cap: round)
+          }
+        }
+        for p in points.sortBy(p => p.z) {
+          let ink = offline ? muted : p.attention ? accent : mix(accent, foreground, 0.15)
+          let scale = 1 + p.z * 0.15
+          circle(p.px, p.py, 10 * scale, fill: alpha(ink, offline ? 0.03 : 0.07))
+          circle(p.px, p.py, 4.5 * scale, fill: alpha(ink, offline ? 0.35 : 0.9))
+          if p.attention { circle(p.px, p.py, 8 * scale, stroke: ink, width: 1.2) }
+        }
+
+      }
+      Box {
+        fill: true
+        align: center
+        Bot { agent: anchor; s: 62; slot: slot }
+      }
+    }
+  }

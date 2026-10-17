@@ -1,3 +1,4 @@
+PYTHON ?= python3
 .PHONY: assemble test check-owl check-desktop check-keyboard build build-linux package
 assemble:
 	cargo xtask assemble
@@ -21,6 +22,11 @@ check-owl:
 check-desktop:
 	cargo xtask check-desktop
 	node tools/test-robot-motion.cjs
+	node tools/test-orbit.cjs
 
 check-keyboard:
 	tools/test-desktop-keyboard.sh
+
+.PHONY: render-design
+render-design:
+	$(PYTHON) tools/render-orbit.py
