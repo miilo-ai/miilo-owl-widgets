@@ -1,5 +1,11 @@
 # Miilo on Linux
 
+> Native Omarchy marketplace development now lives in the separate
+> [miilo-omarchy-plugin](https://github.com/miilo-ai/miilo-omarchy-plugin) repository.
+> This document includes legacy prototype/install validation; for current standalone
+> wiring and registration use `.specify/handoffs/omarchy-plugin-repository.md`.
+> Existing desktop source/installers remain for compatibility during migration.
+
 The application helper and developer tooling are Rust. OWL is the shared widget
 source; the pinned upstream Quickshell runtime renders it on Linux. Python is not
 required for building, testing, installing, or releasing this repository.

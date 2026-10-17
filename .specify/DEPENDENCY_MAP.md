@@ -27,3 +27,10 @@ managed features are preserved; paid/mobile/glasses work is not an open-source
 release blocker. The first native local adapters are Codex/Cursor, not every
 custom factory. Provider authors can use SDK ports/core independently; broader
 CLI provider plugins remain a separately scoped extension.
+
+## Native plugin distribution
+
+`miilo-ai/miilo-omarchy-plugin` now owns the independent Omarchy plugin manifest
+and shell presentation. It consumes a pinned renderer snapshot and external
+miilo-owl/miilo-local binaries. Widgets retains the shared design and helper.
+See `.specify/handoffs/omarchy-plugin-repository.md` for registration and ownership.

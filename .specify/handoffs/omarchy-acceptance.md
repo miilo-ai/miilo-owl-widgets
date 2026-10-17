@@ -104,3 +104,9 @@ cargo build --workspace --locked -j2
 
 This is a per-command rewrite, not a global Git configuration change. Once public,
 the ordinary pinned HTTPS dependency needs no cross-repository token.
+
+## Separate plugin repository
+
+Native plugin work now targets `miilo-ai/miilo-omarchy-plugin`. Read
+`omarchy-plugin-repository.md` before modifying or installing native entry points.
+Its own handoff includes the official development and publishing guides.
