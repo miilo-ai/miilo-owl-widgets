@@ -541,7 +541,7 @@ FocusScope {
                         leftPadding: 42
                         spacing: 3
                         TypeText { typography: root.theme.typography;
-                            width: parent.width - (choice.modelData.header ? 76 : 32)
+                            width: Math.max(0, parent.width - parent.leftPadding - (choice.modelData.header ? 44 : 0))
                             text: choice.modelData.header ? (root.collapsed[choice.modelData.name] ? "▸ " : "▾ ") + choice.modelData.name + " (" + choice.modelData.count + ")" : choice.modelData.session.name || "Unnamed session"
                             wrapMode: Text.Wrap
                             color: !choice.selectable ? root.widget.ink("muted") : choice.cursor ? root.theme.focusText : root.theme.foreground
@@ -549,7 +549,7 @@ FocusScope {
                         }
                         TypeText { typography: root.theme.typography;
                             visible: !choice.modelData.header
-                            width: parent.width - 32
+                            width: Math.max(0, parent.width - parent.leftPadding)
                             text: choice.modelData.header ? "" : choice.modelData.session.kind + " · " + (choice.modelData.session.cwd || choice.modelData.session.id) + (choice.modelData.session.observable ? "" : " · import not available yet")
                             wrapMode: Text.WrapAnywhere
                             color: root.widget.ink("muted")

@@ -210,3 +210,6 @@ The helper now decodes negotiated gzip/Brotli/zstd JSON with the same decoded
 response limit. See [compression validation](docs/compression.md) for the real
 socket/ARM64 Linux checks and local CLI export/restore workflow. Live speech and
 SSE are not implicitly compressed; no provider account or observation state changes.
+
+Expanded native design: [Quiet and Orbit](docs/orbit.md), including local Qt
+rendering and remaining native acceptance gates.

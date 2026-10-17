@@ -138,13 +138,10 @@
       } else {
         let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
         let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
-        Row {
-          fill: width
-          gap: 8
-          Button { text: "All work"; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
-          Button { text: "Needs you ${len(actionable)}"; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
-        }
-        if needle != "" {
+        WorkViewToolbar { count: len(actionable) }
+        if observatoryView == "orbit" {
+          OrbitView { list: visible }
+        } else if needle != "" {
           let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
           if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
           WorkRows { list: visible; showSystem: true }
@@ -154,7 +151,7 @@
             let team = actors.filter(a => a.providerId == p.id)
             let tasks = visible.filter(w => w.providerId == p.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
             let urgent = actionable.filter(w => w.providerId == p.id)
-            SystemRow { provider: p; count: len(urgent) > 0 ? "${len(urgent)} needs you" : "${len(tasks)} work" }
+            SystemRow { provider: p; count: len(urgent) > 0 ? "${len(urgent)} needs you" : "${len(tasks)} ${len(tasks) == 1 ? "task" : "tasks"}" }
             if expandedSystem == p.id {
               Row {
                 fill: width

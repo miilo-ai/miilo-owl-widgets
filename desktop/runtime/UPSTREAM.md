@@ -18,3 +18,5 @@ literally. Explicit OWL fontSize remains an authored logical-size override; it
 still follows the host text scale. New MiiloTypography.qml/MiiloTypeScale.js are
 Miilo-authored additions. Android Compose/Omalauncher is a separate renderer and
 requires its own host integration and on-device acceptance.
+Canvas explicitly selects Canvas.Image: Qt 6 ignores FramebufferObject. This
+corrects the previous GPU-path comment; native performance still needs measurement.
