@@ -51,6 +51,7 @@ widget "miilo" {
   state searchEditing = false
   state expandedSystem = ""
   state providerLimit = 5
+  state showInactiveSessions = false persist
   state renameOpen = false
   state selectedWork = ""
   state selectedActor = ""
@@ -67,10 +68,20 @@ widget "miilo" {
   let configured = data != null && data.configured
   let snap = data == null ? null : data.snapshot
   let allProviders = snap == null ? [] : (snap.providers ?? [])
-  let effectiveSystem = any(allProviders, p => p.id == system) ? system : ""
-  let provs = allProviders.filter(p => effectiveSystem == "" || p.id == effectiveSystem)
-  let works = (snap.workItems ?? []).filter(w => effectiveSystem == "" || w.providerId == effectiveSystem)
-  let actors = (snap.actors ?? []).filter(a => effectiveSystem == "" || a.providerId == effectiveSystem)
+  let allActors = snap.actors ?? []
+  let allWorks = snap.workItems ?? []
+  // Transcript-backed sessions are inferred observations, not persistent factories.
+  let localSessionIds = allActors.filter(a => get(get(a.extensions ?? {}, "dev.miilo.session", {}), "runtimeStatusAuthoritative", true) == false).map(a => a.providerId)
+  let activeActors = allActors.filter(a => contains(["working", "running", "reviewing", "blocked", "failed", "error"], a.status) && !contains(["offline", "unreachable", "unknown"], a.health ?? ""))
+  let activeActorKeys = activeActors.map(a => a._key)
+  let activeProviderIds = activeActors.map(a => a.providerId) + allWorks.filter(w => (w.attention ?? "none") != "none" || w.lifecycle == "failed").map(w => w.providerId)
+  let inactiveSessionCount = len(allProviders.filter(p => contains(localSessionIds, p.id) && !contains(activeProviderIds, p.id)))
+  let selectableProviders = allProviders.filter(p => showInactiveSessions || !contains(localSessionIds, p.id) || contains(activeProviderIds, p.id))
+  let effectiveSystem = any(selectableProviders, p => p.id == system) ? system : ""
+  let provs = selectableProviders.filter(p => effectiveSystem == "" || p.id == effectiveSystem).sortBy(p => contains(activeProviderIds, p.id) ? 0 : 1)
+  let visibleProviderIds = provs.map(p => p.id)
+  let works = allWorks.filter(w => contains(visibleProviderIds, w.providerId))
+  let actors = allActors.filter(a => contains(visibleProviderIds, a.providerId)).sortBy(a => contains(activeActorKeys, a._key) ? 0 : 1)
   let attention = (snap.attention ?? []).filter(a => effectiveSystem == "" || a.providerId == effectiveSystem)
   let attempts = snap.attempts ?? []
   let evidence = snap.evidence ?? []
@@ -79,8 +90,8 @@ widget "miilo" {
   let live = works.filter(w => contains(["active", "waiting", "failed", "queued"], w.lifecycle))
   let needle = lower(trim(query))
   let searched = works.filter(w => contains(lower("${w.title} ${w.summary ?? ""} ${w.phase} ${get(find(allProviders, p => p.id == w.providerId), "name", "")}"), needle))
-  let focused = find(works, w => w._key == selectedWork)
-  let actor = find(actors, a => a._key == selectedActor)
+  let focused = find(allWorks, w => w._key == selectedWork)
+  let actor = find(allActors, a => a._key == selectedActor)
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
   let toolbarHeight = linux ? 34 : 44
@@ -153,11 +164,14 @@ widget "miilo" {
     if issueCount > 0 {
       Text { text: "${issueCount} endpoint(s) unavailable"; style: small; color: red; maxLines: 1 }
     }
+    if focused == null && actor == null && inactiveSessionCount > 0 {
+      Button { text: showInactiveSessions ? "Hide inactive sessions" : "Show inactive sessions (${inactiveSessionCount})"; onTap: { showInactiveSessions = !showInactiveSessions; pageSize = 5 } }
+    }
     if systemsOpen && len(allProviders) > 1 {
       Flow {
         gap: 5
         Button { text: "All systems"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
-        for p in allProviders key p.id {
+        for p in selectableProviders key p.id {
           Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
         }
       }
