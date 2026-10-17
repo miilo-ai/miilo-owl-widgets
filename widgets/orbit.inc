@@ -29,6 +29,7 @@
       gap: 1
       background: alpha(accent, 0.035)
       radius: 12
+      onTap: { expandedSystem = provider.id; workflowActor = ""; selectedActor = ""; selectedWork = ""; pageSize = 5; agentsOpen = false }
       Row {
         fill: width
         align: center
@@ -50,7 +51,7 @@
           Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
-      if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
+      if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
     }
   }
   component OrbitView(list) {

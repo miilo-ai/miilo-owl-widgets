@@ -51,7 +51,6 @@ widget "miilo" {
   state searchEditing = false
   state expandedSystem = ""
   state providerLimit = 5
-  state showInactiveSessions = false persist
   state renameOpen = false
   state selectedWork = ""
   state selectedActor = ""
@@ -75,8 +74,8 @@ widget "miilo" {
   let activeActors = allActors.filter(a => contains(["working", "running", "reviewing", "blocked", "failed", "error"], a.status) && !contains(["offline", "unreachable", "unknown"], a.health ?? ""))
   let activeActorKeys = activeActors.map(a => a._key)
   let activeProviderIds = activeActors.map(a => a.providerId) + allWorks.filter(w => (w.attention ?? "none") != "none" || w.lifecycle == "failed").map(w => w.providerId)
-  let inactiveSessionCount = len(allProviders.filter(p => contains(localSessionIds, p.id) && !contains(activeProviderIds, p.id)))
-  let selectableProviders = allProviders.filter(p => showInactiveSessions || !contains(localSessionIds, p.id) || contains(activeProviderIds, p.id))
+  let recentSessionIds = allActors.filter(a => get(get(a.extensions ?? {}, "dev.miilo.session", {}), "recentlyActive", false)).map(a => a.providerId)
+  let selectableProviders = allProviders.filter(p => !contains(localSessionIds, p.id) || contains(activeProviderIds, p.id) || contains(recentSessionIds, p.id))
   let effectiveSystem = any(selectableProviders, p => p.id == system) ? system : ""
   let provs = selectableProviders.filter(p => effectiveSystem == "" || p.id == effectiveSystem).sortBy(p => contains(activeProviderIds, p.id) ? 0 : 1)
   let visibleProviderIds = provs.map(p => p.id)
@@ -164,13 +163,10 @@ widget "miilo" {
     if issueCount > 0 {
       Text { text: "${issueCount} endpoint(s) unavailable"; style: small; color: red; maxLines: 1 }
     }
-    if focused == null && actor == null && inactiveSessionCount > 0 {
-      Button { text: showInactiveSessions ? "Hide inactive sessions" : "Show inactive sessions (${inactiveSessionCount})"; onTap: { showInactiveSessions = !showInactiveSessions; pageSize = 5 } }
-    }
     if systemsOpen && len(allProviders) > 1 {
       Flow {
         gap: 5
-        Button { text: "All systems"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
+        if effectiveSystem != "" { Button { text: "All"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } } }
         for p in selectableProviders key p.id {
           Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
         }
@@ -676,6 +672,7 @@ widget "miilo" {
       gap: 1
       background: alpha(accent, 0.035)
       radius: 12
+      onTap: { expandedSystem = provider.id; workflowActor = ""; selectedActor = ""; selectedWork = ""; pageSize = 5; agentsOpen = false }
       Row {
         fill: width
         align: center
@@ -697,7 +694,7 @@ widget "miilo" {
           Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
-      if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { observatoryView = "quiet"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
+      if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
     }
   }
   component OrbitView(list) {
@@ -923,7 +920,9 @@ widget "miilo" {
         let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
         let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
         WorkViewToolbar { count: len(actionable) }
-        if observatoryView == "orbit" {
+        if observatoryView == "orbit" && expandedSystem != "" && any(provs, p => p.id == expandedSystem) {
+          QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
+        } else if observatoryView == "orbit" {
           OrbitView { list: visible }
         } else if needle != "" {
           let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))

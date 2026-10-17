@@ -120,7 +120,9 @@
         let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
         let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
         WorkViewToolbar { count: len(actionable) }
-        if observatoryView == "orbit" {
+        if observatoryView == "orbit" && expandedSystem != "" && any(provs, p => p.id == expandedSystem) {
+          QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
+        } else if observatoryView == "orbit" {
           OrbitView { list: visible }
         } else if needle != "" {
           let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
