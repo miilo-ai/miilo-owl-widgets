@@ -1,4 +1,4 @@
-# Approved density checkpoint — 2026-10-17
+# Compact presentation validation — 2026-10-17
 
 - Desktop Orbit task rows are 22px, with one themed state icon and a short title; long titles truncate. Android rows retain 44px targets.
 - Original robots, individual ring phases, dormant rings, subtle glow and active zaps remain.

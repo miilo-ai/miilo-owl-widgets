@@ -48,7 +48,7 @@ harness behavior. Save a short evidence report (revision, command, outcome,
 redacted screenshots, limitations) in .specify/evidence/omarchy-acceptance.md.
 Do not commit credentials, private transcripts or raw screenshots with secrets.
 
-## Sunday recording
+## Demo recording
 
 Capture expressive compact robots, native local import, clear groups, real natural
 updates and progressive detail. Action scenes require a separately qualified provider; do not simulate unsupported behavior. Use a sanitized

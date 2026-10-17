@@ -63,8 +63,8 @@ A deterministic 241-frame Qt recording covers a full 20-second cycle at 12fps.
 This is synthetic inventory with software Qt rendering, not native performance
 or provider-operation evidence. Installed Omarchy acceptance remains pending.
 
-Reproduce with `MIILO_PREVIEW_RECORD=1 MIILO_PREVIEW_HEIGHT=550 python3
-tools/render-orbit.py /tmp/orbit-capture` using the documented Qt environment.
+For the current renderer and capture commands, see [the toolchain guide](development-toolchain.md).
+The current atom projection supersedes the earlier independent ellipse motion described above.
 
 Expressive Full motion includes an occasional short antenna-to-active-task zap,
 using a cool secondary color blended with the theme accent. It is decorative,

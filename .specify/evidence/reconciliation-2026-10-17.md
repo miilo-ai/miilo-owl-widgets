@@ -1,7 +1,6 @@
 # Orbit / typography reconciliation — 2026-10-17
 
-The owner fetched origin/main through the host terminal after this agent's Git
-commands failed DNS. Reconciled widgets f276cee with fetched 8017401, and native
+Source integration combines widgets f276cee with fetched 8017401, and native
 plugin 8809802 with fetched dd5de5b. These are the source parents, not new remote
 publication claims. No installed plugin/configuration was changed.
 
@@ -54,4 +53,3 @@ Remaining work, in practical order:
 Several original spec checkboxes lag behind source/evidence. Reconciliation and
 matching source pin can be checked; rendering/profiling/Android/native acceptance
 must not be inferred from inherited screenshots or isolated Qt tests.
-Example Lab/Semantica tools were unavailable; no shared-memory read/write occurred.

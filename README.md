@@ -1,4 +1,13 @@
-# Miilo OWL widgets
+<h1 align="center">Miilo OWL widgets</h1>
+
+<p align="center">
+  <img alt="Rust" src="https://img.shields.io/badge/Rust-b7410e?style=flat-square&amp;logo=rust&amp;logoColor=white" />
+  <img alt="QML" src="https://img.shields.io/badge/QML-267b36?style=flat-square&amp;logo=qt&amp;logoColor=white" />
+  <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-675b00?style=flat-square&amp;logo=javascript&amp;logoColor=white" />
+  <img alt="OWL" src="https://img.shields.io/badge/OWL-346a74?style=flat-square" />
+  <img alt="Android" src="https://img.shields.io/badge/Android-267b36?style=flat-square&amp;logo=android&amp;logoColor=white" />
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-343434?style=flat-square&amp;logo=linux&amp;logoColor=white" />
+</p>
 
 Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
@@ -13,6 +22,14 @@ The Linux dashboard, native Omarchy bar and desktop tile, and existing-session c
 The installer enables one Miilo widget. The focused attention/board sources remain available for manual use; existing installations of those are preserved as `.disabled` files.
 
 All colors come from Omalauncher’s semantic palette. There are no fixed provider colors. Light and dark theme changes are handled by the launcher. Native tile sizing is intentionally small; users can enlarge tiles on the home screen.
+
+## Preview
+
+<p align="center">
+  <img src="docs/images/miilo-orbit.gif" alt="Miilo robots in Tokyo Night Orbit: compact tasks beside working and resting systems" width="720" />
+</p>
+
+<p align="center"><sub>Native Qt render · sample systems and tasks · installed-host acceptance is separate.</sub></p>
 
 ## Install and register what to observe
 
@@ -134,7 +151,6 @@ Robot colors: open setup (⚙), select an automation under Robot colors, then ch
 Newcomer empty state: when no systems are configured, the tile centers a blinking welcome robot above “Tap to add a system”. Tapping that group opens setup directly. It uses the same theme palette and scales down to compact tiles; it is not a provider or agent record.
 
 Theme behavior: saved Green/Red/etc. choices keep their color family, while the current theme supplies each shade. Robot ink also blends slightly with the theme foreground for contrast. Sleep Zs are larger, bold, foreground-weighted and use a stronger fade envelope so they remain visible against light/dark themed tiles.
-
 
 ### Files, changes, and evidence
 

@@ -1,7 +1,7 @@
 # Omarchy plugin repository handoff
 
 The independent native plugin lives in https://github.com/miilo-ai/miilo-omarchy-plugin
-with clean history and its own root manifest. See its `.specify/handoffs/omarchy-agent.md`
+with its own root manifest. See its `.specify/handoffs/omarchy-agent.md`
 for native validation and `docs/marketplace.md` for owner-authorized registration.
 
 Official references:
