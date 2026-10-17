@@ -37,3 +37,11 @@ and palette from authored OWL. No second character geometry is maintained.
 Official Kotlin checker accepted the standalone program. Drawing parity passed
 18 state/theme/motion combinations at 3 controlled frames (54 comparisons), with
 no external sources or I/O. Existing renderer/Orbit/motion and xtask tests passed.
+
+## Smooth-rail correction
+
+Removed nonlinear base-path warping and electrical position jitter. Rail, glyphs
+and travelling light now share an exact tilted ellipse. A regression verifies the
+closed seam and the ellipse equation for every rail/highlight sample. Official OWL
+syntax, existing renderer/motion/portrait checks and actual Qt render/selection
+passed; the updated screenshot was inspected. Native machine gates remain open.

@@ -141,3 +141,11 @@ scene-graph adapter later without forking semantics or silently changing the run
   — procedural geometry, seeded time and arc-length flow; web practice, not a Qt benchmark.
 - https://github.com/BoogerCheeseOnRye/SecMesh — visual reference only; no project
   license found at aff7dc6. Do not copy source/artwork absent an applicable grant.
+
+## Visual correction: soft travel rail
+
+Use an unwarped tilted ellipse for the rail, work positions and travelling light.
+The initial displacement-noise proposal above is superseded for the main orbit: it
+made the highlighted segment look kinked. Use 128 closed rail segments, 32 short
+highlight segments and round joins. Electricity comes from the layered light/fade;
+do not displace its core away from the rail. Preserve the separate depth cues.

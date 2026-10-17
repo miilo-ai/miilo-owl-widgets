@@ -486,31 +486,29 @@ widget "miilo" {
         let cy = height / 2
         let rx = max(30, min(width * 0.38, 142))
         let ry = 48
+        let tilt = -0.12
         let points = items.map(w => {
           key: w._key,
-          angle: indexOf(items.map(q => q._key), w._key) * 6.283185 / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
+          angle: indexOf(items.map(q => q._key), w._key) * 2 * pi / max(len(items), 1) + (moving && w.lifecycle == "active" ? clock * 0.24 : 0),
           active: w.lifecycle == "active",
           attention: w.attention != "none" || w.lifecycle == "failed"
         }).map(p => {
           key: p.key, active: p.active, attention: p.attention,
           z: sin(p.angle),
-          px: cx + cos(p.angle) * rx * (1 + sin(p.angle) * 0.12),
-          py: cy + sin(p.angle) * ry + sin(p.angle * 2) * 9
+          px: cx + cos(p.angle) * rx * cos(tilt) - sin(p.angle) * ry * sin(tilt),
+          py: cy + cos(p.angle) * rx * sin(tilt) + sin(p.angle) * ry * cos(tilt)
         })
-        let ring = range(65).map(i => [cx + cos(i * 6.283185 / 64) * rx * (1 + sin(i * 6.283185 / 64) * 0.12), cy + sin(i * 6.283185 / 64) * ry + sin(i * 6.283185 / 64 * 2) * 9])
-        path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1)
-        let inner = range(49).map(i => [cx + cos(i * 6.283185 / 48) * rx * 0.72, cy + sin(i * 6.283185 / 48) * 26 - cos(i * 6.283185 / 48) * 14])
-        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8)
+        let ring = range(129).map(i => {x: cos((i % 128) * 2 * pi / 128) * rx, y: sin((i % 128) * 2 * pi / 128) * ry}).map(p => [cx + p.x * cos(tilt) - p.y * sin(tilt), cy + p.x * sin(tilt) + p.y * cos(tilt)])
+        path(ring, stroke: alpha(accent, offline ? 0.08 : 0.24), width: 1, cap: round)
+        let inner = range(97).map(i => [cx + cos((i % 96) * 2 * pi / 96) * rx * 0.72, cy + sin((i % 96) * 2 * pi / 96) * 26 - cos((i % 96) * 2 * pi / 96) * 14])
+        path(inner, stroke: alpha(accent, offline ? 0.04 : 0.1), width: 0.8, cap: round)
         if moving && energized && slot < 3 {
           let cycle = (clock + slot * 1.7) % 5
           if cycle < 0.7 {
             let fade = min(cycle / 0.12, min((0.7 - cycle) / 0.22, 1))
-            let a = floor((clock + slot * 1.7) / 5) * 2.399
-            let filament = range(13).map(k => {
-              u: k / 12,
-              a: a + k / 12 * 0.8,
-              noise: sin(k * 7.1 + floor(clock * 10) * 1.37 + slot) * (1 - (clock * 10) % 1) + sin(k * 7.1 + (floor(clock * 10) + 1) * 1.37 + slot) * ((clock * 10) % 1)
-            }).map(v => [cx + cos(v.a) * rx * (1 + sin(v.a) * 0.12), cy + sin(v.a) * ry + sin(v.a * 2) * 9 + sin(v.u * 3.141593) * v.noise * 2.5])
+            let a = floor((clock + slot * 1.7) / 5) * 2.399 + cycle * 0.8
+            // The light follows the same ellipse. Never perturb the travel rail.
+            let filament = range(33).map(k => {x: cos(a + k / 32 * 0.8) * rx, y: sin(a + k / 32 * 0.8) * ry}).map(p => [cx + p.x * cos(tilt) - p.y * sin(tilt), cy + p.x * sin(tilt) + p.y * cos(tilt)])
             path(filament, stroke: alpha(accent, fade * 0.06), width: 4, cap: round)
             path(filament, stroke: alpha(accent, fade * 0.2), width: 2, cap: round)
             path(filament, stroke: alpha(mix(accent, foreground, 0.2), fade * 0.85), width: 0.9, cap: round)

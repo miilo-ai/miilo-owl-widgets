@@ -22,6 +22,17 @@ function scene({count=2, work=9, motion='full', stale=false, light=false, view='
     const draw=t=>render(t).filter(n=>n.kind==='Canvas'&&n.p?.height===192).map(n=>n.draw(340,192));
     return {instance,slot,set,data,update,render,draw,commands,errors};
 }
+// The rail closes exactly, and the travelling glow may never bend off it.
+const paths = scene().draw(.2)[0].filter(op => op.op === 'path');
+assert.deepEqual(paths[0].points[0], paths[0].points.at(-1), 'Orbit seam must close');
+assert.equal(paths[0].points.length, 129);
+assert(paths.length >= 5, 'Fixture must exercise the travelling highlight');
+for (const path of [paths[0], ...paths.slice(2)]) for (const [x,y] of path.points) {
+    const dx=x-170, dy=y-96, tilt=-.12;
+    const u=(dx*Math.cos(tilt)+dy*Math.sin(tilt))/(340*.38);
+    const v=(-dx*Math.sin(tilt)+dy*Math.cos(tilt))/48;
+    assert(Math.abs(u*u+v*v-1)<1e-9, 'Glow/rail must follow the same smooth ellipse');
+}
 for(const light of [false,true]) {
     const s=scene({light});const a=s.draw(.2), b=s.draw(1.4);
     assert.equal(a.length,2);assert.notDeepEqual(a,b,'Full scene should move');
