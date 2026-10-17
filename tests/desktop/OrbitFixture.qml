@@ -3,7 +3,7 @@ import QtQuick.Window
 import "runtime" as Runtime
 import "runtime/Owl.js" as Owl
 Window {
- id: root; width: 900; height: 850; visible: true; color: "#16151d"
+ id: root; width: 900; height: 850; visible: true; color: sceneLight ? "#f4f2f8" : "#16151d"
  property var errors: []
  property real sceneTime: .2
  property string selection: { var f=widget.frame; return widget.instance ? String(widget.instance.read(widget.program.globals.findIndex(g=>g.name==="selectedWork"))) : "" }
@@ -17,7 +17,7 @@ Window {
   property string monoFamily:"Menlo"
   property string iconFamily:"Helvetica"
   property var configureLocal:null
-  property var palette: Owl.themeFromToml('accent="#ac9cf5"\nbackground="#16151d"\nforeground="#eeeaf4"')
+  property var palette: Owl.themeFromToml(sceneLight ? 'accent="#6047ad"\nbackground="#f4f2f8"\nforeground="#25202e"' : 'accent="#ac9cf5"\nbackground="#16151d"\nforeground="#eeeaf4"')
   property var program: Owl.compile(widgetSource)
   property var instance: null
   property var tree:null
@@ -31,7 +31,7 @@ Window {
     theme:n=>palette[n]===undefined?null:palette[n],
     tile:n=>({linux:true,tileWidth:260,tileHeight:180,screenWidth:root.width-36,screenHeight:root.height-36})[n] || null,
     report:e=>root.errors.push(e),changed:()=>Qt.callLater(()=>widget.renderAt(root.sceneTime)),act:()=>{},runInto:()=>root.errors.push("Unexpected process")
-   },{observatoryView:"orbit"});
+   },{observatoryView:"orbit",robotMotion:sceneMotion});
    var slot=program.globals.findIndex(g=>g.name==="feed");
    instance.setSource(slot,Owl.fromJson({ok:true,out:JSON.stringify(sceneData),code:0,err:""}));
    renderAt(.2);

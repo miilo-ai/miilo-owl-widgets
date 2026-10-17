@@ -24,7 +24,7 @@ theme/motion settings, stationary work selection and a real Qt rendering harness
 Canvas glyph picking and event one-shots remain deferred. Native gates above are
 not checked off by portable/evaluator or isolated Qt evidence.
 
-- [x] Secondary rail rocks +/-45 degrees, task glyphs use both ellipses.
+- [x] Both projected atom planes sweep +/-0.17 radians with an open nucleus; task glyphs stay on their assigned rail.
 - [x] Discreet state icons retain readable labels and theme colors.
 - [x] Full-cycle deterministic Qt capture; desktop/narrow layout and motion checks.
 - [ ] Installed Omarchy motion, lifecycle and performance acceptance.

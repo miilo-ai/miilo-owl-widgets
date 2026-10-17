@@ -1,4 +1,4 @@
-  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "") {
+  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "", anchored = false) {
     Canvas {
       width: s
       height: s
@@ -15,7 +15,7 @@
       let blocked = contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
       let wistful = expressive && !unavailable && blocked && (clock + max(slot, 0) * 3.7) % 23 < 2.5
       let cx = width / 2
-      let cy = height * 0.48
+      let cy = height * (anchored ? 0.5 : 0.48)
       let r = min(width, height) * 0.27
       let on = !unavailable && !failed && contains(["working", "running"], agent.status)
       let resting = !unavailable && contains(["idle", "resting"], agent.status) && agent.health == "healthy" && !blocked
@@ -27,7 +27,7 @@
       let blinking = motion && !unavailable && (clock + phase) % 5.8 < 0.16
       let wink = expressive && !blocked && !focused && !unavailable && !resting && (clock + phase) % 29 > 27.8 && (clock + phase) % 29 < 28.05
       let led = unavailable ? muted : failed || agent.health == "degraded" ? red : resting ? alpha(ink, 0.55) : ink
-      let bob = on && expressive ? sin(clock * 1.8 + phase) * 1.2 : 0
+      let bob = on && expressive && !anchored ? sin(clock * 1.8 + phase) * 1.2 : 0
       let y = cy + bob
       // A soft halo, rounded shell, inset visor, and two luminous eyes.
       if on && expressive {

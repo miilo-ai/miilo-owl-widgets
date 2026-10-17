@@ -22,25 +22,46 @@ function scene({count=2, work=9, motion='full', stale=false, light=false, view='
     const draw=t=>render(t).filter(n=>n.kind==='Canvas'&&n.p?.height===192).map(n=>n.draw(340,192));
     return {instance,slot,set,data,update,render,draw,commands,errors};
 }
-// The rail closes exactly, and the travelling glow may never bend off it.
-const paths = scene().draw(.2)[0].filter(op => op.op === 'path');
-assert.deepEqual(paths[0].points[0], paths[0].points.at(-1), 'Orbit seam must close');
-assert.equal(paths[0].points.length, 129);
-assert(paths.length >= 5, 'Fixture must exercise the travelling highlight');
-for (const path of [paths[0], ...paths.slice(2)]) for (const [x,y] of path.points) {
-    const dx=x-170, dy=y-96, tilt=-.12;
-    const u=(dx*Math.cos(tilt)+dy*Math.sin(tilt))/(340*.38);
-    const v=(-dx*Math.sin(tilt)+dy*Math.cos(tilt))/48;
-    assert(Math.abs(u*u+v*v-1)<1e-9, 'Glow/rail must follow the same smooth ellipse');
+// Golden frames come from the approved browser projection, not a second native scene.
+const golden = JSON.parse(fs.readFileSync(path.join(root,'tests/orbit-projection.json')));
+const near=(a,b,label)=>assert(Math.abs(a-b)<1e-7,`${label}: ${a} != ${b}`);
+const projection=scene({count:3,work:3});
+for(const expected of golden.frames) {
+    const ops=projection.draw(expected.time)[expected.slot];
+    const rails=ops.filter(op=>op.op==='path' && op.points.length===65);
+    assert.equal(rails.length,16,'Four depth halves each have a core and three glow strokes');
+    expected.rails.forEach((rail,index)=>{
+        const group=rails.slice(index*4,index*4+4);
+        group.forEach(op=>assert.deepEqual(op.points,group[0].points,'Glow and core share geometry'));
+        for(const p of rail.points) {
+            near(group[0].points[p.index][0],p.x+10,'Rail x');
+            near(group[0].points[p.index][1],p.y,'Rail y');
+        }
+        for(const [x,y] of group[0].points) {
+            assert(x>=0&&x<=340&&y>=0&&y<=192,'Ring bounds');
+            assert(Math.hypot(x-170,y-96)>=52-1e-7,'Open nucleus clears original robot');
+        }
+    });
+    // The solid task circles are distinguishable from halos/attention outlines.
+    const orbs=ops.filter(op=>op.op==='circle' && op.args[2]>3 && op.args[2]<6);
+    assert(orbs.length>=3 && orbs.length<=4, 'Three task cores and an optional antenna flash');
+    for(const p of expected.orbs) {
+        const orb=orbs.find(op=>Math.hypot(op.args[0]-(p.x+10),op.args[1]-p.y)<1e-7);
+        assert(orb,'Each task stays on its assigned, projected ring');
+        near(orb.args[2],4.5*p.scale,'Orb depth scale');
+    }
 }
-// Both rails close, the secondary ellipse rocks without clipping, and owns task glyphs.
-const rocking = scene();
-assert.deepEqual(paths[1].points[0], paths[1].points.at(-1));
-assert.notDeepEqual(rocking.draw(.2)[0][1].points, rocking.draw(5)[0][1].points);
-for (let t=0; t<=20; t+=.5) {
-    const frame=rocking.draw(t)[0], cross=frame.filter(op=>op.op==='path')[1];
-    for(const [x,y] of cross.points) assert(x>=0 && x<=340 && y>=0 && y<=192, 'Cross rail must fit');
-}
+const pathsAt=t=>scene({work:3}).draw(t)[0].filter(op=>op.op==='path'&&op.points.length===65);
+for(const lane of [0,1]) assert.notDeepEqual(pathsAt(.2)[lane*4].points,pathsAt(5)[lane*4].points,'Both planes move');
+const dormant=scene({work:0});dormant.data.snapshot.actors.forEach(a=>a.status='resting');dormant.update();
+assert.deepEqual(dormant.draw(.2),dormant.draw(9),'Dormant rings stop');
+const dormantOps=dormant.draw(.2)[0].filter(op=>op.op==='path');
+assert.equal(dormantOps.length,4,'Dormant rings have no glow');
+assert.notDeepEqual(dormantOps[0].stroke,pathsAt(.2)[3].stroke,'Dormant rail uses muted theme ink');
+const filtered=scene({count:3,work:3});
+const unfilteredFrame=filtered.draw(5)[2];
+filtered.set('system','p2');
+assert.deepEqual(filtered.draw(5)[0],unfilteredFrame,'System filtering preserves each provider phase');
 const icons=scene().render(1).filter(n=>n.kind==='Canvas'&&n.p?.height===14);
 assert(icons.length>0, 'State labels must have discreet icons');
 for(const icon of icons) assert(icon.draw(14,14).length>0);
