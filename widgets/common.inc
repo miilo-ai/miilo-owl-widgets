@@ -126,6 +126,7 @@
 
   component SetupTerminal() {
     if setupOpen {
+      RobotAppearance { }
       Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
       Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
       Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }

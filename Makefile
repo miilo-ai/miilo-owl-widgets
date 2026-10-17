@@ -20,6 +20,7 @@ check-owl:
 
 check-desktop:
 	cargo xtask check-desktop
+	node tools/test-robot-motion.cjs
 
 check-keyboard:
 	tools/test-desktop-keyboard.sh

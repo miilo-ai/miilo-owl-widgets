@@ -184,3 +184,22 @@ boundaries. Run `python3 tools/check_architecture.py` and
 development checks, not runtime dependencies.
 
 Text chat helper checkpoint and setup: [launcher chat](docs/launcher-chat.md). Graphical chat and voice acceptance remain pending.
+
+### Robot personality and motion
+
+Setup now offers persisted Calm/Expressive personality, Full/Reduced/Off motion,
+and Slow/Normal/Lively animation pace. Existing per-agent theme colors remain.
+Focused eyes distinguish verification/review, a raised brow signals attention,
+errors use crossed eyes, and expressive robots occasionally wink. These are
+original Miilo drawings; no third-party mascot artwork is bundled.
+
+Off freezes all robot animation channels. Reduced retains blinks but removes
+body movement, neighbor glances, winks and drifting sleep marks. These manual
+settings do not claim automatic OS accessibility preference detection. Unknown
+or unavailable agents do not animate as busy or appear healthy and asleep.
+Expressions reflect observed states; a decorative wink is not completion or
+an approval receipt. Event-driven completion/recovery reactions remain planned.
+
+Validation: official OWL syntax checks, Linux evaluator scenarios and controlled
+clock draw tests. Android and live Omarchy visual/performance checks remain native
+testing gates. `make check-desktop` includes the robot drawing regressions.
