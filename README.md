@@ -182,3 +182,5 @@ The [engineering constitution](.specify/memory/constitution.md) defines the
 boundaries. Run `python3 tools/check_architecture.py` and
 `python3 tools/test_architecture.py`; CI qualification runs both. These are
 development checks, not runtime dependencies.
+
+Text chat helper checkpoint and setup: [launcher chat](docs/launcher-chat.md). Graphical chat and voice acceptance remain pending.

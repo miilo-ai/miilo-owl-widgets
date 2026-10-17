@@ -7,6 +7,7 @@ license = "MIT"
 description = "Native observation and revision-bound action helper for Miilo OWL widgets"
 
 [dependencies]
+miilo-adapter-sdk = { git = "https://github.com/miilo-ai/miilo-sdk", rev = "8eabb8da834874dc50738a47700365024a56a39e" }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 fs2 = "0.4"
 libc = "0.2"

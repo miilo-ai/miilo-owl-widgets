@@ -27,11 +27,17 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
         ref: ${{ github.sha }}
+    - uses: ./.github/actions/sdk-access
+      id: sdk
+      with:
+        token: ${{ github.event_name != 'pull_request' && (secrets.MIILO_SDK_READ_TOKEN
+          || secrets.MIILO_WORKSPACE_READ_TOKEN) || '' }}
     - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
       with:
         toolchain: 1.96.1
     - run: cargo xtask release version
       id: version
+      if: steps.sdk.outputs.ready == 'true'
     - id: policy
       run: cargo xtask release publication
       env:
@@ -39,9 +45,11 @@ jobs:
         MIILO_PUBLISH: ${{ inputs.publish }}
         RELEASE_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEPENDENCIES_READY: 'true'
+      if: steps.sdk.outputs.ready == 'true'
   qualify:
     needs: candidate
-    if: needs.candidate.outputs.publish == 'true' && needs.candidate.outputs.new == 'true'
+    if: needs.candidate.outputs.publish == 'true' && needs.candidate.outputs.new ==
+      'true'
     uses: ./.github/workflows/qualify.yml
     secrets: inherit
   tag:
@@ -64,18 +72,13 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG: ${{ needs.candidate.outputs.tag }}
-      run: |-
-        set -euo pipefail
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        gh auth setup-git
-        if git show-ref --verify --quiet "refs/tags/$TAG"; then
-          test "$(git rev-parse "$TAG^{commit}")" = "$GITHUB_SHA"
-        else
-          git tag -a "$TAG" -m "Release $TAG" "$GITHUB_SHA"
-          git push origin "$TAG"
-        fi
-        gh workflow run release.yml --ref "$TAG" -f tag="$TAG" -f publish=true
+      run: "set -euo pipefail\ngit config user.name \"github-actions[bot]\"\ngit config\
+        \ user.email \"41898282+github-actions[bot]@users.noreply.github.com\"\ngh\
+        \ auth setup-git\nif git show-ref --verify --quiet \"refs/tags/$TAG\"; then\n\
+        \  test \"$(git rev-parse \"$TAG^{commit}\")\" = \"$GITHUB_SHA\"\nelse\n \
+        \ git tag -a \"$TAG\" -m \"Release $TAG\" \"$GITHUB_SHA\"\n  git push origin\
+        \ \"$TAG\"\nfi\ngh workflow run release.yml --ref \"$TAG\" -f tag=\"$TAG\"\
+        \ -f publish=true"
   unchanged:
     needs:
     - candidate
@@ -84,6 +87,6 @@ jobs:
     if: always() && needs.tag.result != 'success'
     runs-on: ubuntu-latest
     steps:
-    - run: |-
-        echo "No release has been made" >> "$GITHUB_STEP_SUMMARY"
-        echo "No release has been made"
+    - run: 'echo "No release has been made" >> "$GITHUB_STEP_SUMMARY"
+
+        echo "No release has been made"'

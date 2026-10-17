@@ -1,0 +1,61 @@
+# Launcher text chat: first implementation checkpoint
+
+Chat contracts and the native helper are implemented; the shared graphical chat
+panel and host acceptance are still pending. This is not a release announcement.
+Plan: `.specify/specs/003-launcher-chat/spec.md`.
+
+## Configure
+
+Build/install the matching helper candidate, then run `miilo-owl chat-setup` in
+a terminal. Enter an OpenAI-compatible base URL ending in `/v1`, model name and
+optional absolute path to a private API key file. HTTPS is required except on
+loopback. The setup asks permission to send normalized observation context.
+Saving config does not claim that an endpoint has been tested.
+
+The file is `chat.json` in the existing private helper configuration directory.
+It is mode 600 and separate from observation connections. Tokens are read from
+the referenced private file on each turn; never put them in widgets or Git.
+Normalized summaries may still contain sensitive information. Inspect context
+before enabling a remote model; this feature is not an automatic PII scrubber.
+
+## Exercise the helper
+
+With enrolled observations updating, send a bounded JSON turn on stdin:
+
+```sh
+printf '%s\n' '{"protocolVersion":"0.1","requestId":"try-1","text":"What needs my attention?"}' | miilo-owl chat
+```
+
+Output is NDJSON: `context`, ordered `text_delta`, then `done` or `error`.
+An error after deltas means the partial answer is incomplete. Consumers must
+not treat exit zero as success: inspect the terminal event. Invalid command/input
+may use the existing generic failure output and nonzero exit.
+`chat-context` accepts the same stdin and prints the exact bounded context
+without contacting the model. Optional `focus` binds `workKey` and `revisionKey`
+from the observed workflow; optional `history` carries at most eight user/assistant
+messages. The caller owns history in memory and clears it on target change.
+No transcript enrollment, tool execution or historical search occurs in chat.
+Current observations are forcibly refreshed each turn. Closing the helper process
+cancels its request; native UI must terminate the owned process on cancel/close
+and discard events from an earlier requestId.
+
+## Voice placeholder
+
+`miilo-owl voice` returns `status: not_implemented`, `specId: VOICE-001`.
+See `.specify/specs/004-launcher-voice/spec.md`. It does not request microphone
+permission or record audio. Existing provider/mobile speech is not removed.
+
+## Qualification
+
+Tests cover actual loopback HTTP/SSE, compiled helper plus a private local
+snapshot with no CE, provider-isolated evidence, stale selection, consent,
+partial observations, malformed/truncated streams and cancellation callbacks.
+Real Gemma latency, graphical rendering and native microphone acceptance are
+not established by these fixtures.
+
+The helper imports the SDK at the exact commit in helper/Cargo.toml. While the
+SDK remains private, CI needs MIILO_SDK_READ_TOKEN or MIILO_WORKSPACE_READ_TOKEN
+with SDK contents-read. Fork pull requests never receive those secrets. Missing
+access reports No release has been made and prevents candidate readiness.
+Once public, no token is required. Docker builds mount scoped access config
+read-only when supplied; credentials are not copied into images or artifacts.

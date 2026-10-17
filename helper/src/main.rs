@@ -50,6 +50,17 @@ fn run(args: &[String]) -> Result<Option<Value>> {
                 json!({"status":"installed","activation":"explicit","mode":mode}),
             ))
         }
+        ["chat-setup"] => {
+            miilo_owl::adapters::chat_config::setup(&store)?;
+            Ok(Some(
+                json!({"status":"configured","message":"Chat configuration saved; run chat to verify the endpoint"}),
+            ))
+        }
+        ["chat"] | ["chat-context"] => {
+            miilo_owl::adapters::chat_command::run(&store, args[0] == "chat-context")?;
+            Ok(None)
+        }
+        ["voice"] => Ok(Some(miilo_owl::adapters::chat_command::voice_unavailable())),
         ["setup"] => {
             setup::setup(&store, &http, &mut setup::Terminal)?;
             Ok(None)
@@ -77,7 +88,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: setup | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

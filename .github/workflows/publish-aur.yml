@@ -22,6 +22,11 @@ jobs:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
         persist-credentials: false
+    - uses: ./.github/actions/sdk-access
+      id: sdk
+      with:
+        token: ${{ github.event_name != 'pull_request' && (secrets.MIILO_SDK_READ_TOKEN
+          || secrets.MIILO_WORKSPACE_READ_TOKEN) || '' }}
     - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
       with:
         toolchain: 1.96.1
@@ -30,53 +35,46 @@ jobs:
       env:
         MIILO_PUBLISH: ${{ inputs.publish }}
         RELEASE_TOKEN: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-        DEPENDENCIES_READY: ${{ github.event.repository.private == false && secrets.AUR_KNOWN_HOSTS != '' && vars.MIILO_AUR_ARM64_QUALIFIED
-          == 'true' }}
-    - if: steps.policy.outputs.publish == 'true'
+        DEPENDENCIES_READY: ${{ github.event.repository.private == false && secrets.AUR_KNOWN_HOSTS
+          != '' && vars.MIILO_AUR_ARM64_QUALIFIED == 'true' }}
+      if: steps.sdk.outputs.ready == 'true'
+    - if: (steps.policy.outputs.publish == 'true') && steps.sdk.outputs.ready == 'true'
       name: Download and render verified release recipe
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG: ${{ inputs.tag }}
         KIND: owl
-      run: |
-        set -euo pipefail
-        gh release download "$TAG" --pattern "*linux-aarch64.tar.gz" --pattern SHA256SUMS --dir release-assets
-        cargo xtask release render-aur --tag "$TAG" --repo "$GITHUB_REPOSITORY" --kind "$KIND"
-        for archive in release-assets/*.tar.xz release-assets/*.tar.gz; do
-          [ -f "$archive" ] || continue
-          gh attestation verify "$archive" --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" --source-ref "refs/tags/$TAG"
-        done
+      run: "set -euo pipefail\ngh release download \"$TAG\" --pattern \"*linux-aarch64.tar.gz\"\
+        \ --pattern SHA256SUMS --dir release-assets\ncargo xtask release render-aur\
+        \ --tag \"$TAG\" --repo \"$GITHUB_REPOSITORY\" --kind \"$KIND\"\nfor archive\
+        \ in release-assets/*.tar.xz release-assets/*.tar.gz; do\n  [ -f \"$archive\"\
+        \ ] || continue\n  gh attestation verify \"$archive\" --repo \"$GITHUB_REPOSITORY\"\
+        \ --signer-workflow \"$GITHUB_REPOSITORY/.github/workflows/release.yml\" --source-ref\
+        \ \"refs/tags/$TAG\"\ndone\n"
     - if: steps.policy.outputs.publish == 'true'
       name: Arch recipe checks; native ARM64 acceptance required separately
-      run: "set -euo pipefail\nmkdir -p aur-result\ndocker run --rm -v \"$PWD/aur:/recipe:ro\" -v \"$PWD/aur-result:/out\"\
-        \ archlinux:base bash -euc '\n  pacman -Syu --noconfirm --needed base-devel namcap git >/dev/null\n  useradd -m builder\n\
-        \  cp /recipe/PKGBUILD /home/builder/PKGBUILD\n  chown builder:builder /home/builder/PKGBUILD\n  cd /home/builder\n\
-        \  runuser -u builder -- makepkg --printsrcinfo > /out/.SRCINFO\n  runuser -u builder -- makepkg --verifysource\n\
-        \  runuser -u builder -- makepkg --nodeps --noconfirm --ignorearch\n  namcap PKGBUILD\n  cp PKGBUILD /out/PKGBUILD\n\
+      run: "set -euo pipefail\nmkdir -p aur-result\ndocker run --rm -v \"$PWD/aur:/recipe:ro\"\
+        \ -v \"$PWD/aur-result:/out\" archlinux:base bash -euc '\n  pacman -Syu --noconfirm\
+        \ --needed base-devel namcap git >/dev/null\n  useradd -m builder\n  cp /recipe/PKGBUILD\
+        \ /home/builder/PKGBUILD\n  chown builder:builder /home/builder/PKGBUILD\n\
+        \  cd /home/builder\n  runuser -u builder -- makepkg --printsrcinfo > /out/.SRCINFO\n\
+        \  runuser -u builder -- makepkg --verifysource\n  runuser -u builder -- makepkg\
+        \ --nodeps --noconfirm --ignorearch\n  namcap PKGBUILD\n  cp PKGBUILD /out/PKGBUILD\n\
         ' "
     - if: steps.policy.outputs.publish == 'true'
       name: Push recipes to AUR
       env:
         AUR_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         AUR_HOSTS: ${{ secrets.AUR_KNOWN_HOSTS }}
-      run: |-
-        set -euo pipefail
-        umask 077
-        printf '%s\n' "$AUR_KEY" > "$RUNNER_TEMP/aur-key"
-        printf '%s\n' "$AUR_HOSTS" > "$RUNNER_TEMP/aur-known-hosts"
-        trap 'rm -f "$RUNNER_TEMP/aur-key" "$RUNNER_TEMP/aur-known-hosts"' EXIT
-        export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/aur-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/aur-known-hosts"
-        package=$(sed -n 's/^pkgname=//p' aur-result/PKGBUILD)
-        git clone "ssh://aur@aur.archlinux.org/$package.git" aur-checkout
-        cp aur-result/PKGBUILD aur-result/.SRCINFO aur-checkout/
-        cd aur-checkout
-        git config user.name 'Miilo release automation'
-        git config user.email 'contact@miilo.tech'
-        git add PKGBUILD .SRCINFO
-        if git diff --cached --quiet; then
-          echo 'No release has been made'
-          echo 'No release has been made' >> "$GITHUB_STEP_SUMMARY"
-        else
-          git commit -m 'Update verified Miilo release recipe'
-          git push origin HEAD:master
-        fi
+      run: "set -euo pipefail\numask 077\nprintf '%s\\n' \"$AUR_KEY\" > \"$RUNNER_TEMP/aur-key\"\
+        \nprintf '%s\\n' \"$AUR_HOSTS\" > \"$RUNNER_TEMP/aur-known-hosts\"\ntrap 'rm\
+        \ -f \"$RUNNER_TEMP/aur-key\" \"$RUNNER_TEMP/aur-known-hosts\"' EXIT\nexport\
+        \ GIT_SSH_COMMAND=\"ssh -i $RUNNER_TEMP/aur-key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes\
+        \ -o UserKnownHostsFile=$RUNNER_TEMP/aur-known-hosts\"\npackage=$(sed -n 's/^pkgname=//p'\
+        \ aur-result/PKGBUILD)\ngit clone \"ssh://aur@aur.archlinux.org/$package.git\"\
+        \ aur-checkout\ncp aur-result/PKGBUILD aur-result/.SRCINFO aur-checkout/\n\
+        cd aur-checkout\ngit config user.name 'Miilo release automation'\ngit config\
+        \ user.email 'contact@miilo.tech'\ngit add PKGBUILD .SRCINFO\nif git diff\
+        \ --cached --quiet; then\n  echo 'No release has been made'\n  echo 'No release\
+        \ has been made' >> \"$GITHUB_STEP_SUMMARY\"\nelse\n  git commit -m 'Update\
+        \ verified Miilo release recipe'\n  git push origin HEAD:master\nfi"
