@@ -33,6 +33,12 @@ All colors come from Omalauncher’s semantic palette. There are no fixed provid
 
 ## Install and register what to observe
 
+Using a real phone? Start with [phone setup](docs/phone-setup.md). Your sessions
+can stay on your computer; the phone connects to an authorized observation API.
+Tailscale connectivity is separate from Miilo authentication. No Codex sign-in or
+server SSH private key is needed on the phone just to view remote observations.
+
+
 Download and verify the **ARM64 Linux release bundle**, extract it, then run **inside Omalauncher's Linux environment**. No Python or Rust toolchain is needed on the device:
 
 ```sh
