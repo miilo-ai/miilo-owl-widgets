@@ -53,5 +53,6 @@ jobs:
         path: dist/*
       if: steps.sdk.outputs.ready == 'true'
 'on':
+- workflow_dispatch
 - push
 - pull_request
