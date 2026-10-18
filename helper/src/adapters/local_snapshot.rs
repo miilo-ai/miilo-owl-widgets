@@ -113,7 +113,7 @@ pub(super) fn connect(store: &Store, http: &dyn Transport, local: &Value) -> Res
         use sha2::{Digest, Sha256};
         let kind = session["kind"]
             .as_str()
-            .filter(|k| matches!(*k, "codex" | "cursor"))
+            .filter(|k| matches!(*k, "codex" | "cursor" | "claude" | "opencode" | "devin"))
             .ok_or("Unsupported local agent")?;
         let id = session["id"]
             .as_str()

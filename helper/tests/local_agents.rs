@@ -7,6 +7,7 @@ fn detects_known_folders_and_executable_commands_without_reading_contents() {
     let bin = temp.path().join("bin");
     fs::create_dir_all(home.join(".codex")).unwrap();
     fs::create_dir_all(home.join(".config/devin")).unwrap();
+    fs::create_dir_all(home.join(".local/share/opencode")).unwrap();
     fs::create_dir_all(&bin).unwrap();
     fs::write(
         home.join(".codex/auth.json"),
@@ -27,7 +28,10 @@ fn detects_known_folders_and_executable_commands_without_reading_contents() {
     assert_eq!(agent("codex")["configFound"], true);
     assert_eq!(agent("cursor")["commandFound"], true);
     assert_eq!(agent("devin")["found"], true);
-    assert_eq!(agent("devin")["observationSupported"], false);
+    assert_eq!(agent("devin")["observationSupported"], true);
+    assert_eq!(agent("claude")["observationSupported"], true);
+    assert_eq!(agent("opencode")["found"], true);
+    assert_eq!(agent("opencode")["observationSupported"], true);
     assert_eq!(agent("claude")["found"], false);
     assert_eq!(result["metadataOnly"], true);
     assert!(!result.to_string().contains("auth.json"));
