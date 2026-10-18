@@ -23,29 +23,30 @@
     Column {
       scroll: true
       gap: 10
-      Setup { }
-      if focused == null && actor == null { Search { placeholder: "Search attention" } }
-      SetupTerminal { }
-      if focused != null {
-        WorkDetail { }
-      } else {
-        let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
-      for a in matches.take(pageSize) key a._key {
-          Column {
-          gap: 2
-          fill: width
-          onTap: { selectedWork = a._workKey ?? ""; evidenceOpen = false; proposed = ""; reply = requestPending ? reply : "" }
-          Row {
+      if setupOpen { SettingsPage { } } else {
+        Setup { }
+        if focused == null && actor == null { Search { placeholder: "Search attention" } }
+        if focused != null {
+          WorkDetail { }
+        } else {
+          let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
+        for a in matches.take(pageSize) key a._key {
+            Column {
+            gap: 2
             fill: width
-            Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
-            Text { text: "›"; width: 10; style: small; color: muted }
+            onTap: { selectedWork = a._workKey ?? ""; evidenceOpen = false; proposed = ""; reply = requestPending ? reply : "" }
+            Row {
+              fill: width
+              Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
+              Text { text: "›"; width: 10; style: small; color: muted }
+            }
+            Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
+            if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
           }
-          Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
-          if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
         }
-      }
-      if len(matches) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
-      if len(matches) > pageSize { Button { text: "+${len(matches) - pageSize} more"; onTap: pageSize = pageSize + 5 } }
+        if len(matches) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
+        if len(matches) > pageSize { Button { text: "+${len(matches) - pageSize} more"; onTap: pageSize = pageSize + 5 } }
+        }
       }
     }
   }

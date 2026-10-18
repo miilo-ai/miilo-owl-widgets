@@ -25,7 +25,7 @@
     Row {
       gap: 4
       align: center
-      Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
+      Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "menu"; setupConfiguring = false; systemsOpen = false }
         ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
@@ -34,7 +34,7 @@
         }
       }
       if len(allProviders) > 1 {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "filters"; setupConfiguring = false; systemsOpen = false }
           ToolbarIcon { kind: "menu" }
         }
       }

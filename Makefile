@@ -29,6 +29,7 @@ check-desktop:
 	node tools/test-portrait.cjs
 	node tools/test-compact.cjs
 	node tools/test-session-visibility.cjs
+	node tools/test-mobile-settings.cjs
 
 check-keyboard:
 	tools/test-desktop-keyboard.sh

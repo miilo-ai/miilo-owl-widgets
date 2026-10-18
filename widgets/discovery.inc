@@ -20,7 +20,7 @@
         }
       } else {
         Box { weight: 1; height: fieldHeight; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
-          Text { text: query == "" ? placeholder : query; fill: width; fontSize: 13; color: query == "" ? muted : foreground; maxLines: 1 }
+          Text { text: query == "" ? placeholder : query; fill: width; fontSize: 12; color: query == "" ? muted : foreground; maxLines: 1 }
         }
         if needle != "" { Box { width: 30; height: fieldHeight; align: center; onTap: { query = ""; pageSize = 5 }
           Text { text: "×"; width: 30; fontSize: 22; align: center; color: muted }
@@ -39,7 +39,7 @@
       fill: width
       gap: 6
       onTap: { expandedSystem = expandedSystem == provider.id ? "" : provider.id; pageSize = 5; agentLimit = 5; workflowActor = "" }
-      Text { text: provider.name; style: body; weight: 1; maxLines: 1 }
+      Text { text: provider.name; fontSize: 12; weight: 1; maxLines: 1 }
       Text { text: count; width: max(20, len(count) * 6); fontSize: 10; color: muted; align: end; maxLines: 1 }
       Text { text: expandedSystem == provider.id ? "⌄" : "›"; width: 10; style: small; color: muted }
     }

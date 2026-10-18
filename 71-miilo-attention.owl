@@ -11,25 +11,26 @@ widget "miilo attention" {
   state robotPersonality = "expressive" persist
   let robotSpeed = robotPace == "slow" ? 0.7 : robotPace == "lively" ? 1.3 : 1
   component RobotAppearance() {
-    Text { text: "Robot personality"; style: small; color: muted }
+    Text { text: "Personality"; style: small; color: muted }
     Flow {
       gap: 6
       for option in ["calm", "expressive"] {
-        Button { text: option == "calm" ? "Calm" : "Expressive"; color: robotPersonality == option ? accent : muted; onTap: robotPersonality = option }
+        Button { height: 44; text: option == "calm" ? "Calm" : "Expressive"; background: alpha(accent, robotPersonality == option ? 0.14 : 0); color: robotPersonality == option ? accent : muted; onTap: robotPersonality = option }
       }
     }
     Text { text: "Motion"; style: small; color: muted }
     Flow {
       gap: 6
       for option in ["full", "reduced", "off"] {
-        Button { text: option == "full" ? "Full" : option == "reduced" ? "Reduced" : "Off"; color: robotMotion == option ? accent : muted; onTap: robotMotion = option }
+        Button { height: 44; text: option == "full" ? "Full" : option == "reduced" ? "Reduced" : "Off"; background: alpha(accent, robotMotion == option ? 0.14 : 0); color: robotMotion == option ? accent : muted; onTap: robotMotion = option }
       }
     }
     if robotMotion != "off" {
+      Text { text: "Pace"; fontSize: 12; color: muted }
       Flow {
         gap: 6
         for option in ["slow", "normal", "lively"] {
-          Button { text: option == "slow" ? "Slow" : option == "lively" ? "Lively" : "Normal"; color: robotPace == option ? accent : muted; onTap: robotPace = option }
+          Button { height: 44; text: option == "slow" ? "Slow" : option == "lively" ? "Lively" : "Normal"; background: alpha(accent, robotPace == option ? 0.14 : 0); color: robotPace == option ? accent : muted; onTap: robotPace = option }
         }
       }
     }
@@ -38,7 +39,8 @@ widget "miilo attention" {
   state system = ""
   state systemsOpen = false
   state setupOpen = false
-  state setupSection = "systems"
+  state setupSection = "menu"
+  state setupConfiguring = false
   state pageSize = 5
   state agentLimit = 5
   state needsOnly = false
@@ -94,9 +96,10 @@ widget "miilo attention" {
   let actor = find(allActors, a => a._key == selectedActor)
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
-  let toolbarHeight = linux ? 34 : 44
-  let fieldHeight = linux ? 32 : 44
-  let tabHeight = linux ? 28 : 44
+  // Linux is also available inside Android; it is not a desktop detector.
+  let toolbarHeight = 48
+  let fieldHeight = 48
+  let tabHeight = 44
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
@@ -150,7 +153,7 @@ widget "miilo attention" {
     Row {
       gap: 4
       align: center
-      Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
+      Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "menu"; setupConfiguring = false; systemsOpen = false }
         ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
@@ -159,9 +162,65 @@ widget "miilo attention" {
         }
       }
       if len(allProviders) > 1 {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "filters"; setupConfiguring = false; systemsOpen = false }
           ToolbarIcon { kind: "menu" }
         }
+      }
+    }
+  }
+
+  // Presentation only: labels and provider action policy remain authoritative.
+  component OrbitStateIcon(phase, attention, offline, failed, ink = accent) {
+    Canvas {
+      width: 14
+      height: 14
+      // Optical alignment with the title glyphs, rather than the line box.
+      offset: [0, 1]
+      if offline {
+        circle(7, 7, 4.5, stroke: ink, width: 1)
+        line(3, 11, 11, 3, stroke: ink, width: 1)
+      } else if failed {
+        line(3.5, 3.5, 10.5, 10.5, stroke: ink, width: 1.3)
+        line(3.5, 10.5, 10.5, 3.5, stroke: ink, width: 1.3)
+      } else if attention != "none" {
+        // Canvas text has different ascent from vector strokes.
+        text("?!", 7, 10, size: 12, bold: true, align: center, color: ink)
+      } else if phase == "implementing" {
+        path([[4.5, 3], [1.5, 7], [4.5, 11]], stroke: ink, width: 1.1, cap: round)
+        path([[9.5, 3], [12.5, 7], [9.5, 11]], stroke: ink, width: 1.1, cap: round)
+        line(8, 3.5, 6, 10.5, stroke: ink, width: 1)
+      } else if phase == "verifying" {
+        path([[6, 2], [6, 7], [2.5, 11], [3.5, 12], [10.5, 12], [11.5, 11], [8, 7], [8, 2]], stroke: ink, width: 1, cap: round)
+        line(5, 2, 9, 2, stroke: ink, width: 1)
+        line(5, 8, 9, 8, stroke: ink, width: 1)
+      } else if contains(["reviewing", "review"], phase) {
+        circle(6, 6, 3.5, stroke: ink, width: 1)
+        line(8.5, 8.5, 12, 12, stroke: ink, width: 1.2)
+      } else {
+        circle(7, 7, 4.5, stroke: ink, width: 1)
+        path([[7, 4], [7, 7], [9, 8]], stroke: ink, width: 1, cap: round)
+      }
+    }
+  }
+
+  component RobotColors() {
+    Text { text: "Robot colors"; style: small; color: muted }
+    Flow {
+      gap: 6
+      for a in actors.take(agentLimit) key a._key {
+        Button { text: replace(a.name, "-", " "); color: colorAgent == a._key ? accent : muted; onTap: colorAgent = a._key }
+      }
+    }
+    if len(actors) > agentLimit { Button { text: "More agents"; onTap: agentLimit = agentLimit + 5 } }
+    if colorAgent != "" {
+      let automatic = abs(sum(split(colorAgent, "").map(c => indexOf(split("0123456789abcdef", ""), c)))) % len(robotPalette)
+      Flow {
+        gap: 6
+        Button { text: "Automatic"; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) }
+        for c, i in robotPalette {
+          Button { text: c.name; color: c.value; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) + [{key: colorAgent, color: i}] }
+        }
+        Button { text: "Shuffle"; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) + [{key: colorAgent, color: (get(find(robotColors, p => p.key == colorAgent), "color", automatic) + 1 + floor(time) % (len(robotPalette) - 1)) % len(robotPalette)}] }
       }
     }
   }
@@ -196,28 +255,6 @@ widget "miilo attention" {
     }
   }
 
-  component SetupTerminal() {
-    if setupOpen {
-      Row {
-        gap: 6
-        Button { text: "Systems"; color: setupSection == "systems" ? accent : muted; onTap: setupSection = "systems" }
-        Button { text: "Chat model"; color: setupSection == "chat" ? accent : muted; onTap: setupSection = "chat" }
-      }
-      if setupSection == "chat" {
-        Text { text: "Choose your chat endpoint, model and credential file. Consent applies to the questions and task context you share."; style: small; color: muted; maxLines: 4 }
-        Terminal { command: "miilo-owl chat-setup"; fill: width; height: max(1, screenHeight * 0.6) }
-        Text { text: "Voice integration is not implemented in this launcher yet. Transcription and speech output will use separate endpoint settings."; style: small; color: muted; maxLines: 4 }
-      } else {
-      RobotAppearance { }
-      Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
-      Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
-      Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
-      Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
-      }
-      Button { text: "Done"; onTap: { setupOpen = false; setupSection = "systems"; refresh() } }
-    }
-  }
-
   component WorkRows(list, showSystem = false) {
     for w in list.take(pageSize) key w._key {
       Column {
@@ -226,11 +263,14 @@ widget "miilo attention" {
         onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; evidenceOpen = false; proposed = "" }
         Row {
           gap: 6
+          height: 44
+          align: center
           fill: width
-          Text { text: w.title; style: body; weight: 1; maxLines: 1 }
+          OrbitStateIcon { phase: w.phase; attention: w.attention; offline: false; failed: w.lifecycle == "failed"; ink: w.lifecycle == "failed" ? red : w.attention != "none" ? accent : foreground }
+          Text { text: w.title; fontSize: 12; weight: 1; maxLines: 1 }
           Text { text: "›"; width: 10; style: small; color: muted }
         }
-        Text { text: showSystem ? "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}" : "${w.phase} · ${w.lifecycle}"; style: small; color: muted; maxLines: 1 }
+        if showSystem { Text { text: get(find(allProviders, p => p.id == w.providerId), "name", "System"); fontSize: 11; color: muted; maxLines: 1 } }
       }
     }
     if len(list) > pageSize {
@@ -239,6 +279,83 @@ widget "miilo attention" {
         if !leftHanded { Spacer { weight: 1 } }
         Button { text: "+${len(list) - pageSize} more"; onTap: pageSize = pageSize + 5 }
         if leftHanded { Spacer { weight: 1 } }
+      }
+    }
+  }
+
+  component SettingsEntry(label, detail, section) {
+    Box {
+      fill: width; padding: 10; radius: 8; background: alpha(accent, 0.07)
+      onTap: { setupSection = section; setupConfiguring = false }
+      Row {
+        fill: width; gap: 8; align: center
+        Column {
+          weight: 1; gap: 2
+          Text { text: label; fontSize: 13; color: foreground; maxLines: 1 }
+          Text { text: detail; fontSize: 11; color: muted; maxLines: 2 }
+        }
+        Text { text: "›"; width: 18; fontSize: 18; align: center; color: accent }
+      }
+    }
+  }
+  component SettingsPage() {
+    Row {
+      fill: width; gap: 8; align: center
+      Box {
+        width: 44; height: toolbarHeight; align: center
+        onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false }
+        ToolbarIcon { kind: "back" }
+      }
+      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
+      Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
+    }
+    if setupSection == "menu" {
+      SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
+      SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
+      SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
+      SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
+    } else if setupSection == "appearance" {
+      RobotAppearance { }
+      Text { text: "Controls"; fontSize: 12; color: muted }
+      Flow {
+        gap: 6
+        Button { height: 44; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
+        Button { height: 44; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
+      }
+      RobotColors { }
+    } else if setupSection == "filters" {
+      Text { text: "Show"; fontSize: 12; color: muted }
+      Box {
+        fill: width; height: 48; padding: 10; radius: 6; background: alpha(accent, effectiveSystem == "" ? 0.16 : 0.04)
+        onTap: { system = ""; pageSize = 5; agentLimit = 5 }
+        Text { text: effectiveSystem == "" ? "✓ All systems" : "All systems"; fontSize: 12; color: effectiveSystem == "" ? accent : foreground; maxLines: 1 }
+      }
+      for p in selectableProviders key p.id {
+        Box {
+          fill: width; height: 48; padding: 10; radius: 6; background: alpha(accent, effectiveSystem == p.id ? 0.16 : 0.04)
+          onTap: { system = p.id; pageSize = 5; agentLimit = 5 }
+          Text { text: effectiveSystem == p.id ? "✓ ${p.name}" : p.name; fontSize: 12; color: effectiveSystem == p.id ? accent : foreground; maxLines: 1 }
+        }
+      }
+      if len(selectableProviders) == 0 { Text { text: "Add a connection to see systems here."; fontSize: 12; color: muted; maxLines: 2 } }
+    } else {
+      Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
+      if setupConfiguring {
+        if setupSection == "chat" { Terminal { fontSize: 12; command: "miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        else { Terminal { fontSize: 12; command: "miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        Text { text: setupSection == "chat" ? "Follow the prompts, then tap Done." : "Type q then Enter to finish, or tap Done."; fontSize: 11; color: muted; maxLines: 2 }
+      } else {
+        if setupSection == "systems" {
+          for p in selectableProviders key p.id {
+            Row {
+              fill: width; height: 28; align: center; gap: 8
+              Text { text: p.name; fontSize: 12; weight: 1; maxLines: 1 }
+              Text { text: p.health ?? "Observed"; fontSize: 11; color: muted; width: 84; align: end; maxLines: 1 }
+            }
+          }
+        }
+        Button { height: 44; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        if setupSection == "chat" { Text { text: "Voice is not available in this launcher yet."; fontSize: 11; color: muted; maxLines: 2 } }
       }
     }
   }
@@ -316,7 +433,7 @@ widget "miilo attention" {
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
-      Text { text: focused.title; font: sans; fontSize: 17; color: foreground; maxLines: 4 }
+      Text { text: focused.title; font: sans; fontSize: 16; color: foreground; maxLines: 4 }
       Row {
         fill: width
         gap: 8
@@ -334,7 +451,7 @@ widget "miilo attention" {
       if !requestPending {
         Flow {
           gap: 6
-          Button { text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          Button { height: 44; background: alpha(accent, 0.12); text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
           for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
             Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
           }
@@ -342,7 +459,7 @@ widget "miilo attention" {
         }
         if !(focused._actionsEnabled ?? false) {
           Text { text: "Actions disabled for this connection"; style: small; color: muted }
-          Button { text: "Action settings"; onTap: setupOpen = true }
+          Button { height: 44; background: alpha(accent, 0.12); text: "Action settings"; onTap: { setupOpen = true; setupSection = "systems"; setupConfiguring = false } }
         }
         if len(focused.actions ?? []) == 0 { Text { text: "No actions currently offered by this provider"; style: small; color: muted } }
         for a in (focused.actions ?? []).filter(a => !a._supported) key a._key {
@@ -416,7 +533,7 @@ widget "miilo attention" {
         }
       } else {
         Box { weight: 1; height: fieldHeight; align: start; padding: 6; radius: 6; background: alpha(muted, 0.08); onTap: searchEditing = true
-          Text { text: query == "" ? placeholder : query; fill: width; fontSize: 13; color: query == "" ? muted : foreground; maxLines: 1 }
+          Text { text: query == "" ? placeholder : query; fill: width; fontSize: 12; color: query == "" ? muted : foreground; maxLines: 1 }
         }
         if needle != "" { Box { width: 30; height: fieldHeight; align: center; onTap: { query = ""; pageSize = 5 }
           Text { text: "×"; width: 30; fontSize: 22; align: center; color: muted }
@@ -435,7 +552,7 @@ widget "miilo attention" {
       fill: width
       gap: 6
       onTap: { expandedSystem = expandedSystem == provider.id ? "" : provider.id; pageSize = 5; agentLimit = 5; workflowActor = "" }
-      Text { text: provider.name; style: body; weight: 1; maxLines: 1 }
+      Text { text: provider.name; fontSize: 12; weight: 1; maxLines: 1 }
       Text { text: count; width: max(20, len(count) * 6); fontSize: 10; color: muted; align: end; maxLines: 1 }
       Text { text: expandedSystem == provider.id ? "⌄" : "›"; width: 10; style: small; color: muted }
     }
@@ -545,28 +662,6 @@ widget "miilo attention" {
     }
   }
 
-  component RobotColors() {
-    Text { text: "Robot colors"; style: small; color: muted }
-    Flow {
-      gap: 6
-      for a in actors.take(agentLimit) key a._key {
-        Button { text: replace(a.name, "-", " "); color: colorAgent == a._key ? accent : muted; onTap: colorAgent = a._key }
-      }
-    }
-    if len(actors) > agentLimit { Button { text: "More agents"; onTap: agentLimit = agentLimit + 5 } }
-    if colorAgent != "" {
-      let automatic = abs(sum(split(colorAgent, "").map(c => indexOf(split("0123456789abcdef", ""), c)))) % len(robotPalette)
-      Flow {
-        gap: 6
-        Button { text: "Automatic"; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) }
-        for c, i in robotPalette {
-          Button { text: c.name; color: c.value; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) + [{key: colorAgent, color: i}] }
-        }
-        Button { text: "Shuffle"; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) + [{key: colorAgent, color: (get(find(robotColors, p => p.key == colorAgent), "color", automatic) + 1 + floor(time) % (len(robotPalette) - 1)) % len(robotPalette)}] }
-      }
-    }
-  }
-
   let ordered = attention.sortBy(a => a.level == "intervention" ? 0 : a.level == "approval" ? 1 : 2)
   Column {
     gap: 5
@@ -592,29 +687,30 @@ widget "miilo attention" {
     Column {
       scroll: true
       gap: 10
-      Setup { }
-      if focused == null && actor == null { Search { placeholder: "Search attention" } }
-      SetupTerminal { }
-      if focused != null {
-        WorkDetail { }
-      } else {
-        let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
-      for a in matches.take(pageSize) key a._key {
-          Column {
-          gap: 2
-          fill: width
-          onTap: { selectedWork = a._workKey ?? ""; evidenceOpen = false; proposed = ""; reply = requestPending ? reply : "" }
-          Row {
+      if setupOpen { SettingsPage { } } else {
+        Setup { }
+        if focused == null && actor == null { Search { placeholder: "Search attention" } }
+        if focused != null {
+          WorkDetail { }
+        } else {
+          let matches = ordered.filter(a => contains(lower("${a._title ?? a.message} ${a.reason ?? ""} ${get(find(allProviders, p => p.id == a.providerId), "name", "")}"), needle))
+        for a in matches.take(pageSize) key a._key {
+            Column {
+            gap: 2
             fill: width
-            Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
-            Text { text: "›"; width: 10; style: small; color: muted }
+            onTap: { selectedWork = a._workKey ?? ""; evidenceOpen = false; proposed = ""; reply = requestPending ? reply : "" }
+            Row {
+              fill: width
+              Text { text: a._title ?? a.message; style: body; weight: 1; maxLines: 2 }
+              Text { text: "›"; width: 10; style: small; color: muted }
+            }
+            Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
+            if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
           }
-          Text { text: "${get(find(allProviders, p => p.id == a.providerId), "name", "System")} · ${a.level}"; style: small; color: a.level == "intervention" ? red : muted; maxLines: 1 }
-          if a._workKey == "" { Text { text: a.reason; style: small; color: muted; maxLines: 2 } }
         }
-      }
-      if len(matches) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
-      if len(matches) > pageSize { Button { text: "+${len(matches) - pageSize} more"; onTap: pageSize = pageSize + 5 } }
+        if len(matches) == 0 { Text { text: issueCount > 0 ? "Check connection" : "Nothing needs you"; style: small; color: muted } }
+        if len(matches) > pageSize { Button { text: "+${len(matches) - pageSize} more"; onTap: pageSize = pageSize + 5 } }
+        }
       }
     }
   }

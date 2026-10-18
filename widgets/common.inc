@@ -1,7 +1,8 @@
   state system = ""
   state systemsOpen = false
   state setupOpen = false
-  state setupSection = "systems"
+  state setupSection = "menu"
+  state setupConfiguring = false
   state pageSize = 5
   state agentLimit = 5
   state needsOnly = false
@@ -57,9 +58,10 @@
   let actor = find(allActors, a => a._key == selectedActor)
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
-  let toolbarHeight = linux ? 34 : 44
-  let fieldHeight = linux ? 32 : 44
-  let tabHeight = linux ? 28 : 44
+  // Linux is also available inside Android; it is not a desktop detector.
+  let toolbarHeight = 48
+  let fieldHeight = 48
+  let tabHeight = 44
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
