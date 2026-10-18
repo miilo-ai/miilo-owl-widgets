@@ -66,17 +66,20 @@ fn assemble() -> Result<()> {
             "appearance",
             "common",
             "toolbar",
+            "orbit-status",
+            "colors",
             "setup",
+            "settings",
             "progress",
             "artifacts",
             "work-detail",
             "discovery",
         ];
         if index != 72 {
-            parts.extend(["robot", "colors"]);
+            parts.extend(["robot"]);
         }
         if index == 70 {
-            parts.extend(["orbit-geometry", "orbit-status", "orbit", "quiet"]);
+            parts.extend(["orbit-geometry", "orbit", "quiet"]);
         }
         parts.push(name);
         let mut fragments = vec![];

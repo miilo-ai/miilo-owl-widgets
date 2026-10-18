@@ -54,6 +54,7 @@ assert(robot({status:'blocked',saved:{robotMotion:'off'}}).draw(0).some(op=>op.o
 assert.equal(failed.draw(0).filter(op=>op.op==='text'&&op.text==='!').length,2,'Detailed failed agents retain both error marks');
 const settings = robot({saved:{robotMotion:'off',robotPace:'slow',robotPersonality:'calm'}});
 settings.instance.values[settings.slot('setupOpen')] = Owl.fromJson(true);
+settings.instance.values[settings.slot('setupSection')] = Owl.fromJson('appearance');
 settings.instance.invalidate();
 const screen = [...walk(settings.instance.render(true))];
 for (const name of ['Calm','Expressive','Full','Reduced','Off']) assert(screen.some(node => node.p.text === name), `Missing ${name} control`);

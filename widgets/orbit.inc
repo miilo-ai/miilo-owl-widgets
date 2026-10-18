@@ -4,13 +4,13 @@
   component WorkViewToolbar(count) {
     Row {
       fill: width
-      gap: 6
-      Box { width: 72; height: tabHeight; align: center; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } Text { text: "All work"; fill: width; align: center; fontSize: 11; maxLines: 1; color: !needsOnly ? accent : muted } }
-      Box { width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } Text { text: "Needs you ${count}"; fill: width; align: center; fontSize: 11; maxLines: 1; color: needsOnly ? accent : muted } }
+      gap: 4
+      Box { width: 64; height: tabHeight; align: center; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } Text { text: "All work"; fill: width; align: center; fontSize: 11; maxLines: 1; color: !needsOnly ? accent : muted } }
+      Box { width: max(98, 84 + len("${count}") * 7); height: tabHeight; align: center; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } Text { text: "Needs you (${count})"; fill: width; align: center; fontSize: 11; maxLines: 1; color: needsOnly ? accent : muted } }
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Box { width: 62; height: tabHeight; align: center; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } Text { text: "Compact"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView != "orbit" ? accent : muted } }
+        Box { width: 60; height: tabHeight; align: center; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } Text { text: "Compact"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView != "orbit" ? accent : muted } }
         Box { width: 48; height: tabHeight; align: center; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "orbit"; orbitPage = 0 } Text { text: "Detail"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView == "orbit" ? accent : muted } }
       }
     }
@@ -42,14 +42,14 @@
       for w in current key w._key {
         Row {
           fill: width
-          height: linux ? 22 : 44
+          height: 44
           gap: 6
           align: center
           onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
           let rowInk = offline ? muted : w.lifecycle == "failed" ? mix(red, foreground, 0.15) : w.attention != "none" ? accent : w.phase == "verifying" ? mix(cyan, foreground, 0.4) : foreground
           OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed"; ink: rowInk }
           // Match visible title glyphs to the icon center; Qt line leading sits above it.
-          Text { text: w.title; weight: 1; fontSize: 11; maxLines: 1; color: rowInk; offset: [0, 2] }
+          Text { text: w.title; weight: 1; fontSize: 12; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { inspectionView = "orbit"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }

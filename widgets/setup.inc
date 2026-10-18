@@ -28,28 +28,6 @@
     }
   }
 
-  component SetupTerminal() {
-    if setupOpen {
-      Row {
-        gap: 6
-        Button { text: "Systems"; color: setupSection == "systems" ? accent : muted; onTap: setupSection = "systems" }
-        Button { text: "Chat model"; color: setupSection == "chat" ? accent : muted; onTap: setupSection = "chat" }
-      }
-      if setupSection == "chat" {
-        Text { text: "Choose your chat endpoint, model and credential file. Consent applies to the questions and task context you share."; style: small; color: muted; maxLines: 4 }
-        Terminal { command: "miilo-owl chat-setup"; fill: width; height: max(1, screenHeight * 0.6) }
-        Text { text: "Voice integration is not implemented in this launcher yet. Transcription and speech output will use separate endpoint settings."; style: small; color: muted; maxLines: 4 }
-      } else {
-      RobotAppearance { }
-      Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
-      Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
-      Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
-      Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
-      }
-      Button { text: "Done"; onTap: { setupOpen = false; setupSection = "systems"; refresh() } }
-    }
-  }
-
   component WorkRows(list, showSystem = false) {
     for w in list.take(pageSize) key w._key {
       Column {
@@ -58,11 +36,14 @@
         onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; evidenceOpen = false; proposed = "" }
         Row {
           gap: 6
+          height: 44
+          align: center
           fill: width
-          Text { text: w.title; style: body; weight: 1; maxLines: 1 }
+          OrbitStateIcon { phase: w.phase; attention: w.attention; offline: false; failed: w.lifecycle == "failed"; ink: w.lifecycle == "failed" ? red : w.attention != "none" ? accent : foreground }
+          Text { text: w.title; fontSize: 12; weight: 1; maxLines: 1 }
           Text { text: "›"; width: 10; style: small; color: muted }
         }
-        Text { text: showSystem ? "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}" : "${w.phase} · ${w.lifecycle}"; style: small; color: muted; maxLines: 1 }
+        if showSystem { Text { text: get(find(allProviders, p => p.id == w.providerId), "name", "System"); fontSize: 11; color: muted; maxLines: 1 } }
       }
     }
     if len(list) > pageSize {

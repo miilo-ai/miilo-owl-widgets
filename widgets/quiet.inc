@@ -9,7 +9,7 @@
         Column {
           weight: 1
           gap: 1
-          Text { text: a.name; style: body; maxLines: 1 }
+          Text { text: a.name; fontSize: 12; maxLines: 1 }
           Text { text: a.status; style: small; color: muted; maxLines: 1 }
         }
         Text { text: "›"; width: 10; style: small; color: muted }
@@ -51,7 +51,7 @@
     let team = actors.filter(a => a.providerId == provider.id)
     let tasks = list.filter(w => w.providerId == provider.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
     Button { text: "Back"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
-    Text { text: provider.name; style: body; maxLines: 2 }
+    Text { text: provider.name; fontSize: 12; maxLines: 2 }
     Flow {
       fill: width
       gap: 8
