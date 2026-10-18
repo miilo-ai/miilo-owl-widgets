@@ -243,7 +243,6 @@ widget "miilo board" {
     }
   }
 
-
   component Arc(phase, moving) {
     Canvas {
       fill: width

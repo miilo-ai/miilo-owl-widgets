@@ -243,7 +243,6 @@ widget "miilo attention" {
     }
   }
 
-
   component Arc(phase, moving) {
     Canvas {
       fill: width
