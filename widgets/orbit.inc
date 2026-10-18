@@ -5,13 +5,13 @@
     Row {
       fill: width
       gap: 6
-      Text { text: "All work"; width: 72; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
-      Text { text: "Needs you ${count}"; width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
+      Box { width: 72; height: tabHeight; align: center; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } Text { text: "All work"; fill: width; align: center; fontSize: 11; maxLines: 1; color: !needsOnly ? accent : muted } }
+      Box { width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } Text { text: "Needs you ${count}"; fill: width; align: center; fontSize: 11; maxLines: 1; color: needsOnly ? accent : muted } }
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } }
-        Text { text: "Orbit"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+        Box { width: 62; height: tabHeight; align: center; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } Text { text: "Compact"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView != "orbit" ? accent : muted } }
+        Box { width: 48; height: tabHeight; align: center; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "orbit"; orbitPage = 0 } Text { text: "Detail"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView == "orbit" ? accent : muted } }
       }
     }
   }

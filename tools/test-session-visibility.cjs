@@ -34,7 +34,7 @@ assert.equal(s.get('allActors').filter(a=>a.status==='resting').length,12,'Never
 assert.equal(s.get('provs').length,1);
 assert.equal(s.render().filter(n=>n.kind==='Canvas'&&n.p.height===164).length,1,'Only visible session gets an Orbit field');
 assert.equal(s.get('systemsOpen'),false,'Menu starts collapsed');
-const menu=s.render().find(n=>n.kind==='Box'&&(n.c||n.children||[]).some(c=>c.p?.text==='≡'));
+const menu=s.render().filter(n=>n.kind==='Box'&&n.p?.width===44&&n.h?.onTap&&(n.c||n.children||[]).some(c=>c.kind==='Canvas'&&c.p.width===24)).at(-1);
 assert(menu,'Menu can be explicitly opened');menu.h.onTap(0,0);
 assert.equal(s.get('systemsOpen'),true);
 let nodes=s.render();

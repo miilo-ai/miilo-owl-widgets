@@ -54,7 +54,13 @@ impl Transport for Http {
             Some(b) => self.client.post(url).json(b),
             None => self.client.get(url),
         }
-        .header("Accept", "application/json");
+        .header("Accept", "application/json")
+        // Read-only generation can take longer than observation or action requests.
+        .timeout(Duration::from_secs(if path == "/v1/explanations" {
+            20
+        } else {
+            8
+        }));
         let credential = endpoint.credential()?;
         if !credential.is_empty() {
             request = request.bearer_auth(&credential);

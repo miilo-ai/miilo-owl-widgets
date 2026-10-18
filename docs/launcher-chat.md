@@ -6,8 +6,8 @@ Plan: `.specify/specs/003-launcher-chat/spec.md`.
 
 ## Configure
 
-Build/install the matching helper candidate, then run `miilo-owl chat-setup` in
-a terminal. Enter an OpenAI-compatible base URL ending in `/v1`, model name and
+Build/install the matching helper candidate, then select **Chat model** under
+the settings cog, or run `miilo-owl chat-setup` in a terminal. Enter an OpenAI-compatible base URL ending in `/v1`, model name and
 optional absolute path to a private API key file. HTTPS is required except on
 loopback. The setup asks permission to send normalized observation context.
 Saving config does not claim that an endpoint has been tested.

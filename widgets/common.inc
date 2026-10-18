@@ -1,6 +1,7 @@
   state system = ""
   state systemsOpen = false
   state setupOpen = false
+  state setupSection = "systems"
   state pageSize = 5
   state agentLimit = 5
   state needsOnly = false
@@ -78,97 +79,9 @@
     }
   }
 
-  component ToolbarControls() {
-    Row {
-      gap: 4
-      align: center
-      Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
-        Canvas {
-          width: 24
-          height: 24
-          circle(12, 12, 7.2, stroke: foreground, width: 1.5)
-          circle(12, 12, 2.8, stroke: foreground, width: 1.5)
-          for i in [0, 1, 2, 3, 4, 5, 6, 7] {
-            let angle = i * 0.7853981634
-            line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
-          }
-        }
-      }
-      if !requestPending {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
-          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
-        }
-      }
-      if len(allProviders) > 1 {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
-          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
-        }
-      }
-    }
-  }
-
-  component Setup() {
-    if focused != null || actor != null || !configured {
-      Row {
-        fill: width
-        gap: 4
-        align: center
-        if !leftHanded { Spacer { weight: 1 } }
-        if focused != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-        else if actor != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
-        ToolbarControls { }
-        if leftHanded { Spacer { weight: 1 } }
-      }
-    }
-    if !configured {
-      Text { text: data == null ? "Install helper, then add systems" : "Add Miilo endpoints and choose providers"; style: small; color: muted; maxLines: 2 }
-    }
-    if issueCount > 0 {
-      Text { text: "${issueCount} endpoint(s) unavailable"; style: small; color: red; maxLines: 1 }
-    }
-    if systemsOpen && len(allProviders) > 1 {
-      Flow {
-        gap: 5
-        if effectiveSystem != "" { Button { text: "All"; color: effectiveSystem == "" ? accent : muted; onTap: { system = ""; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } } }
-        for p in selectableProviders key p.id {
-          Button { text: p.name; color: effectiveSystem == p.id ? accent : muted; onTap: { system = p.id; systemsOpen = false; pageSize = 5; agentLimit = 5; selectedWork = ""; selectedActor = ""; proposed = ""; reply = requestPending ? reply : "" } }
-        }
-      }
-    }
-  }
-
-  component SetupTerminal() {
-    if setupOpen {
-      RobotAppearance { }
-      Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
-      Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
-      Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
-      Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
-      Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
-    }
-  }
-
-  component WorkRows(list, showSystem = false) {
-    for w in list.take(pageSize) key w._key {
-      Column {
-        gap: 2
-        fill: width
-        onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; evidenceOpen = false; proposed = "" }
-        Row {
-          gap: 6
-          fill: width
-          Text { text: w.title; style: body; weight: 1; maxLines: 1 }
-          Text { text: "›"; width: 10; style: small; color: muted }
-        }
-        Text { text: showSystem ? "${get(find(allProviders, p => p.id == w.providerId), "name", "System")} · ${w.phase}" : "${w.phase} · ${w.lifecycle}"; style: small; color: muted; maxLines: 1 }
-      }
-    }
-    if len(list) > pageSize {
-      Row {
-        fill: width
-        if !leftHanded { Spacer { weight: 1 } }
-        Button { text: "+${len(list) - pageSize} more"; onTap: pageSize = pageSize + 5 }
-        if leftHanded { Spacer { weight: 1 } }
-      }
+  component StatusBadge(label, ink = accent, w = 90) {
+    Box {
+      width: w; height: 22; align: center; radius: 4; background: alpha(ink, 0.1)
+      Text { text: label; fill: width; align: center; fontSize: 10; color: ink; maxLines: 1 }
     }
   }

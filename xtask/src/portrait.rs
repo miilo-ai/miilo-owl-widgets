@@ -12,7 +12,7 @@ pub fn assemble() -> Result<()> {
         .ok_or("Shared robot palette not found")?
         .0;
     let source = format!(
-        "widget \"miilo-portrait\" {{\n size: 1x1\n{}\n state portraitAgent = {{_key: \"welcome\", name: \"Miilo\", status: \"ready\", health: \"healthy\"}}\n state portraitSize = 64\n state robotColors = []\n let actors = [portraitAgent]\n let works = []\n let robotPalette = [{}\n ]\n{}\n Bot {{ agent: portraitAgent; s: portraitSize }}\n}}\n",
+        "widget \"miilo-portrait\" {{\n size: 1x1\n{}\n state portraitAgent = {{_key: \"welcome\", name: \"Miilo\", status: \"ready\", health: \"healthy\"}}\n state portraitSize = 64\n state portraitAnchored = false\n state robotColors = []\n let actors = [portraitAgent]\n let works = []\n let robotPalette = [{}\n ]\n{}\n Bot {{ agent: portraitAgent; s: portraitSize; anchored: portraitAnchored }}\n}}\n",
         fs::read_to_string(root.join("widgets/appearance.inc"))?,
         palette,
         fs::read_to_string(root.join("widgets/robot.inc"))?

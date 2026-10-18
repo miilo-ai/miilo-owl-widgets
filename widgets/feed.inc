@@ -1,6 +1,7 @@
   let tileActors = (previewRobots ? actors.take(1) : actors) + (previewRobots ? [
     {_key: "preview-resting", providerId: "", name: "Preview sleep", status: "resting", health: "healthy", _preview: true},
-    {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true}
+    {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true},
+    {_key: "preview-review", providerId: "", name: "Preview review", status: "blocked", health: "healthy", _preview: true}
   ] : [])
   component StateMark(warning, working, offline, s = 18) {
     Canvas {
@@ -18,14 +19,14 @@
   let availableWidth = max(tileWidth - 16, 32)
   let availableHeight = max(tileHeight - 16, 32)
   let showNames = availableHeight >= 88
-  let columns = max(1, min(len(tileActors), floor((availableWidth + 6) / 76)))
-  let rows = max(1, min(2, floor((availableHeight - 16) / (showNames ? 96 : 50))))
+  let columns = max(1, min(4, min(len(tileActors), floor((availableWidth + 6) / 88))))
+  let rows = max(1, min(ceil(len(tileActors) / columns), floor((availableHeight - 16) / (showNames ? 64 : 40))))
   let capacity = columns * rows
   let cellWidth = (availableWidth - (columns - 1) * 6) / columns
   let cellHeight = (availableHeight - 16 - (rows - 1) * 6) / rows
   let robotSize = clamp(min(cellWidth - 10, cellHeight - (showNames ? 32 : 0)), 30, 100)
   let usedRows = ceil(min(len(tileActors), capacity) / columns)
-  let groupHeight = usedRows * (robotSize + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
+  let groupHeight = usedRows * (robotSize * 0.82 + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
   Box {
     fill: true
   Column {
@@ -67,9 +68,9 @@
             onTap: { inspectionView = observatoryView; expandedSystem = a.providerId; workflowActor = (a._preview ?? false) ? "" : a._key; selectedActor = ""; selectedWork = ""; needsOnly = false; query = ""; pageSize = 5; screen() }
             Box {
               width: robotSize + 10
-              height: robotSize
+              height: max(24, (robotSize + 10) * 0.82)
               align: center
-              Bot { agent: a; s: robotSize; lookX: neighbor.x; lookY: neighbor.y; slot: slot; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+              CompactOrbit { agent: a; items: owned; s: robotSize + 10; lookX: neighbor.x; lookY: neighbor.y; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
               Box {
                 width: max(1, robotSize - 6)
                 height: max(1, robotSize * 0.92 - 6)
@@ -99,7 +100,7 @@
       gap: 10
       Setup { }
       if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
-      if setupOpen { RobotColors { } }
+      if setupOpen && setupSection != "chat" { RobotColors { } }
       SetupTerminal { }
       if focused != null {
         WorkDetail { }

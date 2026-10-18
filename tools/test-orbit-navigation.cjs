@@ -9,10 +9,10 @@ for (const work of [0, 1, 9]) {
     assert.equal(tileScene.instance.values[tileScene.slot('expandedSystem')],'p0');
     assert.equal(tileScene.instance.values[tileScene.slot('observatoryView')],'orbit','Inspection preserves the chosen Orbit preference');
     const detail=tileScene.render(2);
-    assert(detail.some(n=>n.p?.text==='← Back to Orbit'),'Tile opens system task list');
+    assert(detail.some(n=>n.p?.text==='Back'),'Tile opens system task list');
     assert(!detail.some(n=>n.p?.text==='Task p1 0'),'Other systems stay excluded');
     assert(detail.some(n=>n.p?.text===(work ? 'Task p0 0' : 'No work in flight')));
-    detail.find(n=>n.p?.text==='← Back to Orbit').h.onTap(0,0);
+    detail.find(n=>n.p?.text==='Back').h.onTap(0,0);
     assert.equal(tileScene.draw(3).length,2,'Back returns to the Orbit tiles');
     assert.deepEqual(tileScene.commands,[],'Navigation must not invoke a provider');
 }
@@ -28,11 +28,11 @@ for (const origin of ['quiet','orbit']) {
     const selected=route.instance.values[route.slot('expandedSystem')];
     const row=route.render(2).find(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.kind==='Row'&&c.c?.some(t=>t.p?.text==='Task '+selected+' 0')));
     assert(row);row.h.onTap(0,0);
-    route.render(3).find(n=>n.p?.text==='←'&&n.h?.onTap).h.onTap(0,0);
+    route.render(3).find(n=>n.kind==='Box'&&n.p?.width===44&&n.h?.onTap&&n.c?.some(c=>c.kind==='Canvas'&&c.p.width===24)).h.onTap(0,0);
     assert.equal(route.instance.values[route.slot('expandedSystem')],selected,'Work back returns to the task list');
     // Inspection origin must survive changes to the general display preference.
     route.set('observatoryView',origin==='orbit'?'quiet':'orbit');
-    route.render(4).find(n=>n.p?.text===(origin==='orbit'?'← Back to Orbit':'← Systems')).h.onTap(0,0);
+    route.render(4).find(n=>n.p?.text==='Back').h.onTap(0,0);
     assert.equal(route.instance.values[route.slot('observatoryView')],origin);
     assert.equal(route.instance.values[route.slot('inspectionView')],'');
     assert.equal(route.instance.values[route.slot('expandedSystem')],'');

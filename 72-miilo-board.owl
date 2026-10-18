@@ -38,6 +38,7 @@ widget "miilo board" {
   state system = ""
   state systemsOpen = false
   state setupOpen = false
+  state setupSection = "systems"
   state pageSize = 5
   state agentLimit = 5
   state needsOnly = false
@@ -115,30 +116,51 @@ widget "miilo board" {
     }
   }
 
+  component StatusBadge(label, ink = accent, w = 90) {
+    Box {
+      width: w; height: 22; align: center; radius: 4; background: alpha(ink, 0.1)
+      Text { text: label; fill: width; align: center; fontSize: 10; color: ink; maxLines: 1 }
+    }
+  }
+
+  component ToolbarIcon(kind) {
+    Canvas {
+      width: 24
+      height: 24
+      if kind == "settings" {
+        circle(12, 12, 7.2, stroke: foreground, width: 1.5)
+        circle(12, 12, 2.8, stroke: foreground, width: 1.5)
+        for i in [0, 1, 2, 3, 4, 5, 6, 7] {
+          let angle = i * 0.7853981634
+          line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
+        }
+      } else if kind == "refresh" {
+        let rail = range(33).map(i => [12 + 9.5 * cos(0.35 + i * 5.38 / 32), 12 + 9.5 * sin(0.35 + i * 5.38 / 32)])
+        path(rail, stroke: foreground, width: 1.5, cap: round)
+        path([[15.1, 7], [20.1, 7], [20.1, 2]], stroke: foreground, width: 1.5, cap: round)
+      } else if kind == "back" {
+        path([[20, 12], [4, 12], [11, 5]], stroke: foreground, width: 1.5, cap: round)
+        path([[4, 12], [11, 19]], stroke: foreground, width: 1.5, cap: round)
+      } else if kind == "menu" {
+        for y in [5, 12, 19] { line(3, y, 21, y, stroke: foreground, width: 1.5) }
+      }
+    }
+  }
   component ToolbarControls() {
     Row {
       gap: 4
       align: center
       Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
-        Canvas {
-          width: 24
-          height: 24
-          circle(12, 12, 7.2, stroke: foreground, width: 1.5)
-          circle(12, 12, 2.8, stroke: foreground, width: 1.5)
-          for i in [0, 1, 2, 3, 4, 5, 6, 7] {
-            let angle = i * 0.7853981634
-            line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
-          }
-        }
+        ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
         Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
-          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
+          ToolbarIcon { kind: "refresh" }
         }
       }
       if len(allProviders) > 1 {
         Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
-          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
+          ToolbarIcon { kind: "menu" }
         }
       }
     }
@@ -151,8 +173,8 @@ widget "miilo board" {
         gap: 4
         align: center
         if !leftHanded { Spacer { weight: 1 } }
-        if focused != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-        else if actor != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+        if focused != null { Box { width: 44; height: toolbarHeight; align: center; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } ToolbarIcon { kind: "back" } } }
+        else if actor != null { Box { width: 44; height: toolbarHeight; align: center; onTap: { selectedActor = ""; renameOpen = false } ToolbarIcon { kind: "back" } } }
         ToolbarControls { }
         if leftHanded { Spacer { weight: 1 } }
       }
@@ -176,12 +198,23 @@ widget "miilo board" {
 
   component SetupTerminal() {
     if setupOpen {
+      Row {
+        gap: 6
+        Button { text: "Systems"; color: setupSection == "systems" ? accent : muted; onTap: setupSection = "systems" }
+        Button { text: "Chat model"; color: setupSection == "chat" ? accent : muted; onTap: setupSection = "chat" }
+      }
+      if setupSection == "chat" {
+        Text { text: "Choose your chat endpoint, model and credential file. Consent applies to the questions and task context you share."; style: small; color: muted; maxLines: 4 }
+        Terminal { command: "miilo-owl chat-setup"; fill: width; height: max(1, screenHeight * 0.6) }
+        Text { text: "Voice integration is not implemented in this launcher yet. Transcription and speech output will use separate endpoint settings."; style: small; color: muted; maxLines: 4 }
+      } else {
       RobotAppearance { }
       Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
       Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
       Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
       Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
-      Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
+      }
+      Button { text: "Done"; onTap: { setupOpen = false; setupSection = "systems"; refresh() } }
     }
   }
 
@@ -209,6 +242,7 @@ widget "miilo board" {
       }
     }
   }
+
 
   component Arc(phase, moving) {
     Canvas {
@@ -270,6 +304,16 @@ widget "miilo board" {
     if len(linked) > pageSize { Button { text: "More files & changes"; onTap: pageSize = pageSize + 5 } }
   }
 
+  component WorkReply() {
+    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
+    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
+      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
+      for c in receipt.changes ?? [] key c.id {
+        Text { text: c.name; style: small; maxLines: 4 }
+        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
+      }
+    }
+  }
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
@@ -277,11 +321,17 @@ widget "miilo board" {
       Row {
         fill: width
         gap: 8
+        align: center
         Text { text: get(find(allProviders, p => p.id == focused.providerId), "name", "System"); weight: 1; fontSize: 11; color: muted; maxLines: 1 }
-        Text { text: focused.phase; width: 90; height: 22; align: center; fontSize: 10; color: accent; background: alpha(accent, 0.1); radius: 4 }
+        StatusBadge { label: focused.phase }
       }
       Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
       if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 8 } }
+      if (focused.attention ?? "none") != "none" {
+        let notes = attention.filter(a => a._workKey == focused._key && (a.message ?? "") != "" && a.message != focused.summary)
+        for note in notes key note._key { Text { text: note.message; style: small; color: foreground; maxLines: 6 } }
+        if len(notes) == 0 && (focused.summary ?? "") == "" { Text { text: "Provider requests attention but supplied no review notes."; style: small; color: muted; maxLines: 3 } }
+      }
       if !requestPending {
         Flow {
           gap: 6
@@ -314,6 +364,7 @@ widget "miilo board" {
           Text { text: "Task changed. Review again."; style: small; color: muted }
         }
       }
+      WorkReply { }
       Column {
         gap: 6
         Spacer { height: 6 }
@@ -332,7 +383,7 @@ widget "miilo board" {
             let passed = contains(["passed", "pass", "success"], lower(e.outcome))
             let failed = contains(["failed", "fail", "error"], lower(e.outcome))
             let ink = passed ? mix(green, foreground, 0.25) : failed ? mix(red, foreground, 0.15) : accent
-            Text { text: e.outcome; width: 58; height: 22; align: center; fontSize: 10; color: ink; background: alpha(ink, 0.09); radius: 4 }
+            StatusBadge { label: e.outcome; ink: ink; w: 58 }
             Text { text: e.summary; weight: 1; fontSize: 12; maxLines: 8 }
           }
           if (e._missingArtifactCount ?? 0) > 0 { Text { text: "${e._missingArtifactCount} referenced artifacts unavailable"; style: small; color: muted } }
@@ -341,14 +392,7 @@ widget "miilo board" {
         TaskArtifacts { }
       }
     }
-    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
-    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
-      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
-      for c in receipt.changes ?? [] key c.id {
-        Text { text: c.name; style: small; maxLines: 4 }
-        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
-      }
-    }
+    if focused == null { WorkReply { } }
   }
 
   component Search(placeholder) {

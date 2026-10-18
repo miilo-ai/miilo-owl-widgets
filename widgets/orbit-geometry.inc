@@ -1,21 +1,21 @@
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85) {
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
     Box {
       fill: width
-      height: 164
+      height: fieldSize
       Canvas {
         fill: true
-        height: 164
+        height: fieldSize
         let cx = width / 2
         let cy = height / 2
         let phase = max(slot, 0) * 2.399963229728653
         let sweep = sin(clock * 2 * pi / 30 + phase) * 0.17
         let planes = [0, 1].map(lane => {
-          radius: (lane == 0 ? 122 : 98) * fit,
-          rise: (58 + sin(clock * 2 * pi / 18 + phase + lane * 0.9) * 6) * fit,
+          radius: (lane == 0 ? 122 : 98) * fit * spread,
+          rise: (58 + sin(clock * 2 * pi / 18 + phase + lane * 0.9) * 6) * fit * spread,
           tilt: (lane == 0 ? -0.44 : 0.44) + sweep
         })
         let points = items.map(w => {
@@ -77,7 +77,11 @@
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112 * fit; slot: slot; anchored: true; alert: alert }
+        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert }
       }
     }
+  }
+
+  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0) {
+    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY }
   }

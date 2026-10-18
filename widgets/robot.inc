@@ -13,6 +13,7 @@
       let failed = alert == "!!" || agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
       let focused = !unavailable && !failed && (agent.status == "reviewing" || any(owned, w => w.lifecycle == "active" && contains(["verifying", "reviewing"], w.phase)))
       let blocked = alert != "" || contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
+      let expressionAlert = unavailable ? "" : failed ? "!!" : blocked ? "?!" : ""
       let wistful = expressive && !unavailable && blocked && (clock + max(slot, 0) * 3.7) % 23 < 2.5
       let cx = width / 2
       let cy = height * (anchored ? 0.5 : 0.48)
@@ -40,14 +41,14 @@
       rect(cx - r, y - r * 0.8, r * 2, r * 1.6, radius: r * 0.55, fill: mix(background, ink, 0.28), stroke: alpha(ink, 0.65), width: 1)
       rect(cx - r * 0.76, y - r * 0.48, r * 1.52, r * 0.86, radius: r * 0.3, fill: alpha(background, 0.9))
       if unavailable {
-        line(cx - r * 0.5, y, cx - r * 0.2, y, stroke: led, width: 1.5, cap: round)
-        line(cx + r * 0.2, y, cx + r * 0.5, y, stroke: led, width: 1.5, cap: round)
-      } else if failed {
         for side in [-1, 1] {
           let ex = cx + side * r * 0.34
           line(ex - r * 0.1, y - r * 0.17, ex + r * 0.1, y + r * 0.03, stroke: led, width: 1.5, cap: round)
           line(ex + r * 0.1, y - r * 0.17, ex - r * 0.1, y + r * 0.03, stroke: led, width: 1.5, cap: round)
         }
+      } else if failed {
+        circle(cx - r * 0.34, y - r * 0.06, r * 0.21, fill: ink)
+        circle(cx + r * 0.34, y - r * 0.06, r * 0.14, fill: ink)
       } else if wistful {
         line(cx - r * 0.48 + eyeX, y + r * 0.08, cx - r * 0.2 + eyeX, y + r * 0.17, stroke: led, width: 1.8, cap: round)
         line(cx + r * 0.2 + eyeX, y + r * 0.17, cx + r * 0.48 + eyeX, y + r * 0.08, stroke: led, width: 1.8, cap: round)
@@ -64,15 +65,15 @@
         circle(cx - r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
         circle(cx + r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
       }
-      if alert != "" {
+      if expressionAlert != "" {
         let markSize = min(s * 0.34, max(19.2, s * 0.288))
         let markX = cx + r * 0.88 - 8
         let markY = y - r * 0.7 - 7
-        if alert == "!!" {
+        if expressionAlert == "!!" {
           text("!", markX, markY, size: markSize, bold: true, color: mix(red, foreground, 0.15))
           text("!", markX + markSize * 0.3, markY, size: markSize, bold: true, color: mix(red, foreground, 0.15))
         } else {
-          text(alert, markX, markY, size: markSize, bold: true, color: mix(orange, foreground, 0.2))
+          text(expressionAlert, markX, markY, size: markSize, bold: true, color: mix(orange, foreground, 0.2))
         }
       }
       if resting {
@@ -82,7 +83,7 @@
           text("z", cx + r * (0.8 + drift * 0.55), y - r * (0.65 + drift * 0.8), size: max(9, s * 0.12) + drift * 2, bold: true, color: alpha(mix(ink, foreground, 0.8), 0.9 * (1 - drift * drift)))
         }
       }
-      if wistful { path([[cx - r * 0.18, y + r * 0.62], [cx, y + r * 0.52], [cx + r * 0.18, y + r * 0.62]], stroke: alpha(ink, 0.6), width: 1.5) }
+      if failed || wistful { path([[cx - r * 0.18, y + r * 0.62], [cx, y + r * 0.52], [cx + r * 0.18, y + r * 0.62]], stroke: alpha(ink, 0.6), width: 1.5) }
       else { line(cx - r * 0.18, y + r * 0.56, cx + r * 0.18, y + r * 0.56, stroke: alpha(ink, 0.6), width: 1.5) }
       rect(cx - r * 0.48, y + r, r * 0.96, r * 0.24, radius: 2, fill: alpha(ink, 0.35))
     }

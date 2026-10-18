@@ -9,4 +9,4 @@ if [[ -n "${GIT_CONFIG_GLOBAL:-}" ]]; then
 fi
 docker run --rm --platform linux/arm64 --cpus 2 --memory 2g \
   -v "$root:/repo" -w /repo -v miilo-owl-cargo:/usr/local/cargo/registry \
-  -e CARGO_TARGET_DIR=/repo/helper/target-linux "${access[@]}" miilo-owl-builder:1.3 "$@"
+  -e CARGO_TARGET_DIR=/repo/helper/target-linux ${access[@]+"${access[@]}"} miilo-owl-builder:1.3 "$@"

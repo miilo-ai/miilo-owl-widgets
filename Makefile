@@ -27,6 +27,7 @@ check-desktop:
 	node tools/test-robot-motion.cjs
 	node tools/test-orbit.cjs
 	node tools/test-portrait.cjs
+	node tools/test-compact.cjs
 	node tools/test-session-visibility.cjs
 
 check-keyboard:

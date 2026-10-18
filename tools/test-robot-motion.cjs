@@ -22,7 +22,7 @@ function robot({status = 'working', health = 'healthy', phase = 'implementing', 
     instance.setSource(slot('feed'), Owl.fromJson({ok:true,out:JSON.stringify(fixture),err:'',code:0}));
     function draw(time) {
         instance.frame(time);
-        const canvas = [...walk(instance.render(false))].find(node => node.kind === 'Canvas');
+        const canvas = [...walk(instance.render(false))].find(node => node.kind === 'Canvas' && !node.p?.fill);
         assert(canvas, 'Robot canvas missing');
         const operations = canvas.draw(canvas.p.width, canvas.p.height);
         assert(operations.length > 0, 'Robot drawing empty');
@@ -45,6 +45,13 @@ const focused = robot({phase:'verifying',saved:{robotMotion:'off'}});
 assert.notDeepEqual(focused.draw(0), still.draw(0), 'Verification needs its focused expression');
 const failed = robot({status:'failed',saved:{robotMotion:'off'}});
 assert.notDeepEqual(failed.draw(0), still.draw(0), 'Failure needs a distinct expression');
+const diagonalEyes = ops => ops.filter(op => op.op === 'line' && Math.abs(op.args[0]-op.args[2]) > 0.01 && Math.abs(op.args[1]-op.args[3]) > 0.01);
+assert.equal(diagonalEyes(failed.draw(0)).length, 0, 'Healthy failed work preserves round eyes without brows or crosses');
+assert.equal(diagonalEyes(robot({health:'unreachable',saved:{robotMotion:'off'}}).draw(0)).length, 4, 'Unavailable system reserves four crossed-eye strokes');
+const troubledEyes = failed.draw(0).filter(op => op.op === 'circle' && op.fill && op.args[2] > 0);
+assert(troubledEyes.some(a => troubledEyes.some(b => a !== b && Math.abs(a.args[2] / b.args[2] - 1.5) < 0.001)), 'Failed work keeps one larger and one regular round eye');
+assert(robot({status:'blocked',saved:{robotMotion:'off'}}).draw(0).some(op=>op.op==='text'&&op.text==='?!'), 'Detailed blocked agents retain their attention mark without an explicit caller override');
+assert.equal(failed.draw(0).filter(op=>op.op==='text'&&op.text==='!').length,2,'Detailed failed agents retain both error marks');
 const settings = robot({saved:{robotMotion:'off',robotPace:'slow',robotPersonality:'calm'}});
 settings.instance.values[settings.slot('setupOpen')] = Owl.fromJson(true);
 settings.instance.invalidate();

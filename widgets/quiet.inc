@@ -25,21 +25,21 @@
     let warning = any(items, w => w.attention != "none") || any(team, a => a.status == "blocked")
     let working = any(items, w => w.lifecycle == "active") || any(team, a => contains(["working", "running"], a.status))
     let portrait = {_key: representative._key, providerId: provider.id, name: provider.name, health: offline ? "unreachable" : representative.health, status: offline ? "offline" : errors ? "failed" : warning ? "blocked" : working ? "working" : "resting"}
-    Bot { agent: portrait; s: s; slot: indexOf(allProviders.map(p => p.id), provider.id); alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+    CompactOrbit { agent: portrait; items: items; s: s; offline: offline; slot: indexOf(allProviders.map(p => p.id), provider.id); alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
   }
   component QuietFleet(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
-    let columns = max(1, min(3, min(len(systems), floor(max(screenWidth - 24, 1) / 104))))
+    let columns = max(1, min(4, min(len(systems), floor(max(screenWidth - 18, 1) / 88))))
     Grid {
       fill: width
       columns: columns
-      gap: 8
+      gap: 6
       for p in systems.take(providerLimit) key p.id {
         Column {
           align: center
           gap: 2
           onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
-          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: screenWidth < 360 ? 72 : 88 }
+          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
           Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
         }
       }
@@ -50,7 +50,7 @@
   component QuietSystemTasks(provider, list) {
     let team = actors.filter(a => a.providerId == provider.id)
     let tasks = list.filter(w => w.providerId == provider.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
-    Button { text: inspectionView == "orbit" ? "← Back to Orbit" : "← Systems"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
+    Button { text: "Back"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
     Text { text: provider.name; style: body; maxLines: 2 }
     Flow {
       fill: width

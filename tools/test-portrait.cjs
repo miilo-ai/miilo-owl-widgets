@@ -18,8 +18,8 @@ for(const light of [false,true])for(const status of ['ready','resting','working'
  const slot=(program,k)=>program.globals.findIndex(g=>g.name===k);
  a.setSource(slot(fleet,'feed'),Owl.fromJson({ok:true,out:JSON.stringify({configured:true,errors:[],snapshot:{providers:[{id:'sample',name:'Sample'}],actors:[agent],workItems:[],attention:[]}})}));
  for(const t of [.6,1.4,6.0]){
-  a.frame(t);const canvas=[...walk(a.render(false))].find(n=>n.kind==='Canvas');assert(canvas);
-  for(const [name,value]of Object.entries({portraitAgent:agent,portraitSize:canvas.p.width,robotMotion:motion}))b.values[slot(portrait,name)]=Owl.fromJson(value);
+  a.frame(t);const canvas=[...walk(a.render(false))].find(n=>n.kind==='Canvas'&&!n.p?.fill);assert(canvas);
+  for(const [name,value]of Object.entries({portraitAgent:agent,portraitSize:canvas.p.width,portraitAnchored:true,robotMotion:motion}))b.values[slot(portrait,name)]=Owl.fromJson(value);
   b.invalidate();b.frame(t);const standalone=b.render(false).children.find(n=>n.kind==='Canvas');
   assert.deepEqual(standalone.draw(canvas.p.width,canvas.p.height),canvas.draw(canvas.p.width,canvas.p.height),`${status}/${motion}/${light}/${t} design drift`);
  }

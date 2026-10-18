@@ -22,6 +22,20 @@ fn texts<'a>(tree: &'a Value, part: &str) -> Vec<&'a str> {
         .filter_map(|n| n["props"]["text"].as_str())
         .collect()
 }
+fn toolbar_path(screen: &[&Value], start: [f64; 2]) -> bool {
+    screen.iter().any(|node| {
+        node["kind"] == "Canvas"
+            && node["props"]["width"] == 24
+            && node["props"]["height"] == 24
+            && node["children"].as_array().is_some_and(|draws| {
+                draws.iter().any(|draw| {
+                    draw["op"] == "path"
+                        && draw["args"][0][0][0].as_f64() == Some(start[0])
+                        && draw["args"][0][0][1].as_f64() == Some(start[1])
+                })
+            })
+    })
+}
 fn row_widths(tree: &Value) {
     for row in all(tree) {
         let children = row["children"].as_array().map(Vec::as_slice).unwrap_or(&[]);
@@ -245,7 +259,7 @@ pub fn check() -> Result<()> {
                 assert!(screen.iter().any(|n| n["kind"] == "Canvas"
                     && n["props"]["width"] == 24
                     && n["props"]["height"] == 24));
-                assert!(labels.contains(&"↻"));
+                assert!(toolbar_path(&screen, [15.1, 7.0]), "Refresh vector missing");
             }
             if scenario == "confirm" {
                 assert!(labels.contains(&"Confirm") && labels.contains(&"Cancel"));
@@ -269,7 +283,7 @@ pub fn check() -> Result<()> {
                 assert!(
                     labels.contains(&"src/worker.rs")
                         && labels.contains(&"Diff not supplied")
-                        && labels.contains(&"←")
+                        && toolbar_path(&screen, [20.0, 12.0])
                 );
                 assert!(labels.iter().any(|t| t.contains("@@ -1 +1 @@")));
                 assert!(!screen.iter().any(|n| (n["kind"] == "Button"

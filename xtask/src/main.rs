@@ -65,6 +65,8 @@ fn assemble() -> Result<()> {
         let mut parts = vec![
             "appearance",
             "common",
+            "toolbar",
+            "setup",
             "progress",
             "artifacts",
             "work-detail",

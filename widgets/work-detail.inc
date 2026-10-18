@@ -1,3 +1,13 @@
+  component WorkReply() {
+    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
+    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
+      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
+      for c in receipt.changes ?? [] key c.id {
+        Text { text: c.name; style: small; maxLines: 4 }
+        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
+      }
+    }
+  }
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
@@ -5,11 +15,17 @@
       Row {
         fill: width
         gap: 8
+        align: center
         Text { text: get(find(allProviders, p => p.id == focused.providerId), "name", "System"); weight: 1; fontSize: 11; color: muted; maxLines: 1 }
-        Text { text: focused.phase; width: 90; height: 22; align: center; fontSize: 10; color: accent; background: alpha(accent, 0.1); radius: 4 }
+        StatusBadge { label: focused.phase }
       }
       Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
       if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 8 } }
+      if (focused.attention ?? "none") != "none" {
+        let notes = attention.filter(a => a._workKey == focused._key && (a.message ?? "") != "" && a.message != focused.summary)
+        for note in notes key note._key { Text { text: note.message; style: small; color: foreground; maxLines: 6 } }
+        if len(notes) == 0 && (focused.summary ?? "") == "" { Text { text: "Provider requests attention but supplied no review notes."; style: small; color: muted; maxLines: 3 } }
+      }
       if !requestPending {
         Flow {
           gap: 6
@@ -42,6 +58,7 @@
           Text { text: "Task changed. Review again."; style: small; color: muted }
         }
       }
+      WorkReply { }
       Column {
         gap: 6
         Spacer { height: 6 }
@@ -60,7 +77,7 @@
             let passed = contains(["passed", "pass", "success"], lower(e.outcome))
             let failed = contains(["failed", "fail", "error"], lower(e.outcome))
             let ink = passed ? mix(green, foreground, 0.25) : failed ? mix(red, foreground, 0.15) : accent
-            Text { text: e.outcome; width: 58; height: 22; align: center; fontSize: 10; color: ink; background: alpha(ink, 0.09); radius: 4 }
+            StatusBadge { label: e.outcome; ink: ink; w: 58 }
             Text { text: e.summary; weight: 1; fontSize: 12; maxLines: 8 }
           }
           if (e._missingArtifactCount ?? 0) > 0 { Text { text: "${e._missingArtifactCount} referenced artifacts unavailable"; style: small; color: muted } }
@@ -69,12 +86,5 @@
         TaskArtifacts { }
       }
     }
-    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
-    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
-      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
-      for c in receipt.changes ?? [] key c.id {
-        Text { text: c.name; style: small; maxLines: 4 }
-        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
-      }
-    }
+    if focused == null { WorkReply { } }
   }

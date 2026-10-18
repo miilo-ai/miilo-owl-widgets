@@ -38,6 +38,7 @@ widget "miilo" {
   state system = ""
   state systemsOpen = false
   state setupOpen = false
+  state setupSection = "systems"
   state pageSize = 5
   state agentLimit = 5
   state needsOnly = false
@@ -115,30 +116,51 @@ widget "miilo" {
     }
   }
 
+  component StatusBadge(label, ink = accent, w = 90) {
+    Box {
+      width: w; height: 22; align: center; radius: 4; background: alpha(ink, 0.1)
+      Text { text: label; fill: width; align: center; fontSize: 10; color: ink; maxLines: 1 }
+    }
+  }
+
+  component ToolbarIcon(kind) {
+    Canvas {
+      width: 24
+      height: 24
+      if kind == "settings" {
+        circle(12, 12, 7.2, stroke: foreground, width: 1.5)
+        circle(12, 12, 2.8, stroke: foreground, width: 1.5)
+        for i in [0, 1, 2, 3, 4, 5, 6, 7] {
+          let angle = i * 0.7853981634
+          line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
+        }
+      } else if kind == "refresh" {
+        let rail = range(33).map(i => [12 + 9.5 * cos(0.35 + i * 5.38 / 32), 12 + 9.5 * sin(0.35 + i * 5.38 / 32)])
+        path(rail, stroke: foreground, width: 1.5, cap: round)
+        path([[15.1, 7], [20.1, 7], [20.1, 2]], stroke: foreground, width: 1.5, cap: round)
+      } else if kind == "back" {
+        path([[20, 12], [4, 12], [11, 5]], stroke: foreground, width: 1.5, cap: round)
+        path([[4, 12], [11, 19]], stroke: foreground, width: 1.5, cap: round)
+      } else if kind == "menu" {
+        for y in [5, 12, 19] { line(3, y, 21, y, stroke: foreground, width: 1.5) }
+      }
+    }
+  }
   component ToolbarControls() {
     Row {
       gap: 4
       align: center
       Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
-        Canvas {
-          width: 24
-          height: 24
-          circle(12, 12, 7.2, stroke: foreground, width: 1.5)
-          circle(12, 12, 2.8, stroke: foreground, width: 1.5)
-          for i in [0, 1, 2, 3, 4, 5, 6, 7] {
-            let angle = i * 0.7853981634
-            line(12 + cos(angle) * 7.2, 12 + sin(angle) * 7.2, 12 + cos(angle) * 10.5, 12 + sin(angle) * 10.5, stroke: foreground, width: 1.5)
-          }
-        }
+        ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
         Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
-          Text { text: "↻"; width: 44; fontSize: 24; align: center; color: accent }
+          ToolbarIcon { kind: "refresh" }
         }
       }
       if len(allProviders) > 1 {
         Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
-          Text { text: "≡"; width: 44; fontSize: 24; align: center; color: accent }
+          ToolbarIcon { kind: "menu" }
         }
       }
     }
@@ -151,8 +173,8 @@ widget "miilo" {
         gap: 4
         align: center
         if !leftHanded { Spacer { weight: 1 } }
-        if focused != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } } }
-        else if actor != null { Text { text: "←"; width: 44; height: toolbarHeight; fontSize: 24; align: center; color: accent; onTap: { selectedActor = ""; renameOpen = false } } }
+        if focused != null { Box { width: 44; height: toolbarHeight; align: center; onTap: { selectedWork = ""; proposed = ""; evidenceOpen = false; reply = requestPending ? reply : "" } ToolbarIcon { kind: "back" } } }
+        else if actor != null { Box { width: 44; height: toolbarHeight; align: center; onTap: { selectedActor = ""; renameOpen = false } ToolbarIcon { kind: "back" } } }
         ToolbarControls { }
         if leftHanded { Spacer { weight: 1 } }
       }
@@ -176,12 +198,23 @@ widget "miilo" {
 
   component SetupTerminal() {
     if setupOpen {
+      Row {
+        gap: 6
+        Button { text: "Systems"; color: setupSection == "systems" ? accent : muted; onTap: setupSection = "systems" }
+        Button { text: "Chat model"; color: setupSection == "chat" ? accent : muted; onTap: setupSection = "chat" }
+      }
+      if setupSection == "chat" {
+        Text { text: "Choose your chat endpoint, model and credential file. Consent applies to the questions and task context you share."; style: small; color: muted; maxLines: 4 }
+        Terminal { command: "miilo-owl chat-setup"; fill: width; height: max(1, screenHeight * 0.6) }
+        Text { text: "Voice integration is not implemented in this launcher yet. Transcription and speech output will use separate endpoint settings."; style: small; color: muted; maxLines: 4 }
+      } else {
       RobotAppearance { }
       Button { text: leftHanded ? "Controls: left hand" : "Controls: right hand"; onTap: leftHanded = !leftHanded }
       Button { text: previewRobots ? "Hide preview robots" : "Show preview robots"; onTap: previewRobots = !previewRobots }
       Terminal { command: "miilo-owl setup"; fill: width; height: max(1, screenHeight * 0.6) }
       Text { text: "Add or change systems here. Type q then Enter when done, or tap Done."; style: small; color: muted; maxLines: 3 }
-      Button { text: "Done"; onTap: { setupOpen = false; refresh() } }
+      }
+      Button { text: "Done"; onTap: { setupOpen = false; setupSection = "systems"; refresh() } }
     }
   }
 
@@ -209,6 +242,7 @@ widget "miilo" {
       }
     }
   }
+
 
   component Arc(phase, moving) {
     Canvas {
@@ -270,6 +304,16 @@ widget "miilo" {
     if len(linked) > pageSize { Button { text: "More files & changes"; onTap: pageSize = pageSize + 5 } }
   }
 
+  component WorkReply() {
+    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
+    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
+      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
+      for c in receipt.changes ?? [] key c.id {
+        Text { text: c.name; style: small; maxLines: 4 }
+        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
+      }
+    }
+  }
   component WorkDetail() {
     if focused != null {
       Spacer { height: 1; fill: width; background: alpha(muted, 0.2) }
@@ -277,11 +321,17 @@ widget "miilo" {
       Row {
         fill: width
         gap: 8
+        align: center
         Text { text: get(find(allProviders, p => p.id == focused.providerId), "name", "System"); weight: 1; fontSize: 11; color: muted; maxLines: 1 }
-        Text { text: focused.phase; width: 90; height: 22; align: center; fontSize: 10; color: accent; background: alpha(accent, 0.1); radius: 4 }
+        StatusBadge { label: focused.phase }
       }
       Arc { phase: focused.phase; moving: focused.lifecycle == "active" }
       if focused.summary != null && focused.summary != "" { Text { text: focused.summary; style: small; color: muted; maxLines: 8 } }
+      if (focused.attention ?? "none") != "none" {
+        let notes = attention.filter(a => a._workKey == focused._key && (a.message ?? "") != "" && a.message != focused.summary)
+        for note in notes key note._key { Text { text: note.message; style: small; color: foreground; maxLines: 6 } }
+        if len(notes) == 0 && (focused.summary ?? "") == "" { Text { text: "Provider requests attention but supplied no review notes."; style: small; color: muted; maxLines: 3 } }
+      }
       if !requestPending {
         Flow {
           gap: 6
@@ -314,6 +364,7 @@ widget "miilo" {
           Text { text: "Task changed. Review again."; style: small; color: muted }
         }
       }
+      WorkReply { }
       Column {
         gap: 6
         Spacer { height: 6 }
@@ -332,7 +383,7 @@ widget "miilo" {
             let passed = contains(["passed", "pass", "success"], lower(e.outcome))
             let failed = contains(["failed", "fail", "error"], lower(e.outcome))
             let ink = passed ? mix(green, foreground, 0.25) : failed ? mix(red, foreground, 0.15) : accent
-            Text { text: e.outcome; width: 58; height: 22; align: center; fontSize: 10; color: ink; background: alpha(ink, 0.09); radius: 4 }
+            StatusBadge { label: e.outcome; ink: ink; w: 58 }
             Text { text: e.summary; weight: 1; fontSize: 12; maxLines: 8 }
           }
           if (e._missingArtifactCount ?? 0) > 0 { Text { text: "${e._missingArtifactCount} referenced artifacts unavailable"; style: small; color: muted } }
@@ -341,14 +392,7 @@ widget "miilo" {
         TaskArtifacts { }
       }
     }
-    if reply == "pending" { Text { text: "Working…"; style: small; color: muted } }
-    if receipt != null && (replyWork == "" || (focused != null && focused._key == replyWork && focused._revisionKey == replyRevision)) {
-      Text { text: receipt.message ?? "Refreshed"; style: small; maxLines: 8; color: receipt.status == "failed" || receipt.status == "conflict" ? red : foreground }
-      for c in receipt.changes ?? [] key c.id {
-        Text { text: c.name; style: small; maxLines: 4 }
-        if c.preview != null && c.preview != "" { Text { text: c.preview; style: small; maxLines: 400 } }
-      }
-    }
+    if focused == null { WorkReply { } }
   }
 
   component Search(placeholder) {
@@ -426,6 +470,7 @@ widget "miilo" {
       let failed = alert == "!!" || agent.status == "failed" || agent.status == "error" || any(owned, w => w.lifecycle == "failed")
       let focused = !unavailable && !failed && (agent.status == "reviewing" || any(owned, w => w.lifecycle == "active" && contains(["verifying", "reviewing"], w.phase)))
       let blocked = alert != "" || contains(["blocked", "failed"], agent.status) || any(works, w => contains(w._actorKeys ?? [], agent._key ?? "") && (w.lifecycle == "failed" || w.attention != "none"))
+      let expressionAlert = unavailable ? "" : failed ? "!!" : blocked ? "?!" : ""
       let wistful = expressive && !unavailable && blocked && (clock + max(slot, 0) * 3.7) % 23 < 2.5
       let cx = width / 2
       let cy = height * (anchored ? 0.5 : 0.48)
@@ -453,14 +498,14 @@ widget "miilo" {
       rect(cx - r, y - r * 0.8, r * 2, r * 1.6, radius: r * 0.55, fill: mix(background, ink, 0.28), stroke: alpha(ink, 0.65), width: 1)
       rect(cx - r * 0.76, y - r * 0.48, r * 1.52, r * 0.86, radius: r * 0.3, fill: alpha(background, 0.9))
       if unavailable {
-        line(cx - r * 0.5, y, cx - r * 0.2, y, stroke: led, width: 1.5, cap: round)
-        line(cx + r * 0.2, y, cx + r * 0.5, y, stroke: led, width: 1.5, cap: round)
-      } else if failed {
         for side in [-1, 1] {
           let ex = cx + side * r * 0.34
           line(ex - r * 0.1, y - r * 0.17, ex + r * 0.1, y + r * 0.03, stroke: led, width: 1.5, cap: round)
           line(ex + r * 0.1, y - r * 0.17, ex - r * 0.1, y + r * 0.03, stroke: led, width: 1.5, cap: round)
         }
+      } else if failed {
+        circle(cx - r * 0.34, y - r * 0.06, r * 0.21, fill: ink)
+        circle(cx + r * 0.34, y - r * 0.06, r * 0.14, fill: ink)
       } else if wistful {
         line(cx - r * 0.48 + eyeX, y + r * 0.08, cx - r * 0.2 + eyeX, y + r * 0.17, stroke: led, width: 1.8, cap: round)
         line(cx + r * 0.2 + eyeX, y + r * 0.17, cx + r * 0.48 + eyeX, y + r * 0.08, stroke: led, width: 1.8, cap: round)
@@ -477,15 +522,15 @@ widget "miilo" {
         circle(cx - r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
         circle(cx + r * 0.34 + eyeX, y - r * 0.06 + eyeY, r * 0.14, fill: led)
       }
-      if alert != "" {
+      if expressionAlert != "" {
         let markSize = min(s * 0.34, max(19.2, s * 0.288))
         let markX = cx + r * 0.88 - 8
         let markY = y - r * 0.7 - 7
-        if alert == "!!" {
+        if expressionAlert == "!!" {
           text("!", markX, markY, size: markSize, bold: true, color: mix(red, foreground, 0.15))
           text("!", markX + markSize * 0.3, markY, size: markSize, bold: true, color: mix(red, foreground, 0.15))
         } else {
-          text(alert, markX, markY, size: markSize, bold: true, color: mix(orange, foreground, 0.2))
+          text(expressionAlert, markX, markY, size: markSize, bold: true, color: mix(orange, foreground, 0.2))
         }
       }
       if resting {
@@ -495,7 +540,7 @@ widget "miilo" {
           text("z", cx + r * (0.8 + drift * 0.55), y - r * (0.65 + drift * 0.8), size: max(9, s * 0.12) + drift * 2, bold: true, color: alpha(mix(ink, foreground, 0.8), 0.9 * (1 - drift * drift)))
         }
       }
-      if wistful { path([[cx - r * 0.18, y + r * 0.62], [cx, y + r * 0.52], [cx + r * 0.18, y + r * 0.62]], stroke: alpha(ink, 0.6), width: 1.5) }
+      if failed || wistful { path([[cx - r * 0.18, y + r * 0.62], [cx, y + r * 0.52], [cx + r * 0.18, y + r * 0.62]], stroke: alpha(ink, 0.6), width: 1.5) }
       else { line(cx - r * 0.18, y + r * 0.56, cx + r * 0.18, y + r * 0.56, stroke: alpha(ink, 0.6), width: 1.5) }
       rect(cx - r * 0.48, y + r, r * 0.96, r * 0.24, radius: 2, fill: alpha(ink, 0.35))
     }
@@ -524,23 +569,23 @@ widget "miilo" {
   }
 
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85) {
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
     Box {
       fill: width
-      height: 164
+      height: fieldSize
       Canvas {
         fill: true
-        height: 164
+        height: fieldSize
         let cx = width / 2
         let cy = height / 2
         let phase = max(slot, 0) * 2.399963229728653
         let sweep = sin(clock * 2 * pi / 30 + phase) * 0.17
         let planes = [0, 1].map(lane => {
-          radius: (lane == 0 ? 122 : 98) * fit,
-          rise: (58 + sin(clock * 2 * pi / 18 + phase + lane * 0.9) * 6) * fit,
+          radius: (lane == 0 ? 122 : 98) * fit * spread,
+          rise: (58 + sin(clock * 2 * pi / 18 + phase + lane * 0.9) * 6) * fit * spread,
           tilt: (lane == 0 ? -0.44 : 0.44) + sweep
         })
         let points = items.map(w => {
@@ -602,9 +647,13 @@ widget "miilo" {
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112 * fit; slot: slot; anchored: true; alert: alert }
+        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert }
       }
     }
+  }
+
+  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0) {
+    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY }
   }
 
   // Presentation only: labels and provider action policy remain authoritative.
@@ -648,13 +697,13 @@ widget "miilo" {
     Row {
       fill: width
       gap: 6
-      Text { text: "All work"; width: 72; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; color: !needsOnly ? accent : muted; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } }
-      Text { text: "Needs you ${count}"; width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; color: needsOnly ? accent : muted; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } }
+      Box { width: 72; height: tabHeight; align: center; radius: 6; background: !needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = false; workflowActor = ""; pageSize = 5 } Text { text: "All work"; fill: width; align: center; fontSize: 11; maxLines: 1; color: !needsOnly ? accent : muted } }
+      Box { width: max(84, 64 + len("${count}") * 7); height: tabHeight; align: center; radius: 6; background: needsOnly ? alpha(accent, 0.09) : transparent; onTap: { needsOnly = true; workflowActor = ""; pageSize = 5 } Text { text: "Needs you ${count}"; fill: width; align: center; fontSize: 11; maxLines: 1; color: needsOnly ? accent : muted } }
       Spacer { weight: 1 }
       Row {
         gap: 4
-        Text { text: "Quiet"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView != "orbit" ? accent : muted; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } }
-        Text { text: "Orbit"; width: 48; height: tabHeight; align: center; fontSize: 11; maxLines: 1; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; color: observatoryView == "orbit" ? accent : muted; onTap: { observatoryView = "orbit"; orbitPage = 0 } }
+        Box { width: 62; height: tabHeight; align: center; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } Text { text: "Compact"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView != "orbit" ? accent : muted } }
+        Box { width: 48; height: tabHeight; align: center; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "orbit"; orbitPage = 0 } Text { text: "Detail"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView == "orbit" ? accent : muted } }
       }
     }
   }
@@ -751,21 +800,21 @@ widget "miilo" {
     let warning = any(items, w => w.attention != "none") || any(team, a => a.status == "blocked")
     let working = any(items, w => w.lifecycle == "active") || any(team, a => contains(["working", "running"], a.status))
     let portrait = {_key: representative._key, providerId: provider.id, name: provider.name, health: offline ? "unreachable" : representative.health, status: offline ? "offline" : errors ? "failed" : warning ? "blocked" : working ? "working" : "resting"}
-    Bot { agent: portrait; s: s; slot: indexOf(allProviders.map(p => p.id), provider.id); alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+    CompactOrbit { agent: portrait; items: items; s: s; offline: offline; slot: indexOf(allProviders.map(p => p.id), provider.id); alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
   }
   component QuietFleet(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
-    let columns = max(1, min(3, min(len(systems), floor(max(screenWidth - 24, 1) / 104))))
+    let columns = max(1, min(4, min(len(systems), floor(max(screenWidth - 18, 1) / 88))))
     Grid {
       fill: width
       columns: columns
-      gap: 8
+      gap: 6
       for p in systems.take(providerLimit) key p.id {
         Column {
           align: center
           gap: 2
           onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
-          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: screenWidth < 360 ? 72 : 88 }
+          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
           Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
         }
       }
@@ -776,7 +825,7 @@ widget "miilo" {
   component QuietSystemTasks(provider, list) {
     let team = actors.filter(a => a.providerId == provider.id)
     let tasks = list.filter(w => w.providerId == provider.id && (workflowActor == "" || contains(w._actorKeys ?? [], workflowActor)))
-    Button { text: inspectionView == "orbit" ? "← Back to Orbit" : "← Systems"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
+    Button { text: "Back"; onTap: { observatoryView = inspectionView == "" ? observatoryView : inspectionView; inspectionView = ""; expandedSystem = ""; workflowActor = ""; agentsOpen = false } }
     Text { text: provider.name; style: body; maxLines: 2 }
     Flow {
       fill: width
@@ -801,7 +850,8 @@ widget "miilo" {
 
   let tileActors = (previewRobots ? actors.take(1) : actors) + (previewRobots ? [
     {_key: "preview-resting", providerId: "", name: "Preview sleep", status: "resting", health: "healthy", _preview: true},
-    {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true}
+    {_key: "preview-working", providerId: "", name: "Preview working", status: "working", health: "healthy", _preview: true},
+    {_key: "preview-review", providerId: "", name: "Preview review", status: "blocked", health: "healthy", _preview: true}
   ] : [])
   component StateMark(warning, working, offline, s = 18) {
     Canvas {
@@ -819,14 +869,14 @@ widget "miilo" {
   let availableWidth = max(tileWidth - 16, 32)
   let availableHeight = max(tileHeight - 16, 32)
   let showNames = availableHeight >= 88
-  let columns = max(1, min(len(tileActors), floor((availableWidth + 6) / 76)))
-  let rows = max(1, min(2, floor((availableHeight - 16) / (showNames ? 96 : 50))))
+  let columns = max(1, min(4, min(len(tileActors), floor((availableWidth + 6) / 88))))
+  let rows = max(1, min(ceil(len(tileActors) / columns), floor((availableHeight - 16) / (showNames ? 64 : 40))))
   let capacity = columns * rows
   let cellWidth = (availableWidth - (columns - 1) * 6) / columns
   let cellHeight = (availableHeight - 16 - (rows - 1) * 6) / rows
   let robotSize = clamp(min(cellWidth - 10, cellHeight - (showNames ? 32 : 0)), 30, 100)
   let usedRows = ceil(min(len(tileActors), capacity) / columns)
-  let groupHeight = usedRows * (robotSize + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
+  let groupHeight = usedRows * (robotSize * 0.82 + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
   Box {
     fill: true
   Column {
@@ -868,9 +918,9 @@ widget "miilo" {
             onTap: { inspectionView = observatoryView; expandedSystem = a.providerId; workflowActor = (a._preview ?? false) ? "" : a._key; selectedActor = ""; selectedWork = ""; needsOnly = false; query = ""; pageSize = 5; screen() }
             Box {
               width: robotSize + 10
-              height: robotSize
+              height: max(24, (robotSize + 10) * 0.82)
               align: center
-              Bot { agent: a; s: robotSize; lookX: neighbor.x; lookY: neighbor.y; slot: slot; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+              CompactOrbit { agent: a; items: owned; s: robotSize + 10; lookX: neighbor.x; lookY: neighbor.y; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
               Box {
                 width: max(1, robotSize - 6)
                 height: max(1, robotSize * 0.92 - 6)
@@ -900,7 +950,7 @@ widget "miilo" {
       gap: 10
       Setup { }
       if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
-      if setupOpen { RobotColors { } }
+      if setupOpen && setupSection != "chat" { RobotColors { } }
       SetupTerminal { }
       if focused != null {
         WorkDetail { }
