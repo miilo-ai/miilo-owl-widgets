@@ -14,7 +14,7 @@ cp "$binary" "$stage/bin/linux-aarch64/miilo-owl"
 chmod 755 "$stage/bin/linux-aarch64/miilo-owl"
 cp "$root"/*.owl "$root/install.sh" "$root/README.md" "$root/LICENSE" "$stage/"
 cp "$root/tools/check-device.sh" "$stage/tools/"
-cp "$root/docs/native-helper-validation.md" "$stage/docs/"
+cp "$root/docs/native-helper-validation.md" "$root/docs/uninstall.md" "$root/docs/uninstall-validation.md" "$stage/docs/"
 cp "$root/previews/native-rust-helper.png" "$root/previews/native-rust-onboarding.png" "$stage/previews/"
 COPYFILE_DISABLE=1 tar --format=ustar -czf "$root/dist/miilo-owl-widgets-${version}-linux-aarch64.tar.gz" -C "$stage" .
 (cd "$root/dist" && shasum -a 256 miilo-owl-widgets-${version}-linux-aarch64.tar.gz > SHA256SUMS)

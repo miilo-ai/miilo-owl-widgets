@@ -6,3 +6,5 @@ pub mod chat_command;
 pub mod chat_config;
 pub mod chat_http;
 pub mod chat_sse;
+
+pub mod uninstall;

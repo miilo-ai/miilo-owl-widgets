@@ -59,6 +59,12 @@ One endpoint may expose many factories/providers. Up to eight independent endpoi
 
 This setup registers **observation endpoints and provider selections locally**. Factory/provider adapters must already be registered in the Miilo backend. It does not invent credentials or create an upstream factory integration. If an endpoint has no providers, setup asks you to register them in Miilo first. Existing per-widget endpoint/token state from version 1.1 is no longer used; run setup once to create the shared configuration.
 
+## Remove or reinstall
+
+See [widget removal](docs/uninstall.md) for preview-first receipt-backed removal
+and retained-data details. Shared binaries, independent observers and private
+settings remain; this is integration removal, not a full device purge.
+
 ## Expanded controls
 
 - `Filter` switches between selected systems. Expanded views start with collapsed system groups. Search narrows work, agent names and system context; work search includes completed records. Lists show five entries at first, with explicit “more” controls.

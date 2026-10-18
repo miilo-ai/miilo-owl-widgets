@@ -6,3 +6,5 @@ pub mod connection;
 pub mod graph;
 pub mod identity;
 pub mod projection;
+
+pub mod removal;

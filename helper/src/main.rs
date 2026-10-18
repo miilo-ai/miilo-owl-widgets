@@ -4,6 +4,9 @@ use miilo_owl::{
 use serde_json::{Value, json};
 
 fn run(args: &[String]) -> Result<Option<Value>> {
+    if let Some(result) = miilo_owl::adapters::uninstall::dispatch(args) {
+        return result.map(Some);
+    }
     let store = Store::from_env()?;
     let http = Http::new()?;
     match args
@@ -88,18 +91,18 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }
     match run(&args) {
         Ok(Some(value)) => println!("{value}"),
         Ok(None) => {}
-        Err(_) => {
+        Err(error) => {
             // Do not echo raw errors, endpoint URLs, tokens or remote payloads.
             println!(
                 "{}",
-                json!({"status":"failed","message":"Request failed. Refresh and check setup/access."})
+                json!({"status":"failed","message": if matches!(args.first().map(String::as_str), Some("uninstall" | "record-widget-install")) { error } else { "Request failed. Refresh and check setup/access.".into() }})
             );
             std::process::exit(1);
         }
