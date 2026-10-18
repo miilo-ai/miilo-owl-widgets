@@ -172,10 +172,10 @@ Search shares one compact row with cog/refresh (and a system filter for multiple
 
 See [.github/RELEASING.md](.github/RELEASING.md) for private-repository rehearsals, manifest-driven tags, credential-missing skips and activation. Publication stays disabled until explicitly requested/configured.
 
-## Standalone local sessions (candidate 1.4)
+## Standalone local sessions
 
 Native Omarchy imports use the public CLI's `miilo-local` binary and SDK runtime.
-Install candidate CLI 0.2 alongside the helper, or provide `MIILO_LOCAL_BINARY`
+Install CLI 0.2 alongside the helper, or provide `MIILO_LOCAL_BINARY`
 when running `tools/install-desktop.sh`. The helper reads a private version-2
 local snapshot file, without a CE process, Miilo account or HTTP listener. Existing
 remote endpoints remain configured and can be mixed with this local source.
