@@ -322,7 +322,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
           align: center
           fill: width
           OrbitStateIcon { phase: w.phase; attention: w.attention; offline: false; failed: w.lifecycle == "failed"; ink: w.lifecycle == "failed" ? red : w.attention != "none" ? accent : foreground }
-          Text { text: w.title; fontSize: 12; weight: 1; maxLines: 1 }
+          Text { text: get(w.extensions ?? {}, "dev.miilo.session", null) != null && trim(w.summary ?? "") != "" ? w.summary : w.title; fontSize: 12; weight: 1; maxLines: 1 }
           Text { text: "›"; width: 10; style: small; color: muted }
         }
         if showSystem { Text { text: get(find(allProviders, p => p.id == w.providerId), "name", "System"); fontSize: 11; color: muted; maxLines: 1 } }

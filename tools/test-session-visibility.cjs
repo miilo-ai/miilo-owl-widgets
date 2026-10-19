@@ -77,3 +77,7 @@ const paired = fixture(); paired.snapshot.actors[0]._pairedComputer = true;
 const pairedScene = scene(paired, {});
 assert(pairedScene.get("provs").some(p=>p.id === "p0"), "Explicitly paired idle sessions remain visible without inventing activity");
 assert.equal(pairedScene.get("actors").find(a=>a.id === "a0").status,"resting");
+
+const activity = fixture(); activity.snapshot.workItems[8].extensions={"dev.miilo.session":{}}; activity.snapshot.workItems[8].summary="Checking the latest observation";
+const activityScene = scene(activity, {}); activityScene.set("expandedSystem","p8");
+assert(activityScene.render().some(n=>n.kind === "Text" && n.p.text === "Checking the latest observation"), "Session rows show their latest summary instead of repeating the session title");

@@ -159,6 +159,12 @@ pub fn setup(store: &Store, http: &dyn Transport, ui: &mut dyn Console) -> Resul
                     let mut next = config.clone();
                     next.endpoints.retain(|e| e.id != name);
                     Ok(next)
+                } else if config
+                    .endpoints
+                    .iter()
+                    .any(|e| e.id == name && e.paired_host.is_some())
+                {
+                    crate::adapters::paired_selection::update(&config, http, ui, &name)
                 } else {
                     add(&config, http, ui, name)
                 };

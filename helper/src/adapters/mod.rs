@@ -9,3 +9,5 @@ pub mod chat_http;
 pub mod chat_sse;
 
 pub mod uninstall;
+
+pub mod paired_selection;

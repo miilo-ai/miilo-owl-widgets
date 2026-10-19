@@ -20,6 +20,11 @@ then approve with `miilo local pair approve REQUEST_ID COMPARISON_CODE`.
 Select the systems to display at the receiver's final prompt. Idle selected systems
 remain sleeping robots; pairing does not make them active or launch agent work.
 
+To display newly selected sessions from an already-paired computer, open
+**Connections → Manage connections**. Choose `a` and enter the paired endpoint
+identifier shown in the list, then select its systems. This preserves the pinned
+identity and device credential; it does not pair again or enable actions.
+
 Invitations are single-use and expire after five minutes. Device credentials last
 30 days. Create another invitation if one expires; synchronize device clocks if
 reported. A small clock skew is tolerated without extending the host's deadline.

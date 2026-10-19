@@ -100,13 +100,14 @@ Item {
 
   // ------------------------------------------------------------- content
   Rectangle {
-    anchors.left: parent.left
-    anchors.verticalCenter: parent.verticalCenter
-    width: 3
-    height: Math.min(24 * root.dp, root.height)
+    objectName: "owlKeyboardFocus"
+    anchors.fill: parent
     z: 100
-    visible: root.activeFocus
-    color: root.widget ? root.widget.ink("accent") : "white"
+    visible: root.activeFocus && root.activeFocusOnTab
+    color: "transparent"
+    radius: L.num(root.p.radius, 0) * root.dp
+    border.width: 2 * root.dp
+    border.color: root.widget ? root.widget.ink("accent") : "white"
   }
 
   Loader {

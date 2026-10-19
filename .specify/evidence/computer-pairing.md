@@ -29,3 +29,10 @@ fixed-error-disclosure policy tests, observation-only explanations, mobile setti
 navigation through the actual OWL evaluator, session visibility, architecture and
 no-Python guards. The native plugin separately records its Qt/package checks.
 Credentials, private invitations and captures are not committed.
+
+Follow-up acceptance: the owner explicitly selected the active Codex conversation.
+The paired host then exposed four selected sessions, and the regular Omarchy
+client received Codex with a current summary and changing detail revision.
+Session rows now preview the latest observation summary without adding a line.
+Updating a paired selection through connection setup retains its certificate and
+credential and never asks for another token or grants action authority.

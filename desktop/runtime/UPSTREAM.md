@@ -27,3 +27,6 @@ inline image fetches through automatic rich-text detection. See
 patches/plain-text-labels.patch for the renderer changes.
 
 Animation performance patch: retain component-local expressions and invalidate time-dependent values lazily; reuse unchanged canvas display lists; skip painting clipped/hidden canvases. Layout clocks remain separate from drawing clocks. Native regression coverage includes continuous clocks, static paint suppression, scrolling and resize.
+
+Keyboard focus patch: interactive OWL nodes retain their existing Tab and
+Enter/Space activation, with a full themed outline instead of a small edge mark.

@@ -49,7 +49,7 @@
           let rowInk = offline ? muted : w.lifecycle == "failed" ? mix(red, foreground, 0.15) : w.attention != "none" ? accent : w.phase == "verifying" ? mix(cyan, foreground, 0.4) : foreground
           OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed"; ink: rowInk }
           // Match visible title glyphs to the icon center; Qt line leading sits above it.
-          Text { text: w.title; weight: 1; fontSize: 12; maxLines: 1; color: rowInk; offset: [0, 2] }
+          Text { text: get(w.extensions ?? {}, "dev.miilo.session", null) != null && trim(w.summary ?? "") != "" ? w.summary : w.title; weight: 1; fontSize: 12; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { inspectionView = "orbit"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
