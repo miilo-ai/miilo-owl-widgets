@@ -72,3 +72,41 @@ fn invalid_selection_preserves_config_and_can_be_corrected() {
     assert!(ui.messages.iter().any(|s| s.contains("Not saved")));
     setup::setup(&s, &Fake::default(), &mut Script::new(&[])).unwrap();
 }
+
+#[test]
+fn updating_paired_systems_preserves_the_pin_and_never_requests_a_credential() {
+    let tmp = tempfile::tempdir().unwrap();
+    let mut endpoint = endpoint();
+    endpoint.token.clear();
+    endpoint.allow_actions = false;
+    endpoint.url = "https://example.invalid".into();
+    endpoint.paired_host = Some(miilo_pairing::domain::PairedHost {
+        host_id: "a".repeat(32),
+        device_id: "b".repeat(32),
+        name: "Workstation".into(),
+        url: endpoint.url.clone(),
+        certificate_pem: "fixture".into(),
+        fingerprint: "c".repeat(64),
+        token: "d".repeat(64),
+        expires_at: 1,
+    });
+    let id = endpoint.id.clone();
+    let s = store(tmp.path(), vec![endpoint.clone()]);
+    let http = Fake::default();
+    let mut ui = Script::new(&["a", &id, "all", "q"]);
+    setup::setup(&s, &http, &mut ui).unwrap();
+    let saved = s.load().unwrap();
+    assert_eq!(ui.secret_prompts, 0);
+    assert_eq!(
+        saved.endpoints[0].paired_host.as_ref().unwrap().token,
+        endpoint.paired_host.unwrap().token
+    );
+    assert!(!saved.endpoints[0].allow_actions);
+    assert!(
+        http.calls
+            .lock()
+            .unwrap()
+            .iter()
+            .all(|(_, path, body)| path == "/v1/snapshot" && body.is_none())
+    );
+}

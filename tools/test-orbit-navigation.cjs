@@ -16,6 +16,48 @@ for (const work of [0, 1, 9]) {
     assert.equal(tileScene.draw(3).length,2,'Back returns to the Orbit tiles');
     assert.deepEqual(tileScene.commands,[],'Navigation must not invoke a provider');
 }
+// Detail means the overview even when Compact has an open system list.
+for (const linux of [true,false]) {
+    const route=scene({count:2,work:3,view:'quiet',linux,screenWidth:393});
+    const compact=route.render(1).find(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.p?.text==='System 0'));
+    assert(compact);compact.h.onTap(0,0);
+    assert.equal(route.instance.values[route.slot('expandedSystem')],'p0');
+    const detail=route.render(2).find(n=>n.kind==='Box'&&n.h?.onTap&&n.c?.some(c=>c.p?.text==='Detail'));
+    assert(detail);detail.h.onTap(0,0);
+    assert.equal(route.instance.values[route.slot('expandedSystem')],'','First Detail activation clears the old drill-down');
+    assert.equal(route.render(3).filter(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.kind==='Row'&&c.c?.some(t=>t.p?.text==='System 0'))).length,1);
+    assert.deepEqual(route.commands,[]);
+}
+// Density follows viewport width, including Android guests reporting Linux.
+for (const linux of [true,false]) for (const width of [320,360,393,440]) {
+    const mobile=scene({count:4,work:3,linux,screenWidth:width});
+    const nodes=mobile.render(1),grid=nodes.find(n=>n.kind==='Row'&&n.c?.some(c=>c.kind==='Column'&&c.p.weight===1));
+    assert.equal(grid.c.length,2,'Normal phone widths fit two Detail cards');
+    const fields=nodes.filter(n=>n.kind==='Canvas'&&n.p?.height===92);
+    assert.equal(fields.length,4);
+    const cell=(grid.p.width-10)/2-16;
+    for(const field of fields) for(const op of field.draw(cell,92)) for(const [x,y]of op.points||[])
+        assert(x>=0&&x<=cell&&y>=0&&y<=92,'Compact Detail rings remain inside their cards');
+    assert.deepEqual(mobile.commands,[]);
+}
+// Both fleets center their grid, including content narrower than a wide viewport.
+for (const view of ['quiet','orbit']) for (const screenWidth of [320,393,900]) {
+    const layout=scene({count:1,work:1,view,screenWidth}).render(1);
+    const container=layout.find(n=>n.kind==='Box'&&n.p.fill==='width'&&n.p.align==='top'&&n.c?.some(c=>c.kind==='Grid'||c.kind==='Row'&&c.c?.some(l=>l.kind==='Column'&&l.p.weight===1)));
+    assert(container,'Both view modes must center the grid within available content');
+    assert(container.c.find(c=>c.kind==='Grid'||c.kind==='Row').p.width<=screenWidth);
+}
+// Changing task heights and feed order must not reshuffle the masonry columns.
+const stable=scene({count:4,work:1,screenWidth:393});
+const lanes=()=>stable.render(1).find(n=>n.kind==='Row'&&n.c?.some(c=>c.kind==='Column'&&c.p.weight===1)).c.map(lane=>lane.c.filter(c=>c.kind==='Column').map(card=>card.c.find(c=>c.kind==='Row').c.find(c=>c.kind==='Text').p.text));
+const placement=lanes();
+stable.data.snapshot.workItems.push(...Array.from({length:8},(_,i)=>({...stable.data.snapshot.workItems[0],_key:'extra'+i,id:'extra'+i})));
+stable.data.snapshot.providers.reverse();stable.update();
+assert.deepEqual(lanes(),placement,'Task counts and incoming provider order cannot rebalance cards');
+// An activity-class transition promotes a system; dormant cards stay below it.
+stable.data.snapshot.actors.forEach(a=>a.status=a.providerId==='p2'?'working':'resting');
+stable.data.snapshot.workItems.forEach(w=>{w.attention='none';w.lifecycle='waiting';});stable.update();
+assert.equal(lanes()[0][0],'System 2','Active work must lead the masonry overview');
 // Returning through task details and overflow preserves the entry mode and page.
 for (const origin of ['quiet','orbit']) {
     const route=scene({count:8,work:9,view:origin});

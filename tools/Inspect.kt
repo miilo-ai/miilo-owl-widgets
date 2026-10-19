@@ -107,7 +107,8 @@ fun main(args: Array<String>) {
             check(!click(p.screen.orEmpty(), Env.root(host), "Confirm"))
             check(click(p.screen.orEmpty(), Env.root(host), label))
             check(click(p.screen.orEmpty(), Env.root(host), "Confirm"))
-            check(host.runs.size == index + 1 && host.runs.last().startsWith("miilo-owl action "))
+            val actionPrefix = """export PATH="${'$'}HOME/.local/bin:${'$'}PATH"; miilo-owl action """
+            check(host.runs.size == index + 1 && host.runs.last().startsWith(actionPrefix))
             check(!click(p.screen.orEmpty(), Env.root(host), label)) { "Pending requests must disable actions" }
             state("reply", Str("{\"status\":\"accepted\",\"message\":\"Queued by provider\"}"))
             state("requestPending", Bool(false))

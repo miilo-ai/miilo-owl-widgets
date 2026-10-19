@@ -43,42 +43,7 @@ pub(super) fn request(endpoint: &Endpoint, path: &str, body: Option<&Value>) -> 
             json!({"connections":snapshot["providers"].as_array().unwrap().iter().map(|p|json!({"id":p["id"],"name":p["name"],"enabled":true,"adapter":"local-observer"})).collect::<Vec<_>>()}),
         ),
         ("/v1/explanations", Some(request)) => {
-            let work = snapshot["workItems"]
-                .as_array()
-                .ok_or("No observed work")?
-                .iter()
-                .find(|w| {
-                    w["providerId"] == request["providerId"] && w["id"] == request["workItemId"]
-                })
-                .ok_or("Observed work unavailable")?;
-            if work["revision"] != request["expectedRevision"] {
-                return Err("Observation changed; refresh before explaining".into());
-            }
-            let explanation = snapshot["extensions"]["dev.miilo.explanations"]
-                .as_array()
-                .and_then(|items| {
-                    items.iter().find(|e| {
-                        e["providerId"] == work["providerId"]
-                            && e["workItemId"] == work["id"]
-                            && e["revision"] == work["revision"]
-                    })
-                })
-                .ok_or("Local explanation unavailable; update the local engine")?;
-            let evidence: Vec<_> = snapshot["evidence"]
-                .as_array()
-                .into_iter()
-                .flatten()
-                .filter(|e| {
-                    e["providerId"] == work["providerId"]
-                        && explanation["evidenceIds"]
-                            .as_array()
-                            .is_some_and(|ids| ids.contains(&e["id"]))
-                })
-                .cloned()
-                .collect();
-            Ok(
-                json!({"revision":work["revision"],"spokenSummary":explanation["summary"],"changes":[],"evidence":evidence,"facts":explanation["facts"],"limitations":explanation["limitations"]}),
-            )
+            crate::domain::observation_explanation::explain(&snapshot, request)
         }
         _ => Err(
             "This local observation source is read-only and does not support that operation".into(),
@@ -99,6 +64,7 @@ pub(super) fn connect(store: &Store, http: &dyn Transport, local: &Value) -> Res
         .filter(|s| !s.is_empty() && s.len() <= 100)
         .ok_or("Select between one and 100 sessions")?;
     let mut endpoint = Endpoint {
+        paired_host: None,
         id: "local-desktop".into(),
         url: "local://desktop".into(),
         token: String::new(),

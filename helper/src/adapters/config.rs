@@ -13,6 +13,9 @@ pub use crate::domain::{
 };
 impl Endpoint {
     pub fn credential(&self) -> Result<String> {
+        if let Some(peer) = &self.paired_host {
+            return Ok(peer.token.clone());
+        }
         let Some(path) = &self.token_file else {
             return Ok(self.token.clone());
         };

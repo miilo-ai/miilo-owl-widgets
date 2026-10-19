@@ -2,6 +2,12 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Endpoint {
+    #[serde(
+        default,
+        rename = "pairedHost",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub paired_host: Option<miilo_pairing::domain::PairedHost>,
     pub id: String,
     pub url: String,
     #[serde(default)]

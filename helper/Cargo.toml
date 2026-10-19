@@ -1,12 +1,13 @@
 [package]
 name = "miilo-owl"
-version = "1.6.3"
+version = "1.7.0"
 edition = "2024"
 rust-version = "1.89"
 license = "MIT"
 description = "Native observation and revision-bound action helper for Miilo OWL widgets"
 
 [dependencies]
+miilo-pairing = { git = "https://github.com/miilo-ai/miilo-cli", rev = "89cab188277336aae6bb4b10957e88518a06de3a" }
 miilo-adapter-sdk = { git = "https://github.com/miilo-ai/miilo-sdk", rev = "40c2008207ae8abac2b82eeca7511ad6bf665d35" }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 fs2 = "0.4"

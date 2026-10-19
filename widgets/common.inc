@@ -35,7 +35,7 @@
   let allActors = snap.actors ?? []
   let allWorks = snap.workItems ?? []
   // Transcript-backed sessions are inferred observations, not persistent factories.
-  let localSessionIds = allActors.filter(a => get(get(a.extensions ?? {}, "dev.miilo.session", {}), "runtimeStatusAuthoritative", true) == false).map(a => a.providerId)
+  let localSessionIds = allActors.filter(a => !(a._pairedComputer ?? false) && get(get(a.extensions ?? {}, "dev.miilo.session", {}), "runtimeStatusAuthoritative", true) == false).map(a => a.providerId)
   let activeActors = allActors.filter(a => contains(["working", "running", "reviewing", "blocked", "failed", "error"], a.status) && !contains(["offline", "unreachable", "unknown"], a.health ?? ""))
   let activeActorKeys = activeActors.map(a => a._key)
   let activeProviderIds = activeActors.map(a => a.providerId) + allWorks.filter(w => (w.attention ?? "none") != "none" || w.lifecycle == "failed").map(w => w.providerId)
@@ -59,9 +59,9 @@
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
   // Linux is also available inside Android; it is not a desktop detector.
-  let toolbarHeight = 48
-  let fieldHeight = 48
-  let tabHeight = 44
+  let toolbarHeight = 32
+  let fieldHeight = 32
+  let tabHeight = 28
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()

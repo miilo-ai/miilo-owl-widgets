@@ -30,17 +30,21 @@
   component QuietFleet(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
     let columns = max(1, min(4, min(len(systems), floor(max(screenWidth - 18, 1) / 88))))
-    Grid {
+    Box {
       fill: width
-      columns: columns
-      gap: 6
-      for p in systems.take(providerLimit) key p.id {
-        Column {
-          align: center
-          gap: 2
-          onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
-          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
-          Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
+      align: top
+      Grid {
+        width: max(screenWidth - 24, 100)
+        columns: columns
+        gap: 6
+        for p in systems.take(providerLimit) key p.id {
+          Column {
+            align: center
+            gap: 2
+            onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
+            QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
+            Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
+          }
         }
       }
     }

@@ -49,10 +49,25 @@ impl Transport for Http {
         if endpoint.local_snapshot_file.is_some() {
             return crate::local_snapshot::request(endpoint, path, body);
         }
+        let paired = if let Some(peer) = &endpoint.paired_host {
+            if path != "/v1/snapshot"
+                || body.is_some()
+                || endpoint.url != peer.url
+                || endpoint.allow_actions
+            {
+                return Err("Paired computers permit read-only observation".into());
+            }
+            Some(miilo_pairing::adapters::client::pinned(
+                &peer.certificate_pem,
+                &peer.fingerprint,
+            )?)
+        } else {
+            None
+        };
         let url = format!("{}{path}", safe_url(&endpoint.url)?);
         let mut request = match body {
             Some(b) => self.client.post(url).json(b),
-            None => self.client.get(url),
+            None => paired.as_ref().unwrap_or(&self.client).get(url),
         }
         .header("Accept", "application/json")
         // Read-only generation can take longer than observation or action requests.

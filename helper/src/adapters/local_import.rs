@@ -61,6 +61,7 @@ pub fn connect(store: &Store, http: &dyn Transport, path: &Path) -> Result<Value
         }
     }
     let mut endpoint = Endpoint {
+        paired_host: None,
         id: "local-desktop".into(),
         url: url.into(),
         token: String::new(),

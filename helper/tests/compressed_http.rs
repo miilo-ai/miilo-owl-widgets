@@ -46,6 +46,7 @@ fn widget_decodes_negotiated_json_and_bounds_decoded_output() {
                 stream.write_all(&encoded).unwrap();
             });
             let endpoint = Endpoint {
+                paired_host: None,
                 id: "fixture".into(),
                 url,
                 token: String::new(),
