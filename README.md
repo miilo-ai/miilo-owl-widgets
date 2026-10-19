@@ -39,6 +39,9 @@ All colors come from Omalauncher’s semantic palette. There are no fixed provid
 
 ## Install and register what to observe
 
+To observe another computer directly, use [computer pairing](docs/computer-pairing.md)
+with helper 1.7.0 and CLI 0.4.0. Existing deployed observation APIs remain supported.
+
 Using a real phone? Start with [phone setup](docs/phone-setup.md). Your sessions
 can stay on your computer; the phone connects to an authorized observation API.
 Tailscale connectivity is separate from Miilo authentication. No Codex sign-in or
@@ -146,7 +149,7 @@ The Linux binary runs inside Arch/PRoot. It is not an Android/Bionic APK or a ma
 
 Existing version-1 configuration and the CLI commands (`setup`, `snapshot`, `refresh`, `explain ITEM REVISION`, `action ITEM ACTION REVISION`) remain compatible. Opaque task/action/revision keys match the old helper, including Unicode. Existing credentials and provider selections are preserved. Older Python helper files may remain from previous installations but are not used by the replaced executable. Python is not removed from the device; other software may need it.
 
-The installer leaves connections unconfigured on a fresh device. For live data, register the desired factories/providers in your Miilo backend, ensure that API is reachable from the device, then use **Set up** to add the endpoint, enter a token privately, and select providers. Emulator access depends on the host's routing: this Mac's emulator was verified to reach the tower through the Mac's Tailscale connection, without an emulator-specific VPN. Test that route before adding another Tailscale client; a physical phone needs its own reachable path. Avoid placing real credentials in ADB commands or shell history.
+The installer leaves a fresh device unconfigured. Use **Settings → Pair computer** for an explicitly shared standalone collector, or **Connections → Manage connections** for a deployed observation API. Both require explicit provider selection. Verify reachability inside the launcher Linux environment; a physical phone needs its own tested route. Keep credentials out of ADB arguments and shell history.
 
 Validation evidence and remaining device/provider checks: [native helper validation](docs/native-helper-validation.md).
 

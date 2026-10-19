@@ -16,7 +16,15 @@ Codex, Cursor or OpenCode, and it does not require an SSH key for the observed h
 The [CLI phone and remote guide](https://github.com/miilo-ai/miilo-cli/blob/main/docs/PHONE_AND_REMOTE.md)
 explains where each component runs and the separate credential boundaries.
 
-## Connection checklist
+## Pair a computer without CE
+
+With CLI 0.4.0 on the sharing computer and helper 1.7.0 on the receiver, use
+**Settings → Pair computer**. Transfer a private invitation, compare both codes,
+approve on the host and select shared systems. See the [pairing guide](computer-pairing.md).
+Agent credentials stay on the computer. The phone needs a working network route;
+Tailscale alone does not start sharing or authorize access.
+
+## Existing observation API checklist
 
 1. Connect the phone to the approved private network if the endpoint requires it.
    Test reachability from Omalauncher's Linux environment, not only its browser.
