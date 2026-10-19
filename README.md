@@ -15,6 +15,12 @@ Application logic and device installation use Rust. Assembly and release orchest
 
 The Linux dashboard, native Omarchy bar and desktop tile, and existing-session connection flow are documented in [Miilo on Linux](docs/desktop.md).
 
+Helper 1.5.0 recognizes Codex, Claude Code, Cursor, OpenCode, Devin CLI, Grok CLI
+and Hermes. Local observation requires CLI 0.3.0 or later on the computer that
+owns the selected sessions. See the CLI's [compatibility matrix](https://github.com/miilo-ai/miilo-cli/blob/main/docs/AGENT_COMPATIBILITY.md)
+for tested versions and boundaries. Local sessions are observation-only; installing
+this helper does not sign in to an agent or silently enroll its sessions.
+
 | Widget | Collapsed | Expanded |
 | --- | --- | --- |
 | Miilo · 3×2 | Responsive animated robot grid, per-system colors, and attention marks | Search and filter systems/agents, inspect tasks, evidence and diffs, and confirm advertised actions |
