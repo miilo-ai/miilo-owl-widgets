@@ -29,7 +29,7 @@
         ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl refresh"); reply = "pending" }
           ToolbarIcon { kind: "refresh" }
         }
       }

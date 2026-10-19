@@ -24,7 +24,7 @@ for(const file of ['70-miilo-fleet.owl','71-miilo-attention.owl','72-miilo-board
    const provider=nodes().find(n=>n.kind==='Box'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text==='Private factory'));provider.h.onTap(0,0);assert.equal(instance.values[slot('system')],'p1');
   }else{
    button(section==='chat'?'Configure chat model':'Manage connections').h.onTap(0,0);
-   const terminal=nodes().find(n=>n.kind==='Terminal');assert(terminal);assert.equal(terminal.p.command,section==='chat'?'miilo-owl chat-setup':'miilo-owl setup');assert(terminal.p.height<=800);
+   const terminal=nodes().find(n=>n.kind==='Terminal');assert(terminal);assert.equal(terminal.p.command,section==='chat'?'export PATH="$HOME/.local/bin:$PATH"; miilo-owl chat-setup':'export PATH="$HOME/.local/bin:$PATH"; miilo-owl setup');assert(terminal.p.height<=800);
    set('setupConfiguring',false);
   }
  }

@@ -27,7 +27,7 @@
   state proposed = ""
   state proposalRevision = ""
   state proposalWork = ""
-  source feed = cmd("miilo-owl snapshot") every 15s timeout 25s status
+  source feed = cmd("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl snapshot") every 15s timeout 25s status
   let data = feed.ok ? parseJson(feed.out) : null
   let configured = data != null && data.configured
   let snap = data == null ? null : data.snapshot
