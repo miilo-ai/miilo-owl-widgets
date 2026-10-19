@@ -9,9 +9,10 @@ fn android_install_preserves_config_backups_and_paths_with_spaces() {
         .prefix("miilo install ")
         .tempdir()
         .unwrap();
-    let local = temp.path().join("local");
-    let widgets = temp.path().join("widgets");
-    let config = temp.path().join("config");
+    let base = temp.path().canonicalize().unwrap();
+    let local = base.join("local");
+    let widgets = base.join("widgets");
+    let config = base.join("config");
     fs::create_dir_all(&widgets).unwrap();
     fs::create_dir_all(&config).unwrap();
     for (name, text) in [
@@ -36,6 +37,7 @@ fn android_install_preserves_config_backups_and_paths_with_spaces() {
             .env("MIILO_OWL_INSTALL_ROOT", &local)
             .env("MIILO_OWL_WIDGET_DIR", &widgets)
             .env("MIILO_OWL_CONFIG_DIR", &config)
+            .env("XDG_STATE_HOME", base.join("state"))
             .output()
             .unwrap();
         assert!(
@@ -47,6 +49,7 @@ fn android_install_preserves_config_backups_and_paths_with_spaces() {
     let snapshot = Command::new(local.join("bin/miilo-owl"))
         .arg("snapshot")
         .env("MIILO_OWL_CONFIG_DIR", &config)
+        .env("XDG_STATE_HOME", base.join("state"))
         .output()
         .unwrap();
     assert_eq!(
