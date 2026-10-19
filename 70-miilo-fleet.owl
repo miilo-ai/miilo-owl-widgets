@@ -5,6 +5,47 @@ widget "miilo" {
   size: 3x2
   minSize: 3x2
   padding: 8
+  requires { pacman: ["bash", "curl", "coreutils", "tar", "gawk", "grep", "gzip"] }
+  let helperInstallCommand = """#!/usr/bin/env bash
+# User-invoked bootstrap; never enrolls sessions or changes credentials.
+set -euo pipefail
+version='1.5.0'
+[ "$(uname -s)" = Linux ] && [ "$(uname -m)" = aarch64 ] || {
+  echo 'This installer supports ARM64 Linux inside Omalauncher. See the installation guide for other systems.' >&2
+  exit 1
+}
+for program in curl sha256sum tar mktemp install; do
+  command -v "$program" >/dev/null || { echo "Required program missing: $program" >&2; exit 1; }
+done
+base="$HOME/.local/bin"
+if [ -e "$base/miilo-owl" ]; then
+  echo 'An existing helper was found; it has not been replaced. Use the documented upgrade workflow.'
+  exit 0
+fi
+stage=$(mktemp -d)
+trap 'rm -rf -- "$stage"' EXIT
+asset="miilo-owl-widgets-$version-linux-aarch64.tar.gz"
+url="https://github.com/miilo-ai/miilo-owl-widgets/releases/download/v$version"
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 180 "$url/$asset" -o "$stage/$asset" || { echo "Miilo $version could not be downloaded. Check your connection and whether this release is published; no helper was installed." >&2; exit 1; }
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 30 "$url/SHA256SUMS" -o "$stage/SHA256SUMS" || { echo "Release checksums are unavailable; no helper was installed." >&2; exit 1; }
+expected=$(awk -v name="$asset" '$2 == name { print $1 }' "$stage/SHA256SUMS")
+[[ "$expected" =~ ^[a-fA-F0-9]{64}$ ]] || { echo 'Missing or ambiguous release checksum.' >&2; exit 1; }
+printf '%s  %s\n' "$expected" "$asset" > "$stage/verified.sha256"
+(cd "$stage" && sha256sum --check verified.sha256)
+# Extract one regular member to stdout; never unpack archive paths onto disk.
+member='./bin/linux-aarch64/miilo-owl'
+[ "$(tar -tzf "$stage/$asset" | grep -Fxc "$member")" = 1 ] || { echo 'Unexpected release layout.' >&2; exit 1; }
+tar -xOzf "$stage/$asset" "$member" > "$stage/miilo-owl"
+chmod 755 "$stage/miilo-owl"
+[ "$("$stage/miilo-owl" --version)" = "miilo-owl $version" ] || { echo 'Unexpected helper version.' >&2; exit 1; }
+mkdir -p "$base"
+# Hard link publishes the staged copy without overwriting a concurrent install.
+pending=$(mktemp "$base/.miilo-owl.XXXXXX")
+trap 'rm -rf -- "$stage"; rm -f -- "$pending"' EXIT
+install -m 755 "$stage/miilo-owl" "$pending"
+ln "$pending" "$base/miilo-owl"
+printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n' "$version" "$base"
+"""
   // Presentation preferences only: never alter observations or action authority.
   state robotMotion = "full" persist
   state robotPace = "normal" persist
@@ -65,7 +106,7 @@ widget "miilo" {
   state proposed = ""
   state proposalRevision = ""
   state proposalWork = ""
-  source feed = cmd("miilo-owl snapshot") every 15s timeout 25s status
+  source feed = cmd("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl snapshot") every 15s timeout 25s status
   let data = feed.ok ? parseJson(feed.out) : null
   let configured = data != null && data.configured
   let snap = data == null ? null : data.snapshot
@@ -157,7 +198,7 @@ widget "miilo" {
         ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl refresh"); reply = "pending" }
           ToolbarIcon { kind: "refresh" }
         }
       }
@@ -223,6 +264,20 @@ widget "miilo" {
         Button { text: "Shuffle"; onTap: robotColors = robotColors.filter(p => p.key != colorAgent) + [{key: colorAgent, color: (get(find(robotColors, p => p.key == colorAgent), "color", automatic) + 1 + floor(time) % (len(robotPalette) - 1)) % len(robotPalette)}] }
       }
     }
+  }
+
+  // Editor agents: miilo-owl is required. Explain its disclosure before installing.
+  // Check architecture, ~/.local/bin and PATH; preserve existing helpers and credentials.
+  // On release 404, report unpublished assets; never bypass checksums or run branch scripts.
+  // Read the store README for troubleshooting. Never auto-enroll sessions or print secrets.
+  state helperInstalling = false
+  component HelperInstall() {
+    Text { text: "Miilo helper required"; fontSize: 16; color: foreground }
+    Text { text: "Miilo requires miilo-owl, a Rust helper that reads selected agent sessions, retrieves work and evidence from configured systems, and sends supported actions only when you request them."; fontSize: 12; color: foreground; maxLines: 7 }
+    Text { text: "Install downloads the ARM64 Linux helper from Miilo’s official GitHub release, verifies its SHA-256 checksum, and saves it in ~/.local/bin without root. It does not enroll sessions or change credentials. Configured remote systems and optional chat models use the network; credentials stay outside widget source."; fontSize: 11; color: muted; maxLines: 9 }
+    Button { height: 44; text: "Install helper & continue"; background: alpha(accent, 0.14); color: accent; onTap: { helperInstalling = true; terminal("bash -c ${sh(helperInstallCommand)}", "Install Miilo helper") } }
+    if helperInstalling { Text { text: "Finish in the terminal, then return and refresh. If installation fails, open Edit widget for troubleshooting instructions."; fontSize: 11; color: muted; maxLines: 4 } }
+    Button { height: 44; text: "Check again"; onTap: refresh() }
   }
 
   component Setup() {
@@ -309,7 +364,9 @@ widget "miilo" {
       Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
       Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
-    if setupSection == "menu" {
+    if feed.code == 127 {
+      HelperInstall { }
+    } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
@@ -341,8 +398,8 @@ widget "miilo" {
     } else {
       Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
       if setupConfiguring {
-        if setupSection == "chat" { Terminal { fontSize: 12; command: "miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
-        else { Terminal { fontSize: 12; command: "miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        if setupSection == "chat" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        else { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
         Text { text: setupSection == "chat" ? "Follow the prompts, then tap Done." : "Type q then Enter to finish, or tap Done."; fontSize: 11; color: muted; maxLines: 2 }
       } else {
         if setupSection == "systems" {
@@ -451,7 +508,7 @@ widget "miilo" {
       if !requestPending {
         Flow {
           gap: 6
-          Button { height: 44; background: alpha(accent, 0.12); text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          Button { height: 44; background: alpha(accent, 0.12); text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
           for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
             Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
           }
@@ -473,7 +530,7 @@ widget "miilo" {
           Text { text: "${action.label}: ${focused.title}?"; style: small; maxLines: 2 }
           Flow {
             gap: 6
-            Button { text: "Confirm"; color: accent; onTap: { requestPending = true; replyWork = proposalWork; replyRevision = proposalRevision; reply = run("miilo-owl action ${sh(proposalWork)} ${sh(proposed)} ${sh(proposalRevision)}"); reply = "pending"; proposed = "" } }
+            Button { text: "Confirm"; color: accent; onTap: { requestPending = true; replyWork = proposalWork; replyRevision = proposalRevision; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl action ${sh(proposalWork)} ${sh(proposed)} ${sh(proposalRevision)}"); reply = "pending"; proposed = "" } }
             Button { text: "Cancel"; onTap: proposed = "" }
           }
         } else {
@@ -1020,7 +1077,7 @@ widget "miilo" {
             Button { text: renameOpen ? "Cancel name" : "Name"; onTap: renameOpen = !renameOpen }
           }
           if renameOpen && !requestPending {
-            Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
+            Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
           }
           let owned = works.filter(w => w.providerId == actor.providerId && contains(w._actorKeys ?? [], actor._key))
           WorkRows { list: owned }

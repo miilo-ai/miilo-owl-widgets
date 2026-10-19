@@ -36,7 +36,9 @@ for (const file of fs.readdirSync(process.argv[2]).filter(f => f.endsWith('.json
                 const confirm = [...walk(screen)].find(n=>n.kind === 'Button' && n.p.text === 'Confirm');
                 assert(confirm,'Missing confirmation control');
                 confirm.h.onTap(0,0);
-                assert.equal(commands.filter(c=>c.startsWith('miilo-owl action ')).length,1);
+                assert.equal(commands.length,1,'Confirmation must dispatch exactly one command');
+                assert(commands[0].startsWith('export PATH="$HOME/.local/bin:$PATH"; miilo-owl action '),
+                    'Confirmation must resolve the installed helper and dispatch an action');
             }
         }
         assert.deepEqual(problems,[],file+' runtime errors');

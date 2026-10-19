@@ -110,7 +110,7 @@
             Button { text: renameOpen ? "Cancel name" : "Name"; onTap: renameOpen = !renameOpen }
           }
           if renameOpen && !requestPending {
-            Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
+            Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
           }
           let owned = works.filter(w => w.providerId == actor.providerId && contains(w._actorKeys ?? [], actor._key))
           WorkRows { list: owned }
