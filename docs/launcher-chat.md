@@ -1,7 +1,8 @@
-# Launcher text chat: first implementation checkpoint
+# Launcher text chat
 
-Chat contracts and the native helper are implemented; the shared graphical chat
-panel and host acceptance are still pending. This is not a release announcement.
+Chat contracts and the native helper are implemented. Model-backed Explain and
+full conversational chat-panel acceptance are separate capabilities. See
+[release status](release-status.md) for current validation limits.
 Plan: `.specify/specs/003-launcher-chat/spec.md`.
 
 ## Configure
@@ -52,9 +53,6 @@ partial observations, malformed/truncated streams and cancellation callbacks.
 Real Gemma latency, graphical rendering and native microphone acceptance are
 not established by these fixtures.
 
-The helper imports the SDK at the exact commit in helper/Cargo.toml. While the
-SDK remains private, CI needs MIILO_SDK_READ_TOKEN or MIILO_WORKSPACE_READ_TOKEN
-with SDK contents-read. Fork pull requests never receive those secrets. Missing
-access reports No release has been made and prevents candidate readiness.
-Once public, no token is required. Docker builds mount scoped access config
-read-only when supplied; credentials are not copied into images or artifacts.
+The helper imports the SDK at the exact revision in helper/Cargo.toml. Public
+checkouts require no private dependency token. Never embed runtime model credentials
+in CI, images, widgets or source control.

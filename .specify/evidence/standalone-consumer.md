@@ -1,5 +1,8 @@
 # Standalone consumer evidence — macOS arm64
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 38 helper tests, 5 xtask tests, warnings-denied helper/xtask clippy and 36 desktop
 OWL structural scenarios passed. New local transport tests use a private cache,
 no HTTP provider, preserve existing remote endpoints, refuse stale reads/actions,

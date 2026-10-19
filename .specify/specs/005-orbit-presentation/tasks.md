@@ -1,5 +1,8 @@
 # ORBIT-001 implementation checkpoints
 
+> Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
+
+
 Initial candidate implemented; local evidence in ../../evidence/orbit-local.md.
 Native runtime host owns final screenshot, interaction and recording evidence.
 

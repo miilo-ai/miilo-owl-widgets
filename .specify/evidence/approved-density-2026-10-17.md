@@ -1,5 +1,8 @@
 # Compact presentation validation — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 - Desktop Orbit task rows are 22px, with one themed state icon and a short title; long titles truncate. Android rows retain 44px targets.
 - Original robots, individual ring phases, dormant rings, subtle glow and active zaps remain.
 - Evidence and per-file changes use outlined sections with colored additions/removals. The progress arc uses 65 local samples and a static curve; only its orb pulses.

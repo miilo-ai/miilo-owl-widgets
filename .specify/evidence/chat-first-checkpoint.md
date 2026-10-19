@@ -1,5 +1,8 @@
 # Chat-first source checkpoint — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Implemented: SDK text contracts and shared helper chat-setup/chat-context/chat.
 Voice returns an explicit VOICE-001 not_implemented result; no microphone starts.
 No graphical chat, native host acceptance or actual Gemma inference is claimed.

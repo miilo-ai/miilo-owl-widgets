@@ -1,5 +1,8 @@
 # Handoff: native Omarchy acceptance and presentation
 
+> Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
+
+
 Target: actual the designated Omarchy test host. Systems baseline 891d278, widgets e92b895.
 Core extraction is in progress; do not infer standalone acceptance from the old CE-backed path.
 

@@ -1,5 +1,8 @@
 # Omarchy plugin repository handoff
 
+> Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
+
+
 The independent native plugin lives in https://github.com/miilo-ai/miilo-omarchy-plugin
 with its own root manifest. See its `.specify/handoffs/omarchy-agent.md`
 for native validation and `docs/marketplace.md` for owner-authorized registration.

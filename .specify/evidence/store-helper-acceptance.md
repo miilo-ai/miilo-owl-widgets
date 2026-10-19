@@ -1,5 +1,8 @@
 # Store helper acceptance, 2026-10-18
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Version remains 1.5.0 because that version has not yet been tagged or published.
 
 ## Android emulator
