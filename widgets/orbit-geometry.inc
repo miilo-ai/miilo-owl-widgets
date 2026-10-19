@@ -1,5 +1,8 @@
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0) {
+  // Unit samples are immutable; only the projected axes change each frame.
+  let orbitHalfRails = [-1, 1].map(side => range(65).map(i => {x: cos((side == 1 ? i : i + 64) * pi / 64), y: sin((side == 1 ? i : i + 64) * pi / 64)}))
+
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0, neighbors = []) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
@@ -38,7 +41,13 @@
         for side in [-1, 1] {
           let depth = side == 1 ? 1 : 0.84
           for plane in planes {
-            let rail = range(65).map(i => {x: cos((side == 1 ? i : i + 64) * pi / 64) * plane.radius, y: sin((side == 1 ? i : i + 64) * pi / 64) * plane.rise}).map(p => [cx + p.x * cos(plane.tilt) - p.y * sin(plane.tilt), cy + p.x * sin(plane.tilt) + p.y * cos(plane.tilt)])
+            let axisCos = cos(plane.tilt)
+            let axisSin = sin(plane.tilt)
+            let horizontalX = plane.radius * axisCos
+            let horizontalY = plane.radius * axisSin
+            let verticalX = plane.rise * axisSin
+            let verticalY = plane.rise * axisCos
+            let rail = orbitHalfRails[side == 1 ? 1 : 0].map(p => [cx + p.x * horizontalX - p.y * verticalX, cy + p.x * horizontalY + p.y * verticalY])
             if !offline && !dormant {
               // Portable soft neon: layered strokes, no platform blur dependency.
               path(rail, stroke: alpha(accent, 0.04 * depth), width: 5, cap: round)
@@ -77,11 +86,11 @@
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert }
+        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert; neighbors: neighbors }
       }
     }
   }
 
-  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0) {
-    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY }
+  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0, neighbors = []) {
+    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY; neighbors: neighbors }
   }

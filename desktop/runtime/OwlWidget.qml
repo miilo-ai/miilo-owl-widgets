@@ -287,7 +287,9 @@ Item {
     onTriggered: {
       root.instance.frame(elapsedTime)
       root.frame++
-      if (root.tree && root.tree.readsTime) root.render()
+      // Canvas-local clocks invalidate lazily without rebuilding static layout.
+      if ((root.tree && root.tree.readsTime)
+          || (root.screenTree && root.screenTree.readsTime)) root.render()
     }
   }
 

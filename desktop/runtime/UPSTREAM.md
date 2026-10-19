@@ -25,3 +25,5 @@ Security patch: all runtime Text labels, input placeholders and terminal output
 use Text.PlainText. Provider-controlled strings remain literal and cannot cause
 inline image fetches through automatic rich-text detection. See
 patches/plain-text-labels.patch for the renderer changes.
+
+Animation performance patch: retain component-local expressions and invalidate time-dependent values lazily; reuse unchanged canvas display lists; skip painting clipped/hidden canvases. Layout clocks remain separate from drawing clocks. Native regression coverage includes continuous clocks, static paint suppression, scrolling and resize.

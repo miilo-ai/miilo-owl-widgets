@@ -3,6 +3,7 @@ assemble:
 	cargo xtask assemble
 
 test:
+	node tools/test-render-invalidation.cjs
 	node --test tools/plain-text.test.cjs
 	node --test tools/install-helper.test.cjs
 	node tools/check-no-python.cjs
@@ -47,3 +48,9 @@ render-design:
 .PHONY: check-plain-text
 check-plain-text:
 	node tools/test-plain-text.cjs tests/desktop/TestPlainText.qml
+
+.PHONY: check-canvas-clock
+check-canvas-clock:
+	node tools/test-canvas-clock.cjs
+
+check-typography: check-canvas-clock

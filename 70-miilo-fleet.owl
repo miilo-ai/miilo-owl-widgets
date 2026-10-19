@@ -1,5 +1,5 @@
 widget "miilo" {
-  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.6.1"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.6.2"; license: "MIT"; category: "dev" }
   page: 1
   order: 7
   size: 3x2
@@ -9,7 +9,7 @@ widget "miilo" {
   let helperInstallCommand = """#!/usr/bin/env bash
 # User-invoked bootstrap; never enrolls sessions or changes credentials.
 set -euo pipefail
-version='1.6.1'
+version='1.6.2'
 [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = aarch64 ] || {
   echo 'This installer supports ARM64 Linux inside Omalauncher. See the installation guide for other systems.' >&2
   exit 1
@@ -628,7 +628,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     if len(systems) > providerLimit { Button { text: "More systems"; onTap: providerLimit = providerLimit + 5 } }
   }
 
-  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "", anchored = false) {
+  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "", anchored = false, neighbors = []) {
     Canvas {
       width: s
       height: s
@@ -653,8 +653,9 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       let phase = (slot >= 0 ? slot : max(indexOf(actors, agent), 0)) * 0.8
       let glanceTime = (clock + max(slot, 0) * 3.7) % 17
       let glance = expressive && !unavailable && !resting && glanceTime < 2 ? pow(sin(glanceTime / 2 * 3.14159), 2) : 0
-      let eyeX = lookX * r * 0.2 * glance
-      let eyeY = lookY * r * 0.16 * glance + (wistful ? r * 0.14 : 0)
+      let neighbor = len(neighbors) > 0 ? neighbors[floor((time + max(slot, 0) * 3.7) / 17) % len(neighbors)] : {x: lookX, y: lookY}
+      let eyeX = neighbor.x * r * 0.2 * glance
+      let eyeY = neighbor.y * r * 0.16 * glance + (wistful ? r * 0.14 : 0)
       let blinking = motion && !unavailable && (clock + phase) % 5.8 < 0.16
       let wink = expressive && !blocked && !focused && !unavailable && !resting && (clock + phase) % 29 > 27.8 && (clock + phase) % 29 < 28.05
       let led = unavailable ? muted : failed || agent.health == "degraded" ? red : resting ? alpha(ink, 0.55) : ink
@@ -720,7 +721,10 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
   }
 
   // Deterministic atom planes: the robot occupies an always-open nucleus.
-  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0) {
+  // Unit samples are immutable; only the projected axes change each frame.
+  let orbitHalfRails = [-1, 1].map(side => range(65).map(i => {x: cos((side == 1 ? i : i + 64) * pi / 64), y: sin((side == 1 ? i : i + 64) * pi / 64)}))
+
+  component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0, neighbors = []) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)
     let moving = robotMotion == "full" && !offline && !dormant
     let clock = moving ? time * robotSpeed : 0
@@ -759,7 +763,13 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
         for side in [-1, 1] {
           let depth = side == 1 ? 1 : 0.84
           for plane in planes {
-            let rail = range(65).map(i => {x: cos((side == 1 ? i : i + 64) * pi / 64) * plane.radius, y: sin((side == 1 ? i : i + 64) * pi / 64) * plane.rise}).map(p => [cx + p.x * cos(plane.tilt) - p.y * sin(plane.tilt), cy + p.x * sin(plane.tilt) + p.y * cos(plane.tilt)])
+            let axisCos = cos(plane.tilt)
+            let axisSin = sin(plane.tilt)
+            let horizontalX = plane.radius * axisCos
+            let horizontalY = plane.radius * axisSin
+            let verticalX = plane.rise * axisSin
+            let verticalY = plane.rise * axisCos
+            let rail = orbitHalfRails[side == 1 ? 1 : 0].map(p => [cx + p.x * horizontalX - p.y * verticalX, cy + p.x * horizontalY + p.y * verticalY])
             if !offline && !dormant {
               // Portable soft neon: layered strokes, no platform blur dependency.
               path(rail, stroke: alpha(accent, 0.04 * depth), width: 5, cap: round)
@@ -798,13 +808,13 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       Box {
         fill: true
         align: center
-        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert }
+        Bot { agent: anchor; s: 112 * fit; lookX: lookX; lookY: lookY; slot: slot; anchored: true; alert: alert; neighbors: neighbors }
       }
     }
   }
 
-  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0) {
-    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY }
+  component CompactOrbit(agent, items, s = 100, slot = 0, offline = false, alert = "", lookX = 0, lookY = 0, neighbors = []) {
+    OrbitField { items: items.take(6); anchor: agent; offline: offline; energized: any(items, w => w.lifecycle == "active") || contains(["working", "running"], agent.status); slot: slot; alert: alert; fit: max(0.1, (s - 6) / 220); fieldSize: max(24, s * 0.82); spread: 0.84; lookX: lookX; lookY: lookY; neighbors: neighbors }
   }
 
   state observatoryView = "quiet" persist
@@ -1022,7 +1032,6 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
             {x: 0, y: -1, valid: slot >= columns},
             {x: 0, y: 1, valid: slot + columns < visibleCount}
           ].filter(n => n.valid)
-          let neighbor = len(neighbors) > 0 ? neighbors[floor((time + slot * 3.7) / 17) % len(neighbors)] : {x: 0, y: 0}
 
           let owned = live.filter(w => contains(w._actorKeys ?? [], a._key))
           let errors = any(owned, w => w.lifecycle == "failed") || contains(["failed", "error"], a.status)
@@ -1037,7 +1046,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
               width: robotSize + 10
               height: max(24, (robotSize + 10) * 0.82)
               align: center
-              CompactOrbit { agent: a; items: owned; s: robotSize + 10; lookX: neighbor.x; lookY: neighbor.y; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+              CompactOrbit { agent: a; items: owned; s: robotSize + 10; neighbors: neighbors; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
               Box {
                 width: max(1, robotSize - 6)
                 height: max(1, robotSize * 0.92 - 6)

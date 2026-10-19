@@ -73,3 +73,19 @@ fixed source. Do not overwrite newer local patches during a future renderer impo
 A clean native regression run is evidence for the tested behavior, not a complete
 security audit or marketplace approval. Marketplace maintainers perform their own
 review. Keep the submission's dependency and installation disclosures accurate.
+
+## Animation clocks and paint budgets
+
+Component-local clock dependencies must invalidate without rebuilding unrelated
+layout. Preserve layout-time dependencies where actual text or geometry needs
+them. Cached drawings must invalidate on state, theme and size changes.
+
+Skip offscreen/inactive painting, and test scrolling static canvases into view
+without any clock tick. Hidden state must never prevent a required repaint.
+Cache immutable orbit samples and repeated projection terms before reducing
+visual detail or introducing a frame-rate limit. Preserve motion preferences.
+
+Run the retained-invalidation test and native canvas-clock fixture after renderer
+changes. Compare native evaluator cost, frame intervals and whole-shell CPU
+separately; a faster evaluator does not prove lower total CPU use or 60 FPS.
+Keep synthetic profiling scenes free of real transcripts, credentials and actions.

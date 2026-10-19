@@ -1703,7 +1703,7 @@ function Env(host, parent, slots) {
   this.slots = slots
 }
 
-function Lazy(ev) { this.ev = ev }
+function Lazy(ev) { this.ev = ev; this.cached = false; this.dynamic = false; this.revision = -1; this.tick = -1 }
 
 Env.prototype = {
   local: function(depth, i) {
@@ -1711,8 +1711,9 @@ Env.prototype = {
     for (var d = 0; d < depth; d++) e = e.parent
     var v = e.slots[i]
     if (v instanceof Lazy) {
-      v = run(v.ev, e)
-      e.slots[i] = v
+      // Preserve the expression so a deferred Canvas can refresh only its clock.
+      if (e.host.local) return e.host.local(v, e)
+      return run(v.ev, e)
     }
     return v === undefined ? null : v
   },
@@ -2513,6 +2514,8 @@ function Instance(program, host, persisted) {
   this.letTime = []
   this.sampled = []
   this.time = 0
+  this.revision = 0
+  this.tick = 0
   this.tracking = []
   this.readsTime = false
   this.triggerLast = []
@@ -2556,6 +2559,7 @@ Instance.prototype = {
     return {
       budget: budget,
       read: function(slot) { return self.read(slot) },
+      local: function(value, env) { return self.local(value, env) },
       write: function(slot, v) { self.write(slot, v) },
       theme: function(name) { return self.host.theme(name) },
       time: function() {
@@ -2579,6 +2583,21 @@ Instance.prototype = {
       this.host.report(what + ": " + messageOf(e))
       return fallback
     }
+  },
+
+  local: function(value, env) {
+    if (!value.cached || value.revision !== this.revision || (value.dynamic && value.tick !== this.tick)) {
+      var dependency = { time: false }
+      this.tracking.push(dependency)
+      try { value.value = run(value.ev, env) }
+      finally { this.tracking.pop() }
+      value.cached = true
+      value.dynamic = dependency.time
+      value.revision = this.revision
+      value.tick = this.tick
+    }
+    if (value.dynamic) this.markTime()
+    return value.value === undefined ? null : value.value
   },
 
   markTime: function() {
@@ -2617,6 +2636,7 @@ Instance.prototype = {
   },
 
   invalidate: function() {
+    this.revision++
     for (var i = 0; i < this.letCache.length; i++) this.letCache[i] = undefined
   },
 
@@ -2666,6 +2686,7 @@ Instance.prototype = {
 
   // A frame of an animated widget: `time` moved, so whatever read it is stale.
   frame: function(seconds) {
+    if (this.time !== seconds) this.tick++
     this.time = seconds
     for (var i = 0; i < this.letCache.length; i++) if (this.letTime[i]) this.letCache[i] = undefined
   },
@@ -2837,7 +2858,21 @@ Instance.prototype = {
       var node = { kind: n.kind, p: props, h: handlers, a: anim, c: [] }
       if (n.kind === "Canvas") {
         var drawn = n.children
-        node.draw = function(width, height) { return self.draw(drawn, env, width, height) }
+        var cache = { revision: -1, tick: -1, width: -1, height: -1, operations: null }
+        node.draw = function(width, height) {
+          if (cache.revision !== self.revision || cache.width !== width || cache.height !== height
+              || (node.draw.readsTime && cache.tick !== self.tick)) {
+            var dependency = { time: false }
+            self.tracking.push(dependency)
+            try { cache.operations = self.draw(drawn, env, width, height) }
+            finally { self.tracking.pop() }
+            node.draw.readsTime = dependency.time
+            cache.revision = self.revision; cache.tick = self.tick
+            cache.width = width; cache.height = height
+          }
+          if (node.draw.readsTime) self.markTime()
+          return cache.operations
+        }
       } else {
         this.nodes(n.children, env, node.c)
       }
