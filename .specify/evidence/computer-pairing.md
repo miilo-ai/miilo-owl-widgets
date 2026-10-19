@@ -60,3 +60,14 @@ both modes without altering card sizes, animation or connection state. Generated
 widget/navigation/density tests, official Kotlin compilation of all three widgets,
 Compact/settings/visibility/retained-render checks and source guards passed. The
 native plugin separately tests actual Qt grid coordinates at narrow/wide widths.
+
+Detail masonry follow-up: active-first, stable-ID ordering drives independent
+columns without changing Compact. Evaluator tests cover activity promotion,
+unchanged placement after task-count/feed-order changes, viewport bounds and
+centering. Official Kotlin compilation, portable presentation, motion, navigation,
+settings, retained-render and source/boundary checks passed. A private render-only
+Android fixture with 6/1/2/1 tasks confirmed that the short column's next card rises
+independently; screenshot/XML bounds were checked. The live widget and original
+paired profile were restored afterward, with active work visibly leading. No
+credentials or provider data were modified. Native Qt independently measures
+unequal-card geometry and keyboard behavior in the plugin repository.

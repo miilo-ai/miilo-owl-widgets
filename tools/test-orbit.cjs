@@ -146,18 +146,18 @@ assert(program.globals.find(g=>g.name==='observatoryView').persist);
 console.log('Orbit generated-renderer checks passed: themes, motion, stale state, bounds, pagination, detail selection and no frame I/O.');
 
 for(const [width,columns]of [[260,1],[320,2],[360,2],[440,2],[540,3],[600,3],[684,3],[900,3],[1400,3]]) {
- const grid=scene({count:3,screenWidth:width}).render(1).find(n=>n.kind==='Grid' && n.c?.some(c=>c.kind==='Column'));
- assert(grid,'Orbit grid must render');assert.equal(grid.p.columns,columns,'Content-based column count at '+width);
+ const grid=scene({count:3,screenWidth:width}).render(1).find(n=>n.kind==='Row' && n.c?.some(c=>c.kind==='Column'&&c.p.weight===1));
+ assert(grid,'Orbit grid must render');assert.equal(grid.c.length,columns,'Content-based column count at '+width);
  assert(grid.p.width<=width && grid.p.width<=1010,'Tile group stays bounded');
 }
-assert.equal(scene({count:1,screenWidth:1400}).render(1).find(n=>n.kind==='Grid').p.width,330,'One system must not stretch across the desktop');
+assert.equal(scene({count:1,screenWidth:1400}).render(1).find(n=>n.kind==='Row'&&n.c?.some(c=>c.kind==='Column'&&c.p.weight===1)).p.width,330,'One system must not stretch across the desktop');
 
 // PRoot reports Linux too; visual row density must not depend on that flag.
 for(const [linux,height]of [[true,28],[false,28]]) {
  const nodes=scene({count:3,work:3,screenWidth:684,linux}).render(1);
  const rows=nodes.filter(n=>n.kind==='Row'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text?.startsWith('Task p')));
  assert.equal(rows.length,9);assert(rows.every(n=>n.p.height===height));
- const grid=nodes.find(n=>n.kind==='Grid');const cell=(grid.p.width-20)/3-20;
+ const grid=nodes.find(n=>n.kind==='Row'&&n.c?.some(c=>c.kind==='Column'&&c.p.weight===1));const cell=(grid.p.width-20)/3-20;
  for(const field of nodes.filter(n=>n.kind==='Canvas'&&n.p?.height===164)) {
   for(const op of field.draw(cell,164))for(const [x,y] of op.points||[])assert(x>=0&&x<=cell&&y>=0&&y<=164,'Narrow rails stay inside their own tile');
  }

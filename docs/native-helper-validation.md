@@ -50,3 +50,9 @@ band, smaller labels and 28-pixel task rows. Tabs and explicit buttons are 28
 pixels high; search/toolbar controls are 32. These are visual layout sizes, not a
 claim of a minimum accessible touch target. Density uses viewport width because
 Android PRoot also reports Linux. No provider observation or action policy changes.
+
+Detail uses centered, equal-width masonry columns with independent vertical
+stacking. Active/attention systems come first, with stable ID ordering within
+activity groups. Changes to task counts do not rebalance columns. Activity and
+viewport changes can reposition cards. Compact retains its regular grid.
+Keyboard traversal follows each rendered column from top to bottom.
