@@ -1,5 +1,8 @@
 # Compact native previews — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Local candidate, not published or installed on a live Omarchy shell.
 
 - 720px capture: three robot tiles, three tasks per active system, resting system.

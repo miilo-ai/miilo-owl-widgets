@@ -1,5 +1,8 @@
 # Compact native Orbit layout — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 The 720px recording previously fell below a hard-coded 760dp two-column
 breakpoint, forcing every system into a full-width row. That was authored Miilo
 layout policy, not an Omarchy requirement.

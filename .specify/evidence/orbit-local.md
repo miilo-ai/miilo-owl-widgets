@@ -1,5 +1,8 @@
 # ORBIT-001 local candidate evidence — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Candidate implementation, not release or native Omarchy acceptance.
 
 - Shared modular OWL: orbit-geometry.inc and orbit.inc. Quiet remains default;

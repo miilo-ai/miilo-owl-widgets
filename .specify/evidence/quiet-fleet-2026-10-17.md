@@ -1,5 +1,8 @@
 # Quiet fleet navigation — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Quiet opens with a responsive robot fleet. Selecting a system opens only its task
 list; selecting work opens existing evidence/actions. Back returns to the fleet.
 Switching to Quiet clears the system/query selection. Original robot portraits,

@@ -1,5 +1,8 @@
 # Orbit / typography reconciliation — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 Source integration combines widgets f276cee with fetched 8017401, and native
 plugin 8809802 with fetched dd5de5b. These are the source parents, not new remote
 publication claims. No installed plugin/configuration was changed.

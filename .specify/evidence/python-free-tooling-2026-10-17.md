@@ -1,5 +1,8 @@
 # Python-free presentation tooling — 2026-10-17
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 ## Scope and boundaries
 
 The runtime remains Rust plus OWL/QML. Portable repository tools use Node 22

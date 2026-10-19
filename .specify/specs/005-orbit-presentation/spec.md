@@ -1,5 +1,8 @@
 # ORBIT-001 — Quiet / Orbit presentation
 
+> Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
+
+
 Status: initial candidate implemented; native Omarchy qualification pending.
 Decision: 2026-10-17. See ../../evidence/orbit-local.md for measured scope.
 Native OWL/Omarchy first; Android parity next; web is a later adapter.

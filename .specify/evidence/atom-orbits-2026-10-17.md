@@ -1,5 +1,8 @@
 # Atom Orbit presentation checkpoint
 
+> Historical validation record. Results apply only to the revision and environment recorded below; they do not describe current release readiness.
+
+
 The two rails now use one deterministic projection and one clock for both rails,
 their soft neon strokes, and task glyphs. There is no independent particle
 simulation or lane switching. Stable provider offsets survive system filtering.

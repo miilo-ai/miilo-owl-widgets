@@ -1,5 +1,8 @@
 # Candidate implementation and handoff
 
+> Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
+
+
 Candidate: 1.4.0. Responsibility: Private local-file transport plus existing remote controls and robot rendering.
 
 ## Shared boundaries

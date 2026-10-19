@@ -258,3 +258,5 @@ The widget requires the Rust `miilo-owl` helper. First-run installation is expli
 uses a pinned official release with checksum verification, and never enrolls
 sessions automatically. See [helper disclosure and agent troubleshooting](docs/widget-store.md)
 for permissions, installation, removal, and marketplace reviewer notes.
+
+Release scope and remaining validation: [release status](docs/release-status.md).
