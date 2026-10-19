@@ -1,4 +1,4 @@
-  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "", anchored = false) {
+  component Bot(agent, s, lookX = 0, lookY = 0, slot = -1, alert = "", anchored = false, neighbors = []) {
     Canvas {
       width: s
       height: s
@@ -23,8 +23,9 @@
       let phase = (slot >= 0 ? slot : max(indexOf(actors, agent), 0)) * 0.8
       let glanceTime = (clock + max(slot, 0) * 3.7) % 17
       let glance = expressive && !unavailable && !resting && glanceTime < 2 ? pow(sin(glanceTime / 2 * 3.14159), 2) : 0
-      let eyeX = lookX * r * 0.2 * glance
-      let eyeY = lookY * r * 0.16 * glance + (wistful ? r * 0.14 : 0)
+      let neighbor = len(neighbors) > 0 ? neighbors[floor((time + max(slot, 0) * 3.7) / 17) % len(neighbors)] : {x: lookX, y: lookY}
+      let eyeX = neighbor.x * r * 0.2 * glance
+      let eyeY = neighbor.y * r * 0.16 * glance + (wistful ? r * 0.14 : 0)
       let blinking = motion && !unavailable && (clock + phase) % 5.8 < 0.16
       let wink = expressive && !blocked && !focused && !unavailable && !resting && (clock + phase) % 29 > 27.8 && (clock + phase) % 29 < 28.05
       let led = unavailable ? muted : failed || agent.health == "degraded" ? red : resting ? alpha(ink, 0.55) : ink

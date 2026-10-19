@@ -26,9 +26,39 @@ Canvas {
   renderTarget: Canvas.Image
   renderStrategy: Canvas.Cooperative
 
-  readonly property var deps: [root.draw, root.width, root.height, root.widget ? root.widget.frame : 0,
+  property bool animated: true
+  property bool dirty: true
+  function inViewport() {
+    if (!root.visible || !root.widget || !root.widget.active || width <= 0 || height <= 0) return false
+    for (var parent = root.parent; parent; parent = parent.parent) {
+      if (!parent.visible || parent.opacity === 0) return false
+      if (parent.clip || parent === root.widget) {
+        var bounds = root.mapToItem(parent, Qt.rect(0, 0, root.width, root.height))
+        if (bounds.x + bounds.width <= 0 || bounds.y + bounds.height <= 0
+            || bounds.x >= parent.width || bounds.y >= parent.height) return false
+      }
+    }
+    return true
+  }
+  // Track ancestor geometry so static widgets resume on scroll without a clock.
+  readonly property var viewportGeometry: {
+    var geometry = [root.x, root.y, root.width, root.height]
+    for (var item = root.parent; item; item = item.parent)
+      geometry.push(item.x, item.y, item.width, item.height, item.scale, item.rotation,
+                    item.clip, item.visible, item.opacity)
+    return geometry
+  }
+  onViewportGeometryChanged: root.schedule()
+  function schedule() { if ((root.dirty || root.animated) && root.inViewport()) root.requestPaint() }
+  readonly property var deps: [root.draw, root.width, root.height,
     root.widget ? root.widget.palette : null]
-  onDepsChanged: root.requestPaint()
+  onDepsChanged: { root.dirty = true; root.animated = true; root.schedule() }
+  onVisibleChanged: if (visible) root.schedule()
+  Connections {
+    target: root.widget
+    function onFrameChanged() { root.schedule() }
+    function onActiveChanged() { root.schedule() }
+  }
 
   // Images a drawing call names load asynchronously; the frame that asked
   // for one skips it and the next frame, after onImageLoaded, has it.
@@ -44,11 +74,14 @@ Canvas {
   onImageLoaded: root.requestPaint()
 
   onPaint: {
+    if (!root.inViewport()) return
     var ctx = getContext("2d")
     ctx.reset()
     if (!root.draw || width <= 0 || height <= 0) return
     ctx.scale(root.dp, root.dp)
     var ops = root.draw(width / root.dp, height / root.dp)
+    root.animated = root.draw.readsTime !== false
+    root.dirty = false
     L.paint(ctx, ops, { foreground: root.widget ? root.widget.ink("foreground") : "white" },
       root.widget ? root.widget.sansFamily : "sans-serif", root.images)
   }

@@ -55,7 +55,6 @@
             {x: 0, y: -1, valid: slot >= columns},
             {x: 0, y: 1, valid: slot + columns < visibleCount}
           ].filter(n => n.valid)
-          let neighbor = len(neighbors) > 0 ? neighbors[floor((time + slot * 3.7) / 17) % len(neighbors)] : {x: 0, y: 0}
 
           let owned = live.filter(w => contains(w._actorKeys ?? [], a._key))
           let errors = any(owned, w => w.lifecycle == "failed") || contains(["failed", "error"], a.status)
@@ -70,7 +69,7 @@
               width: robotSize + 10
               height: max(24, (robotSize + 10) * 0.82)
               align: center
-              CompactOrbit { agent: a; items: owned; s: robotSize + 10; lookX: neighbor.x; lookY: neighbor.y; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
+              CompactOrbit { agent: a; items: owned; s: robotSize + 10; neighbors: neighbors; slot: slot; offline: offline; alert: offline ? "" : errors ? "!!" : warning ? "?!" : "" }
               Box {
                 width: max(1, robotSize - 6)
                 height: max(1, robotSize * 0.92 - 6)
