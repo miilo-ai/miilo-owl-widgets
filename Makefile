@@ -3,6 +3,7 @@ assemble:
 	cargo xtask assemble
 
 test:
+	node --test tools/plain-text.test.cjs
 	node --test tools/install-helper.test.cjs
 	node tools/check-no-python.cjs
 	node --test tools/no-python.test.cjs
@@ -36,9 +37,13 @@ check-desktop:
 check-keyboard:
 	tools/test-desktop-keyboard.sh
 
-check-typography:
+check-typography: check-plain-text
 	bash tools/test-typography.sh
 
 .PHONY: render-design
 render-design:
 	node tools/render-orbit.cjs
+
+.PHONY: check-plain-text
+check-plain-text:
+	node tools/test-plain-text.cjs tests/desktop/TestPlainText.qml

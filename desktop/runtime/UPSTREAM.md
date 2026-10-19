@@ -20,3 +20,8 @@ Miilo-authored additions. Android Compose/Omalauncher is a separate renderer and
 requires its own host integration and on-device acceptance.
 Canvas explicitly selects Canvas.Image: Qt 6 ignores FramebufferObject. This
 corrects the previous GPU-path comment; native performance still needs measurement.
+
+Security patch: all runtime Text labels, input placeholders and terminal output
+use Text.PlainText. Provider-controlled strings remain literal and cannot cause
+inline image fetches through automatic rich-text detection. See
+patches/plain-text-labels.patch for the renderer changes.

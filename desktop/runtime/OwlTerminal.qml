@@ -128,6 +128,7 @@ Rectangle {
       required property int index
       width: output.width
       text: root.lines[index] || " "
+      textFormat: Text.PlainText
       color: root.widget ? root.widget.ink("foreground") : "white"
       font: metrics.font
       wrapMode: Text.WrapAnywhere
@@ -156,6 +157,7 @@ Rectangle {
         delegate: Text {
           required property var modelData
           text: modelData.label
+          textFormat: Text.PlainText
           color: root.widget ? root.widget.ink("accent") : "white"
           font.family: root.widget ? root.widget.monoFamily : "monospace"
           font.pixelSize: root.fontSize
@@ -194,6 +196,7 @@ Rectangle {
         anchors.fill: parent
         visible: field.text === "" && !field.activeFocus
         text: "$ tap to type"
+        textFormat: Text.PlainText
         color: root.widget ? root.widget.ink("muted") : "grey"
         font: field.font
       }

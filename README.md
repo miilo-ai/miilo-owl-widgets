@@ -260,3 +260,5 @@ sessions automatically. See [helper disclosure and agent troubleshooting](docs/w
 for permissions, installation, removal, and marketplace reviewer notes.
 
 Release scope and remaining validation: [release status](docs/release-status.md).
+
+Native integration rules: [Omarchy integration guide](docs/omarchy-integration-guide.md), including plain-text rendering and renderer security checks.
