@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {spawnSync}=require('node:child_process');
 const script=path.resolve('tools/install-helper.sh');
+const version=fs.readFileSync('helper/Cargo.toml','utf8').match(/^version = "([^"]+)"/m)[1];
 for(const scenario of ['success','checksum','download','existing','architecture'])test('helper installer: '+scenario,()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'miilo-install-'));
  try{
@@ -12,10 +13,10 @@ for(const scenario of ['success','checksum','download','existing','architecture'
   write('uname',scenario==='architecture'?'echo x86_64':'if [ "$1" = -s ]; then echo Linux; else echo aarch64; fi');
   write('curl',`[ "$SCENARIO" != download ] || exit 22\nfor arg; do case "$arg" in https:*) url="$arg";; esac; last="$arg"; done\ncase "$url" in *SHA256SUMS) cp "$ASSETS/SHA256SUMS" "$last";; *) cp "$ASSETS/bundle.tgz" "$last";; esac`);
   fs.mkdirSync(path.join(assets,'bin/linux-aarch64'),{recursive:true});
-  fs.writeFileSync(path.join(assets,'bin/linux-aarch64/miilo-owl'),'#!/bin/sh\necho "miilo-owl 1.6.2"\n',{mode:0o755});
+  fs.writeFileSync(path.join(assets,'bin/linux-aarch64/miilo-owl'),`#!/bin/sh\necho "miilo-owl ${version}"\n`,{mode:0o755});
   assert.equal(spawnSync('tar',['-czf',path.join(assets,'bundle.tgz'),'-C',assets,'./bin']).status,0);
   const hash=require('node:crypto').createHash('sha256').update(fs.readFileSync(path.join(assets,'bundle.tgz'))).digest('hex');
-  fs.writeFileSync(path.join(assets,'SHA256SUMS'),`${scenario==='checksum'?'0'.repeat(64):hash}  miilo-owl-widgets-1.6.2-linux-aarch64.tar.gz\n`);
+  fs.writeFileSync(path.join(assets,'SHA256SUMS'),`${scenario==='checksum'?'0'.repeat(64):hash}  miilo-owl-widgets-${version}-linux-aarch64.tar.gz\n`);
   const destination=path.join(home,'.local/bin/miilo-owl');
   if(scenario==='existing'){fs.mkdirSync(path.dirname(destination),{recursive:true});fs.writeFileSync(destination,'preserve');}
   const result=spawnSync('bash',[script],{env:{...process.env,HOME:home,PATH:bin+':'+process.env.PATH,ASSETS:assets,SCENARIO:scenario},encoding:'utf8'});

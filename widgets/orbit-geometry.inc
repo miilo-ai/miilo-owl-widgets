@@ -1,6 +1,7 @@
   // Deterministic atom planes: the robot occupies an always-open nucleus.
+  // 32 segments per half keep chord error below 0.13 dp at the largest preset.
   // Unit samples are immutable; only the projected axes change each frame.
-  let orbitHalfRails = [-1, 1].map(side => range(65).map(i => {x: cos((side == 1 ? i : i + 64) * pi / 64), y: sin((side == 1 ? i : i + 64) * pi / 64)}))
+  let orbitHalfRails = [-1, 1].map(side => range(33).map(i => {x: cos((side == 1 ? i : i + 32) * pi / 32), y: sin((side == 1 ? i : i + 32) * pi / 32)}))
 
   component OrbitField(items, anchor, offline, energized, slot = 0, alert = "", fit = 0.85, fieldSize = 164, spread = 1, lookX = 0, lookY = 0, neighbors = []) {
     let dormant = !energized && contains(["idle", "resting", "ready"], anchor.status)

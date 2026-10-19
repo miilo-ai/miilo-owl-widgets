@@ -69,6 +69,8 @@ Item {
   property int generation: 0
   // Bumped every animation frame.
   property int frame: 0
+  // Bound CPU painting independently of the wall-clock animation speed.
+  property int animationFramesPerSecond: 30
 
   readonly property string name: root.program ? root.program.name : root.fileName.replace(/\.owl$/, "")
   readonly property var size: root.program && root.program.size ? root.program.size : [3, 2]
@@ -283,8 +285,14 @@ Item {
   // `time` is seconds since the frame clock started, like the launcher's,
   // which a widget is written to expect: it restarts when the board reopens.
   FrameAnimation {
+    property real nextPaint: 0
+    onRunningChanged: nextPaint = 0
     running: root.active && !!root.program && root.program.animated && root.visible
     onTriggered: {
+      if (elapsedTime + 0.0005 < nextPaint) return
+      var interval = 1 / Math.max(1, Math.min(60, root.animationFramesPerSecond))
+      nextPaint += interval
+      if (nextPaint < elapsedTime) nextPaint = elapsedTime + interval
       root.instance.frame(elapsedTime)
       root.frame++
       // Canvas-local clocks invalidate lazily without rebuilding static layout.

@@ -66,3 +66,8 @@ never executes Explain, approvals, enrollment or a real provider command.
 
 These captures prove renderer behavior only. Actual Omarchy shell lifecycle,
 font/scaling and physical Android interaction remain separate acceptance checks.
+
+The shared Qt host defaults to a 30 FPS animation paint budget. It advances using
+elapsed time, so orbit speed is independent of skipped paint ticks. Hosts can set
+`animationFramesPerSecond` between 1 and 60. Source refresh and input invalidation
+remain immediate. The Android launcher has its own frame clock.

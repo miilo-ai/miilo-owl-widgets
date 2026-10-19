@@ -73,6 +73,14 @@ Item {
             staticCanvas.width=150;wait(80);
             verify(root.staticDraws>still,"Static resize must repaint");
         }
+        function test_paint_budget_preserves_wall_clock_speed() {
+            tryVerify(()=>subject.instance!==null && subject.tree!==null);
+            var frame=subject.frame, x=root.phaseX(), start=Date.now();
+            wait(1000);
+            var seconds=(Date.now()-start)/1000, frames=subject.frame-frame;
+            verify(frames>=15 && frames<=seconds*30+2,"Paint budget: "+frames);
+            verify(Math.abs((root.phaseX()-x)-seconds*15)<1.5,"Clock must follow elapsed time");
+        }
         function test_component_clock_advances_without_source_refresh() {
             tryVerify(()=>subject.instance!==null && subject.tree!==null);
             console.log("CLOCK_READY",subject.error,subject.problems,subject.tree.readsTime);
