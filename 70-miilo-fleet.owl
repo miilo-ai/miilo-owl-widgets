@@ -1,5 +1,5 @@
 widget "miilo" {
-  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.4.0"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.5.0"; license: "MIT"; category: "dev" }
   page: 1
   order: 7
   size: 3x2
