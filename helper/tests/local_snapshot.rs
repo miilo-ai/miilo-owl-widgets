@@ -15,7 +15,9 @@ fn private(path: &std::path::Path, value: &Value) {
 #[test]
 fn standalone_cache_connects_without_http_preserves_remote_and_fails_stale() {
     use sha2::{Digest, Sha256};
-    for kind in ["codex", "cursor", "claude", "opencode", "devin"] {
+    for kind in [
+        "codex", "cursor", "claude", "opencode", "devin", "grok", "hermes",
+    ] {
         let temp = tempfile::tempdir().unwrap();
         let store = store(temp.path(), vec![endpoint()]);
         let cache = temp.path().join("snapshot.json");

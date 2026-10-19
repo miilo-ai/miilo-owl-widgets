@@ -13,10 +13,14 @@ pub fn detect(home: &Path, search_path: &[PathBuf]) -> Value {
         ("devin","Devin CLI",vec![home.join(".devin"),home.join(".config/devin"),home.join(".local/share/devin/cli")],true),
         ("claude","Claude Code",vec![home.join(".claude")],true),
         ("opencode","OpenCode",vec![home.join(".config/opencode"),home.join(".local/share/opencode")],true),
+        ("grok","Grok CLI",vec![home.join(".grok")],true),
+        ("hermes","Hermes",vec![home.join(".hermes")],true),
     ].into_iter().map(|(id,name,mut paths,supported)|{
         if id=="codex" && let Some(path)=std::env::var_os("CODEX_HOME") {paths.push(path.into());}
         if id=="cursor" && let Some(path)=std::env::var_os("MIILO_CURSOR_PROJECTS") {paths.push(path.into());}
         if id=="claude" && let Some(path)=std::env::var_os("CLAUDE_CONFIG_DIR") {paths.push(path.into());}
+        if id=="grok" && let Some(path)=std::env::var_os("GROK_HOME") {paths.push(path.into());}
+        if id=="hermes" && let Some(path)=std::env::var_os("HERMES_HOME") {paths.push(path.into());}
         if matches!(id,"opencode"|"devin") && let Some(data)=std::env::var_os("XDG_DATA_HOME") {paths.push(PathBuf::from(data).join(if id=="opencode"{"opencode"}else{"devin/cli"}));}
         let folders:Vec<_>=paths.into_iter().filter(|path|path.is_dir()).collect();
         let executable=search_path.iter().any(|directory| fs::metadata(directory.join(if id=="claude"{"claude"}else{id})).is_ok_and(|metadata|metadata.is_file() && metadata.permissions().mode()&0o111!=0));

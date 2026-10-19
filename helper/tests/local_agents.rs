@@ -32,6 +32,8 @@ fn detects_known_folders_and_executable_commands_without_reading_contents() {
     assert_eq!(agent("claude")["observationSupported"], true);
     assert_eq!(agent("opencode")["found"], true);
     assert_eq!(agent("opencode")["observationSupported"], true);
+    assert_eq!(agent("grok")["observationSupported"], true);
+    assert_eq!(agent("hermes")["observationSupported"], true);
     assert_eq!(agent("claude")["found"], false);
     assert_eq!(result["metadataOnly"], true);
     assert!(!result.to_string().contains("auth.json"));
