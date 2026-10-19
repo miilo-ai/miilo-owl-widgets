@@ -98,42 +98,42 @@
     Column {
       scroll: true
       gap: 10
-      Setup { }
-      if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
-      if setupOpen && setupSection != "chat" { RobotColors { } }
-      SetupTerminal { }
-      if focused != null {
-        WorkDetail { }
-      } else if actor != null {
-        Bot { agent: actor; s: 48 }
-        Text { text: actor.name; style: body; maxLines: 1 }
-        Flow {
-          Button { text: renameOpen ? "Cancel name" : "Name"; onTap: renameOpen = !renameOpen }
-        }
-        if renameOpen && !requestPending {
-          Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
-        }
-        let owned = works.filter(w => w.providerId == actor.providerId && contains(w._actorKeys ?? [], actor._key))
-        WorkRows { list: owned }
-        if len(owned) == 0 { Text { text: "No assigned work reported"; style: small; color: muted } }
-        WorkDetail { }
-      } else {
-        let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
-        let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
-        WorkViewToolbar { count: len(actionable) }
-        if observatoryView == "orbit" && expandedSystem != "" && any(provs, p => p.id == expandedSystem) {
-          QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
-        } else if observatoryView == "orbit" {
-          OrbitView { list: visible }
-        } else if needle != "" {
-          let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
-          if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
-          WorkRows { list: visible; showSystem: true }
-          if len(visible) == 0 && (needsOnly || len(matches) == 0) { Text { text: "No matches"; style: small; color: muted } }
-        } else if expandedSystem == "" || !any(provs, p => p.id == expandedSystem) {
-          QuietFleet { list: visible }
+      if setupOpen { SettingsPage { } } else {
+        Setup { }
+        if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
+        if focused != null {
+          WorkDetail { }
+        } else if actor != null {
+          Bot { agent: actor; s: 48 }
+          Text { text: actor.name; style: body; maxLines: 1 }
+          Flow {
+            Button { text: renameOpen ? "Cancel name" : "Name"; onTap: renameOpen = !renameOpen }
+          }
+          if renameOpen && !requestPending {
+            Input { text: actor.name; placeholder: "Display name"; onSubmit: { requestPending = true; replyWork = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl name-agent ${sh(actor._key)} ${sh(trim(value))}"); reply = "pending"; renameOpen = false } }
+          }
+          let owned = works.filter(w => w.providerId == actor.providerId && contains(w._actorKeys ?? [], actor._key))
+          WorkRows { list: owned }
+          if len(owned) == 0 { Text { text: "No assigned work reported"; style: small; color: muted } }
+          WorkDetail { }
         } else {
-          QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
+          let actionable = works.filter(w => w.attention != "none" || any(attention, a => a._workKey == w._key))
+          let visible = (needle == "" ? live : searched).filter(w => !needsOnly || any(actionable, a => a._key == w._key)).sortBy(w => any(actionable, a => a._key == w._key) ? 0 : w.lifecycle == "active" ? 1 : 2)
+          WorkViewToolbar { count: len(actionable) }
+          if observatoryView == "orbit" && expandedSystem != "" && any(provs, p => p.id == expandedSystem) {
+            QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
+          } else if observatoryView == "orbit" {
+            OrbitView { list: visible }
+          } else if needle != "" {
+            let matches = actors.filter(a => contains(lower("${a.name} ${a.id}"), needle))
+            if !needsOnly && len(matches) > 0 { AgentRows { list: matches } }
+            WorkRows { list: visible; showSystem: true }
+            if len(visible) == 0 && (needsOnly || len(matches) == 0) { Text { text: "No matches"; style: small; color: muted } }
+          } else if expandedSystem == "" || !any(provs, p => p.id == expandedSystem) {
+            QuietFleet { list: visible }
+          } else {
+            QuietSystemTasks { provider: find(provs, p => p.id == expandedSystem); list: visible }
+          }
         }
       }
     }

@@ -152,8 +152,8 @@ for(const [width,columns]of [[360,1],[440,1],[540,2],[600,2],[684,3],[900,3],[14
 }
 assert.equal(scene({count:1,screenWidth:1400}).render(1).find(n=>n.kind==='Grid').p.width,330,'One system must not stretch across the desktop');
 
-// Compact desktop rows retain full touch targets on Android.
-for(const [linux,height]of [[true,22],[false,44]]) {
+// A Linux environment can be the Android PRoot; both retain touch targets.
+for(const [linux,height]of [[true,44],[false,44]]) {
  const nodes=scene({count:3,work:3,screenWidth:684,linux}).render(1);
  const rows=nodes.filter(n=>n.kind==='Row'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text?.startsWith('Task p')));
  assert.equal(rows.length,9);assert(rows.every(n=>n.p.height===height));

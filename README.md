@@ -15,6 +15,12 @@ Application logic and device installation use Rust. Assembly and release orchest
 
 The Linux dashboard, native Omarchy bar and desktop tile, and existing-session connection flow are documented in [Miilo on Linux](docs/desktop.md).
 
+Helper 1.5.0 recognizes Codex, Claude Code, Cursor, OpenCode, Devin CLI, Grok CLI
+and Hermes. Local observation requires CLI 0.3.0 or later on the computer that
+owns the selected sessions. See the CLI's [compatibility matrix](https://github.com/miilo-ai/miilo-cli/blob/main/docs/AGENT_COMPATIBILITY.md)
+for tested versions and boundaries. Local sessions are observation-only; installing
+this helper does not sign in to an agent or silently enroll its sessions.
+
 | Widget | Collapsed | Expanded |
 | --- | --- | --- |
 | Miilo · 3×2 | Responsive animated robot grid, per-system colors, and attention marks | Search and filter systems/agents, inspect tasks, evidence and diffs, and confirm advertised actions |
@@ -148,7 +154,9 @@ Validation evidence and remaining device/provider checks: [native helper validat
 
 Miilo Feed is the primary view: expand a system to browse five work items at a time, filter Needs you across systems, search work or agents, and open a task for evidence and confirmed actions. Animated robots remain visible above each expanded system's work and act as tabs that filter workflows by assigned agent. All work includes unassigned tasks; agent details remain available on demand. The installer exposes only Miilo and preserves older focused widgets as .disabled files. The inline toolbar uses ← for Back, ⚙ for setup, and ↻ for refresh. Labels on consequential actions remain explicit.
 
-Controls default to right-handed placement. Open ⚙ and tap Controls: right hand to switch to left-hand placement; the toolbar and work-list More control follow that preference. Setup/refresh/back use borderless icons with 44 dp touch areas. Omalauncher's title/close row is launcher-owned and has no widget action slot, so icons sit directly below it. Robot tabs replace the redundant Agents count button for small teams.
+Controls default to right-handed placement. Open ⚙ → Appearance and tap Right handed to switch to left-hand placement; the toolbar and work-list More control follow that preference. Setup/refresh/back use borderless icons in 44 × 48 dp touch areas. Omalauncher's title/close row is launcher-owned and has no widget action slot, so icons sit directly below it. Robot tabs replace the redundant Agents count button for small teams.
+
+The settings menu opens dedicated Appearance, Connections, Chat model and Systems pages. Task content and search stay hidden while settings are open. Connections and Chat model start their setup terminal only after Manage connections or Configure chat model is selected. Done returns to the previous task or view.
 
 The collapsed Miilo tile is robot-first: no task titles or workflow progress bar. Theme-colored `?!` marks actionable work and tight red `!!` marks failures; a muted connection marker distinguishes reported offline agents. Activity is conveyed through robot animation without a bulb. Resting agents retain closed eyes and drifting Zs. Tapping a robot opens its assigned workflows. Additional agents remain discoverable in the expanded view. New installations default to a compact 3×2 tile; existing user sizing is retained by the launcher.
 
@@ -243,3 +251,10 @@ Expanded native design: [Compact and Detail](docs/orbit.md), including local Qt
 rendering and remaining native acceptance gates.
 
 Development and preview tooling: [toolchain guide](docs/development-toolchain.md).
+
+## Omalauncher store setup
+
+The widget requires the Rust `miilo-owl` helper. First-run installation is explicit,
+uses a pinned official release with checksum verification, and never enrolls
+sessions automatically. See [helper disclosure and agent troubleshooting](docs/widget-store.md)
+for permissions, installation, removal, and marketplace reviewer notes.

@@ -22,14 +22,14 @@ explains where each component runs and the separate credential boundaries.
    Test reachability from Omalauncher's Linux environment, not only its browser.
 2. Install the verified ARM64 Linux widget bundle inside that environment, following
    the README. The installer does not discover private server credentials.
-3. Open **Set up** (or run `miilo-owl setup`), add a named observation endpoint,
+3. Open **Settings → Connections → Manage connections** (or run `miilo-owl setup`), add a named observation endpoint,
    and enter its Miilo bearer token privately. A Codex login or model API key is
    not a replacement for that token.
 4. Select returned providers explicitly. An empty list may mean no provider was
    registered upstream; a failed/unauthorized response is not empty success.
 5. Keep actions disabled initially. Open a system and verify a natural source
    update and freshness before considering provider-supported actions.
-6. Configure **Chat model** separately if desired. Its OpenAI-compatible `/v1`
+6. Configure **Settings → Chat model → Configure chat model** separately if desired. Its OpenAI-compatible `/v1`
    URL and model credential belong in chat setup, not observation connections.
 7. Report the installed versions, selected source, connectivity result and actual
    update. Missing access is a handoff to the operator, not an instruction to

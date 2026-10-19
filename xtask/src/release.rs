@@ -409,6 +409,12 @@ mod tests {
             .unwrap()
         }
         let release = workflow("release.yml");
+        let auto = workflow("version.yml");
+        let policy = &auto["jobs"]["candidate"]["steps"];
+        let policy_text = format!("{policy:?}");
+        assert!(policy_text.contains("github.event_name == 'push'"));
+        assert!(policy_text.contains("refs/heads/main"));
+        assert!(policy_text.contains("MIILO_RELEASE_ENABLED != 'false'"));
         let jobs = &release["jobs"];
         assert!(format!("{:?}", jobs["publication-gate"]["needs"]).contains("qualify"));
         assert!(format!("{:?}", jobs["build"]["needs"]).contains("publication-gate"));

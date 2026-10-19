@@ -48,19 +48,20 @@
     Column {
       scroll: true
       gap: 10
-      Setup { }
-      if focused == null && actor == null { Search { placeholder: "Search work or systems" } }
-      SetupTerminal { }
-      if focused != null {
-        WorkDetail { }
-      } else {
-        if needle != "" {
-          Text { text: "${len(searched)} matches"; style: small; color: muted }
-          WorkRows { list: searched; showSystem: true }
-          if len(searched) == 0 { Text { text: "No matching work"; style: small; color: muted } }
+      if setupOpen { SettingsPage { } } else {
+        Setup { }
+        if focused == null && actor == null { Search { placeholder: "Search work or systems" } }
+        if focused != null {
+          WorkDetail { }
         } else {
-          WorkGroups { list: live }
-          if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
+          if needle != "" {
+            Text { text: "${len(searched)} matches"; style: small; color: muted }
+            WorkRows { list: searched; showSystem: true }
+            if len(searched) == 0 { Text { text: "No matching work"; style: small; color: muted } }
+          } else {
+            WorkGroups { list: live }
+            if len(live) == 0 { Text { text: issueCount > 0 ? "Check connection" : "No work in flight"; style: small; color: muted } }
+          }
         }
       }
     }

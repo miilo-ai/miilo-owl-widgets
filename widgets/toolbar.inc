@@ -25,16 +25,16 @@
     Row {
       gap: 4
       align: center
-      Box { width: 44; height: toolbarHeight; align: center; onTap: setupOpen = !setupOpen
+      Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "menu"; setupConfiguring = false; systemsOpen = false }
         ToolbarIcon { kind: "settings" }
       }
       if !requestPending {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("miilo-owl refresh"); reply = "pending" }
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { requestPending = true; replyWork = ""; replyRevision = ""; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl refresh"); reply = "pending" }
           ToolbarIcon { kind: "refresh" }
         }
       }
       if len(allProviders) > 1 {
-        Box { width: 44; height: toolbarHeight; align: center; onTap: systemsOpen = !systemsOpen
+        Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "filters"; setupConfiguring = false; systemsOpen = false }
           ToolbarIcon { kind: "menu" }
         }
       }

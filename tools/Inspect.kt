@@ -43,6 +43,7 @@ private class FixtureHost(val program: Program, fixture: String, val width: Doub
         if (scenario == "preview") state("previewRobots", Bool(true))
         if (scenario == "colors") {
             state("setupOpen", Bool(true))
+            state("setupSection", Str("appearance"))
             state("colorAgent", first("actors")?.fields?.get("_key") ?: Str(""))
         }
         if (scenario == "needs") state("needsOnly", Bool(true))
