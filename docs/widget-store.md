@@ -16,7 +16,7 @@ profile edits, or credential changes occur. Existing helpers are not overwritten
 The checksum detects corrupted or mismatched assets; it is not an independent
 signature because the archive and checksum come from the same release account.
 Return and refresh after success. Ensure `~/.local/bin` is on the launcher PATH.
-Version 1.6.0 must be published with its archive and SHA256SUMS before this workflow
+Version 1.6.1 must be published with its archive and SHA256SUMS before this workflow
 can install it. Missing release assets fail without installing anything.
 
 To remove the helper, delete `~/.local/bin/miilo-owl` after stopping its use.

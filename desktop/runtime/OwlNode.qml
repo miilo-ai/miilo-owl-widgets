@@ -541,6 +541,7 @@ Item {
         id: label
         anchors.centerIn: parent
         text: root.p.text === undefined || root.p.text === null ? "…" : String(root.p.text)
+        textFormat: Text.PlainText
         color: root.p.color || (root.widget ? root.widget.ink("accent") : "white")
         font.pixelSize: root.typography.size("body")
         font.family: root.family("mono")
@@ -714,6 +715,7 @@ Item {
           Text {
             anchors.centerIn: parent
             text: "Import local agents"
+            textFormat: Text.PlainText
             color: root.widget.ink("foreground")
           }
           MouseArea { anchors.fill: parent; onClicked: root.widget.configureLocal() }
@@ -814,6 +816,7 @@ Item {
           verticalAlignment: Text.AlignVCenter
           visible: field.text === ""
           text: root.p.placeholder || ""
+          textFormat: Text.PlainText
           color: root.widget ? root.widget.ink("muted") : "grey"
           font: field.font
         }
