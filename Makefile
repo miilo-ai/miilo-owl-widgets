@@ -3,6 +3,7 @@ assemble:
 	cargo xtask assemble
 
 test:
+	node --test tools/install-helper.test.cjs
 	node tools/check-no-python.cjs
 	node --test tools/no-python.test.cjs
 	node tools/check-architecture.cjs
@@ -30,6 +31,7 @@ check-desktop:
 	node tools/test-compact.cjs
 	node tools/test-session-visibility.cjs
 	node tools/test-mobile-settings.cjs
+	node tools/test-helper-onboarding.cjs
 
 check-keyboard:
 	tools/test-desktop-keyboard.sh

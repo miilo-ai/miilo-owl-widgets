@@ -245,3 +245,10 @@ Expanded native design: [Compact and Detail](docs/orbit.md), including local Qt
 rendering and remaining native acceptance gates.
 
 Development and preview tooling: [toolchain guide](docs/development-toolchain.md).
+
+## Omalauncher store setup
+
+The widget requires the Rust `miilo-owl` helper. First-run installation is explicit,
+uses a pinned official release with checksum verification, and never enrolls
+sessions automatically. See [helper disclosure and agent troubleshooting](docs/widget-store.md)
+for permissions, installation, removal, and marketplace reviewer notes.

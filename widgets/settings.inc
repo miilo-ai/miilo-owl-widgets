@@ -24,7 +24,9 @@
       Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
       Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
-    if setupSection == "menu" {
+    if feed.code == 127 {
+      HelperInstall { }
+    } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
@@ -56,8 +58,8 @@
     } else {
       Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
       if setupConfiguring {
-        if setupSection == "chat" { Terminal { fontSize: 12; command: "miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
-        else { Terminal { fontSize: 12; command: "miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        if setupSection == "chat" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        else { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
         Text { text: setupSection == "chat" ? "Follow the prompts, then tap Done." : "Type q then Enter to finish, or tap Done."; fontSize: 11; color: muted; maxLines: 2 }
       } else {
         if setupSection == "systems" {

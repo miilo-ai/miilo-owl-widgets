@@ -62,12 +62,18 @@ fn assemble() -> Result<()> {
             "widget \"{title}\" {{\n  meta {{ owl: 6; description: \"{description}\"; version: \"{version}\"; license: \"MIT\"; category: \"dev\" }}\n  page: 1\n  order: {}\n  size: 3x2\n  minSize: 3x2\n  padding: 8\n",
             index - 63
         );
+        text.push_str("  requires { pacman: [\"bash\", \"curl\", \"coreutils\", \"tar\", \"gawk\", \"grep\", \"gzip\"] }\n");
+        let installer = fs::read_to_string(root.join("tools/install-helper.sh"))?;
+        text.push_str(&format!(
+            "  let helperInstallCommand = \"\"\"{installer}\"\"\"\n"
+        ));
         let mut parts = vec![
             "appearance",
             "common",
             "toolbar",
             "orbit-status",
             "colors",
+            "helper-install",
             "setup",
             "settings",
             "progress",
