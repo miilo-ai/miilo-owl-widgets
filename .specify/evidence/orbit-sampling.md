@@ -56,3 +56,25 @@ replacement. All thirteen explicitly selected sessions remained current.
 Rendering remains a significant CPU cost. These changes improve it; they do not
 establish a low-power budget for large fleets or certify physical Android behavior.
 The separate observer wakeup correction reduced its idle CPU below 1% of a core.
+
+## Android emulator acceptance
+
+Validated the generated 1.6.3 widget in the Android 14 ARM64 preview launcher.
+A private on-device backup preserved its original widget, preferences and helper
+configuration/credentials. The test used four explicitly labeled read-only sample
+systems; no agent work, real provider actions or model requests were started.
+
+- Four robots rendered side by side in the home widget; expanded Compact used
+  the existing responsive 3+1 arrangement and Detail used its phone card layout.
+- Opened the review system and task, inspected evidence and colored file changes,
+  returned through both in-widget Back steps, and verified Needs you filtering.
+- Opened isolated Settings and Appearance; Full/Reduced/Off, personality, pace
+  and per-robot color controls remained available. No saved choice was changed.
+- A silent eight-second Detail capture yielded 32 unique cropped orbit frames at
+  four samples per second, with no adjacent duplicate samples. This demonstrates
+  motion across the sampled interval, not 60 FPS or physical-phone performance.
+- Settings Done and Android Back returned to the fleet and launcher respectively.
+- Restored the original widget/preferences byte for byte and verified helper
+  configuration/credentials against the private backup before restarting.
+
+The Qt-specific paint budget is covered by native Qt tests, not this Android run.
