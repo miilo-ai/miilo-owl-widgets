@@ -28,14 +28,14 @@ const near=(a,b,label)=>assert(Math.abs(a-b)<1e-7,`${label}: ${a} != ${b}`);
 const projection=scene({count:3,work:3});
 for(const expected of golden.frames) {
     const ops=projection.draw(expected.time)[expected.slot];
-    const rails=ops.filter(op=>op.op==='path' && op.points.length===65);
+    const rails=ops.filter(op=>op.op==='path' && op.points.length===33);
     assert.equal(rails.length,16,'Four depth halves each have a core and three glow strokes');
     expected.rails.forEach((rail,index)=>{
         const group=rails.slice(index*4,index*4+4);
         group.forEach(op=>assert.deepEqual(op.points,group[0].points,'Glow and core share geometry'));
         for(const p of rail.points) {
-            near(group[0].points[p.index][0],170+(p.x-160)*.85,'Rail x');
-            near(group[0].points[p.index][1],82+(p.y-96)*.85,'Rail y');
+            near(group[0].points[p.index / 2][0],170+(p.x-160)*.85,'Rail x');
+            near(group[0].points[p.index / 2][1],82+(p.y-96)*.85,'Rail y');
         }
         for(const [x,y] of group[0].points) {
             assert(x>=0&&x<=340&&y>=0&&y<=164,'Ring bounds');
@@ -51,7 +51,7 @@ for(const expected of golden.frames) {
         near(orb.args[2],4.5*p.scale*.85,'Orb depth scale');
     }
 }
-const pathsAt=t=>scene({work:3}).draw(t)[0].filter(op=>op.op==='path'&&op.points.length===65);
+const pathsAt=t=>scene({work:3}).draw(t)[0].filter(op=>op.op==='path'&&op.points.length===33);
 for(const lane of [0,1]) assert.notDeepEqual(pathsAt(.2)[lane*4].points,pathsAt(5)[lane*4].points,'Both planes move');
 const dormant=scene({work:0});dormant.data.snapshot.actors.forEach(a=>a.status='resting');dormant.update();
 assert.deepEqual(dormant.draw(.2),dormant.draw(9),'Dormant rings stop');

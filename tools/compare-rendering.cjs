@@ -12,7 +12,15 @@ function scene(Owl,file,view){
 }
 function* walk(n){for(const c of n.c||n.children||[]){yield c;yield*walk(c);}}
 function operations(tree){return [...walk(tree)].filter(n=>n.kind==='Canvas').map(c=>c.draw(c.p.width||260,c.p.height||164));}
-function equal(a,b){if(typeof a==='number'&&typeof b==='number'){assert(Math.abs(a-b)<1e-9,`${a} != ${b}`);return;}
+let maximumRailError=0;
+function equal(a,b){
+ if(process.argv.includes("--subpixel-rails") && Array.isArray(a) && Array.isArray(b) && a.length===65 && b.length===33){
+  b.forEach((point,i)=>equal(a[i*2],point));
+  for(let i=0;i<32;i++){const old=a[i*2+1],left=b[i],right=b[i+1];
+   const error=Math.hypot(old[0]-(left[0]+right[0])/2,old[1]-(left[1]+right[1])/2);
+   assert(error<0.13,`Rail chord error ${error} exceeds 0.13 dp`);maximumRailError=Math.max(maximumRailError,error);}
+  return;
+ }if(typeof a==='number'&&typeof b==='number'){assert(Math.abs(a-b)<1e-9,`${a} != ${b}`);return;}
  if(a&&b&&typeof a==='object'&&typeof b==='object'){assert.deepEqual(Object.keys(a),Object.keys(b));for(const k of Object.keys(a))equal(a[k],b[k]);return;}assert.equal(a,b);}
 assert(process.argv[2]&&process.argv[3],'Usage: node tools/compare-rendering.cjs BASELINE_RUNTIME BASELINE_WIDGET');
 const old=load(process.argv[2]),current=load(path.join(root,'desktop/runtime/Owl.js'));let comparisons=0;
@@ -26,4 +34,4 @@ for(const view of ['quiet','orbit'])for(const expanded of [false,true]){
  }
  assert.deepEqual(a.errors,[]);assert.deepEqual(b.errors,[]);
 }
-console.log(`${comparisons} canvas comparisons matched the baseline across modes, states and clock phases (numeric tolerance 1e-9).`);
+console.log(`${comparisons} canvas comparisons matched across modes, states and clock phases; retained geometry tolerance 1e-9, maximum rail chord error ${maximumRailError.toFixed(4)} dp.`);
