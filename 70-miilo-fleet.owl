@@ -56,14 +56,14 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     Flow {
       gap: 6
       for option in ["calm", "expressive"] {
-        Button { height: 44; text: option == "calm" ? "Calm" : "Expressive"; background: alpha(accent, robotPersonality == option ? 0.14 : 0); color: robotPersonality == option ? accent : muted; onTap: robotPersonality = option }
+        Button { height: 28; text: option == "calm" ? "Calm" : "Expressive"; background: alpha(accent, robotPersonality == option ? 0.14 : 0); color: robotPersonality == option ? accent : muted; onTap: robotPersonality = option }
       }
     }
     Text { text: "Motion"; style: small; color: muted }
     Flow {
       gap: 6
       for option in ["full", "reduced", "off"] {
-        Button { height: 44; text: option == "full" ? "Full" : option == "reduced" ? "Reduced" : "Off"; background: alpha(accent, robotMotion == option ? 0.14 : 0); color: robotMotion == option ? accent : muted; onTap: robotMotion = option }
+        Button { height: 28; text: option == "full" ? "Full" : option == "reduced" ? "Reduced" : "Off"; background: alpha(accent, robotMotion == option ? 0.14 : 0); color: robotMotion == option ? accent : muted; onTap: robotMotion = option }
       }
     }
     if robotMotion != "off" {
@@ -71,7 +71,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       Flow {
         gap: 6
         for option in ["slow", "normal", "lively"] {
-          Button { height: 44; text: option == "slow" ? "Slow" : option == "lively" ? "Lively" : "Normal"; background: alpha(accent, robotPace == option ? 0.14 : 0); color: robotPace == option ? accent : muted; onTap: robotPace = option }
+          Button { height: 28; text: option == "slow" ? "Slow" : option == "lively" ? "Lively" : "Normal"; background: alpha(accent, robotPace == option ? 0.14 : 0); color: robotPace == option ? accent : muted; onTap: robotPace = option }
         }
       }
     }
@@ -138,9 +138,9 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
   // Linux is also available inside Android; it is not a desktop detector.
-  let toolbarHeight = 48
-  let fieldHeight = 48
-  let tabHeight = 44
+  let toolbarHeight = 32
+  let fieldHeight = 32
+  let tabHeight = 28
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()
@@ -275,9 +275,9 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     Text { text: "Miilo helper required"; fontSize: 16; color: foreground }
     Text { text: "Miilo requires miilo-owl, a Rust helper that reads selected agent sessions, retrieves work and evidence from configured systems, and sends supported actions only when you request them."; fontSize: 12; color: foreground; maxLines: 7 }
     Text { text: "Install downloads the ARM64 Linux helper from Miilo’s official GitHub release, verifies its SHA-256 checksum, and saves it in ~/.local/bin without root. It does not enroll sessions or change credentials. Configured remote systems and optional chat models use the network; credentials stay outside widget source."; fontSize: 11; color: muted; maxLines: 9 }
-    Button { height: 44; text: "Install helper & continue"; background: alpha(accent, 0.14); color: accent; onTap: { helperInstalling = true; terminal("bash -c ${sh(helperInstallCommand)}", "Install Miilo helper") } }
+    Button { height: 28; text: "Install helper & continue"; background: alpha(accent, 0.14); color: accent; onTap: { helperInstalling = true; terminal("bash -c ${sh(helperInstallCommand)}", "Install Miilo helper") } }
     if helperInstalling { Text { text: "Finish in the terminal, then return and refresh. If installation fails, open Edit widget for troubleshooting instructions."; fontSize: 11; color: muted; maxLines: 4 } }
-    Button { height: 44; text: "Check again"; onTap: refresh() }
+    Button { height: 28; text: "Check again"; onTap: refresh() }
   }
 
   component Setup() {
@@ -362,7 +362,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
         ToolbarIcon { kind: "back" }
       }
       Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
-      Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
+      Button { height: 28; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
     if feed.code == 127 {
       HelperInstall { }
@@ -377,8 +377,8 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       Text { text: "Controls"; fontSize: 12; color: muted }
       Flow {
         gap: 6
-        Button { height: 44; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
-        Button { height: 44; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
+        Button { height: 28; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
+        Button { height: 28; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
       }
       RobotColors { }
     } else if setupSection == "filters" {
@@ -413,7 +413,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
             }
           }
         }
-        Button { height: 44; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        Button { height: 28; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
         if setupSection == "chat" { Text { text: "Voice is not available in this launcher yet."; fontSize: 11; color: muted; maxLines: 2 } }
       }
     }
@@ -510,7 +510,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       if !requestPending {
         Flow {
           gap: 6
-          Button { height: 44; background: alpha(accent, 0.12); text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
+          Button { height: 28; background: alpha(accent, 0.12); text: "Explain"; color: accent; onTap: { requestPending = true; replyWork = focused._key; replyRevision = focused._revisionKey; reply = run("export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl explain ${sh(focused._key)} ${sh(focused._revisionKey)}"); reply = "pending"; proposed = "" } }
           for a in (focused.actions ?? []).filter(a => a._supported) key a._key {
             Button { text: a.label; color: accent; onTap: { proposed = a._key; proposalRevision = focused._revisionKey; proposalWork = focused._key; reply = requestPending ? reply : "" } }
           }
@@ -518,7 +518,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
         }
         if !(focused._actionsEnabled ?? false) {
           Text { text: "Actions disabled for this connection"; style: small; color: muted }
-          Button { height: 44; background: alpha(accent, 0.12); text: "Action settings"; onTap: { setupOpen = true; setupSection = "systems"; setupConfiguring = false } }
+          Button { height: 28; background: alpha(accent, 0.12); text: "Action settings"; onTap: { setupOpen = true; setupSection = "systems"; setupConfiguring = false } }
         }
         if len(focused.actions ?? []) == 0 { Text { text: "No actions currently offered by this provider"; style: small; color: muted } }
         for a in (focused.actions ?? []).filter(a => !a._supported) key a._key {
@@ -833,7 +833,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       Row {
         gap: 4
         Box { width: 60; height: tabHeight; align: center; radius: 6; background: observatoryView != "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "quiet"; expandedSystem = ""; workflowActor = ""; query = "" } Text { text: "Compact"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView != "orbit" ? accent : muted } }
-        Box { width: 48; height: tabHeight; align: center; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "orbit"; orbitPage = 0 } Text { text: "Detail"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView == "orbit" ? accent : muted } }
+        Box { width: 48; height: tabHeight; align: center; radius: 6; background: observatoryView == "orbit" ? alpha(accent, 0.09) : transparent; onTap: { observatoryView = "orbit"; expandedSystem = ""; workflowActor = ""; inspectionView = ""; orbitPage = 0 } Text { text: "Detail"; fill: width; align: center; fontSize: 11; maxLines: 1; color: observatoryView == "orbit" ? accent : muted } }
       }
     }
   }
@@ -848,7 +848,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     let current = items.sortBy(w => w._key).take(8)
     Column {
       fill: width
-      padding: 10
+      padding: screenWidth < 600 ? 8 : 10
       gap: 1
       background: alpha(accent, 0.035)
       radius: 12
@@ -856,22 +856,22 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       Row {
         fill: width
         align: center
-        Text { text: provider.name; weight: 1; fontSize: 11; maxLines: 1 }
-        Text { text: offline ? "Unavailable" : "${len(items)} ${len(items) == 1 ? "task" : "tasks"}"; width: 60; align: end; fontSize: 10; color: muted; maxLines: 1 }
+        Text { text: provider.name; weight: 1; fontSize: screenWidth < 600 ? 10 : 11; maxLines: screenWidth < 600 ? 2 : 1 }
+        Text { text: offline ? "Unavailable" : "${len(items)} ${len(items) == 1 ? "task" : "tasks"}"; width: screenWidth < 600 ? 42 : 60; align: end; fontSize: 10; color: muted; maxLines: 1 }
       }
-      OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot; alert: mark; fit: fit }
+      OrbitField { items: current; anchor: anchor; offline: offline; energized: any(items, w => w.lifecycle == "active"); slot: slot; alert: mark; fit: screenWidth < 600 ? min(fit, 0.45) : fit; fieldSize: screenWidth < 600 ? 92 : 164 }
       if len(items) == 0 { Text { text: offline ? "Waiting for a fresh observation" : "No tasks in flight"; style: small; color: muted } }
       for w in current key w._key {
         Row {
           fill: width
-          height: 44
+          height: 28
           gap: 6
           align: center
           onTap: { selectedWork = w._key; reply = requestPending ? reply : ""; proposed = ""; evidenceOpen = false }
           let rowInk = offline ? muted : w.lifecycle == "failed" ? mix(red, foreground, 0.15) : w.attention != "none" ? accent : w.phase == "verifying" ? mix(cyan, foreground, 0.4) : foreground
           OrbitStateIcon { phase: w.phase; attention: w.attention; offline: offline; failed: w.lifecycle == "failed"; ink: rowInk }
           // Match visible title glyphs to the icon center; Qt line leading sits above it.
-          Text { text: get(w.extensions ?? {}, "dev.miilo.session", null) != null && trim(w.summary ?? "") != "" ? w.summary : w.title; weight: 1; fontSize: 12; maxLines: 1; color: rowInk; offset: [0, 2] }
+          Text { text: get(w.extensions ?? {}, "dev.miilo.session", null) != null && trim(w.summary ?? "") != "" ? w.summary : w.title; weight: 1; fontSize: screenWidth < 600 ? 10 : 12; maxLines: 1; color: rowInk; offset: [0, 2] }
         }
       }
       if len(items) > 8 { Button { text: "+${len(items) - 8} ${len(items) == 9 ? "task" : "tasks"} · inspect system"; onTap: { inspectionView = "orbit"; expandedSystem = provider.id; workflowActor = ""; pageSize = 12 } } }
@@ -881,13 +881,13 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
     let page = min(orbitPage, max(0, ceil(len(systems) / 6) - 1))
     // Content-sized columns, not a desktop/mobile breakpoint.
-    let columns = max(1, min(len(systems), min(3, floor((screenWidth - 14) / 218))))
+    let columns = max(1, min(len(systems), min(4, floor((screenWidth - 14) / 150))))
     Grid {
-      width: min(max(screenWidth - 24, 100), columns * 330 + (columns - 1) * 10)
+      width: min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10)
       columns: columns
       gap: 10
       for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
-        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * 330 + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
+        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
       }
     }
     if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }

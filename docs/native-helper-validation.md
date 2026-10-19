@@ -42,3 +42,11 @@ Live tower observation preserved 93 artifacts with 38 nonempty previews, linked 
 ## Stock-compatible search toolbar
 
 Cog and refresh now share the search row using OWL6, with centered icon hit targets. Native checks used the exact default install file, not an OWL8 header variant: tap expands the focused input, typing filters the real feed, and the finish control restores the toolbar while retaining the query. Runtime tests cover opening/finishing/clearing search for all widget sources; action and evidence tests remain included. The archived launcher patch only controls native host UI and is no longer a prerequisite for toolbar placement.
+
+Mobile density follow-up: Detail clears the prior system/actor inspection when
+selected, so Compact drill-down does not survive as the Detail overview. Phone
+widths of 320–440 logical pixels display two Detail cards, with a 92-pixel orbit
+band, smaller labels and 28-pixel task rows. Tabs and explicit buttons are 28
+pixels high; search/toolbar controls are 32. These are visual layout sizes, not a
+claim of a minimum accessible touch target. Density uses viewport width because
+Android PRoot also reports Linux. No provider observation or action policy changes.

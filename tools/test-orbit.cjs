@@ -145,15 +145,15 @@ const unsupported=scene({view:'unknown'});assert.equal(unsupported.draw(1).lengt
 assert(program.globals.find(g=>g.name==='observatoryView').persist);
 console.log('Orbit generated-renderer checks passed: themes, motion, stale state, bounds, pagination, detail selection and no frame I/O.');
 
-for(const [width,columns]of [[360,1],[440,1],[540,2],[600,2],[684,3],[900,3],[1400,3]]) {
+for(const [width,columns]of [[260,1],[320,2],[360,2],[440,2],[540,3],[600,3],[684,3],[900,3],[1400,3]]) {
  const grid=scene({count:3,screenWidth:width}).render(1).find(n=>n.kind==='Grid' && n.c?.some(c=>c.kind==='Column'));
  assert(grid,'Orbit grid must render');assert.equal(grid.p.columns,columns,'Content-based column count at '+width);
  assert(grid.p.width<=width && grid.p.width<=1010,'Tile group stays bounded');
 }
 assert.equal(scene({count:1,screenWidth:1400}).render(1).find(n=>n.kind==='Grid').p.width,330,'One system must not stretch across the desktop');
 
-// A Linux environment can be the Android PRoot; both retain touch targets.
-for(const [linux,height]of [[true,44],[false,44]]) {
+// PRoot reports Linux too; visual row density must not depend on that flag.
+for(const [linux,height]of [[true,28],[false,28]]) {
  const nodes=scene({count:3,work:3,screenWidth:684,linux}).render(1);
  const rows=nodes.filter(n=>n.kind==='Row'&&n.h?.onTap&&[...walk(n)].some(c=>c.p?.text?.startsWith('Task p')));
  assert.equal(rows.length,9);assert(rows.every(n=>n.p.height===height));

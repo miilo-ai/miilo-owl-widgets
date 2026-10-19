@@ -22,7 +22,7 @@
         ToolbarIcon { kind: "back" }
       }
       Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
-      Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
+      Button { height: 28; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
     if feed.code == 127 {
       HelperInstall { }
@@ -37,8 +37,8 @@
       Text { text: "Controls"; fontSize: 12; color: muted }
       Flow {
         gap: 6
-        Button { height: 44; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
-        Button { height: 44; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
+        Button { height: 28; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
+        Button { height: 28; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
       }
       RobotColors { }
     } else if setupSection == "filters" {
@@ -73,7 +73,7 @@
             }
           }
         }
-        Button { height: 44; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        Button { height: 28; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
         if setupSection == "chat" { Text { text: "Voice is not available in this launcher yet."; fontSize: 11; color: muted; maxLines: 2 } }
       }
     }

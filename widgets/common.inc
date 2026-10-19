@@ -59,9 +59,9 @@
   let receipt = reply == "" || reply == "pending" ? null : parseJson(reply)
   let issueCount = len(data.errors ?? [])
   // Linux is also available inside Android; it is not a desktop detector.
-  let toolbarHeight = 48
-  let fieldHeight = 48
-  let tabHeight = 44
+  let toolbarHeight = 32
+  let fieldHeight = 32
+  let tabHeight = 28
   let phases = ["planning", "implementing", "verifying", "reviewing", "promoting"]
   on reply { requestPending = value == "pending"; refresh() }
   onTap: screen()

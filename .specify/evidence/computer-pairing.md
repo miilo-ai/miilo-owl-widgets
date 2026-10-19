@@ -36,3 +36,20 @@ client received Codex with a current summary and changing detail revision.
 Session rows now preview the latest observation summary without adding a line.
 Updating a paired selection through connection setup retains its certificate and
 credential and never asks for another token or grants action authority.
+
+Mobile density/navigation follow-up: Compact robot drill-down remained selected
+when entering Detail, requiring a Compact round-trip to reach the overview. The
+failing case was reproduced in the evaluator and the Android preview. The corrected transition clears system/actor/inspection selection and
+opens the overview in one tap. Three complete emulator cycles passed afterward.
+The actual candidate widget was backed up and replaced while retaining its private
+helper profile and existing paired connections. Live screenshots confirmed two
+Detail cards side by side, smaller robots, shortened search/tabs, and compact
+Appearance buttons. No launcher APK modification or reinstall was required.
+The generated widget, navigation and bounds regressions, Compact, robot/portrait,
+settings, source guards and retained-render tests passed. Official compiler and
+fixture qualification is recorded separately after completion.
+Official Kotlin OWL compiler qualification passed for all three generated widgets
+and the complete tile/screen fixture matrix. The action fixture now asserts the
+actual explicit PATH-prefixed helper command rather than its obsolete unprefixed
+form; confirmation/cancel dispatch-count assertions remain intact. Generated
+source, default portrait output and the full portable presentation suite passed.

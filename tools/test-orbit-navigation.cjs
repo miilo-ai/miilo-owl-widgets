@@ -16,6 +16,30 @@ for (const work of [0, 1, 9]) {
     assert.equal(tileScene.draw(3).length,2,'Back returns to the Orbit tiles');
     assert.deepEqual(tileScene.commands,[],'Navigation must not invoke a provider');
 }
+// Detail means the overview even when Compact has an open system list.
+for (const linux of [true,false]) {
+    const route=scene({count:2,work:3,view:'quiet',linux,screenWidth:393});
+    const compact=route.render(1).find(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.p?.text==='System 0'));
+    assert(compact);compact.h.onTap(0,0);
+    assert.equal(route.instance.values[route.slot('expandedSystem')],'p0');
+    const detail=route.render(2).find(n=>n.kind==='Box'&&n.h?.onTap&&n.c?.some(c=>c.p?.text==='Detail'));
+    assert(detail);detail.h.onTap(0,0);
+    assert.equal(route.instance.values[route.slot('expandedSystem')],'','First Detail activation clears the old drill-down');
+    assert.equal(route.render(3).filter(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.kind==='Row'&&c.c?.some(t=>t.p?.text==='System 0'))).length,1);
+    assert.deepEqual(route.commands,[]);
+}
+// Density follows viewport width, including Android guests reporting Linux.
+for (const linux of [true,false]) for (const width of [320,360,393,440]) {
+    const mobile=scene({count:4,work:3,linux,screenWidth:width});
+    const nodes=mobile.render(1),grid=nodes.find(n=>n.kind==='Grid');
+    assert.equal(grid.p.columns,2,'Normal phone widths fit two Detail cards');
+    const fields=nodes.filter(n=>n.kind==='Canvas'&&n.p?.height===92);
+    assert.equal(fields.length,4);
+    const cell=(grid.p.width-10)/2-16;
+    for(const field of fields) for(const op of field.draw(cell,92)) for(const [x,y]of op.points||[])
+        assert(x>=0&&x<=cell&&y>=0&&y<=92,'Compact Detail rings remain inside their cards');
+    assert.deepEqual(mobile.commands,[]);
+}
 // Returning through task details and overflow preserves the entry mode and page.
 for (const origin of ['quiet','orbit']) {
     const route=scene({count:8,work:9,view:origin});
