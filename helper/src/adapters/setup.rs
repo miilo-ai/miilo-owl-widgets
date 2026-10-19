@@ -55,6 +55,7 @@ fn add(
     name: String,
 ) -> Result<Config> {
     let mut endpoint = Endpoint {
+        paired_host: None,
         id: name,
         url: safe_url(&ask(ui, "Miilo API URL: ")?)?,
         token: ui

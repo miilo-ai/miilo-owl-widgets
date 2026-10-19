@@ -72,3 +72,8 @@ const remote=fixture();remote.snapshot.actors[0].extensions={};
 assert.deepEqual(scene(remote).get('provs').map(p=>p.id),['p8','p0'],'Idle persistent remote factories stay accessible');
 const quiet=scene(data,{observatoryView:'quiet'});assert.equal(quiet.get('actors').length,1);quiet.render();
 console.log('Session visibility passed: active-first, 12-hour sleeping visibility, lifecycle updates, decisions, remote factories and no provider commands.');
+
+const paired = fixture(); paired.snapshot.actors[0]._pairedComputer = true;
+const pairedScene = scene(paired, {});
+assert(pairedScene.get("provs").some(p=>p.id === "p0"), "Explicitly paired idle sessions remain visible without inventing activity");
+assert.equal(pairedScene.get("actors").find(a=>a.id === "a0").status,"resting");

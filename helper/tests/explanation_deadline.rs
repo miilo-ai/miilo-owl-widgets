@@ -38,6 +38,7 @@ fn delayed(path: &str) -> miilo_owl::Result<serde_json::Value> {
         let _ = stream.write_all(response.as_bytes());
     });
     let endpoint = Endpoint {
+        paired_host: None,
         id: "slow".into(),
         url,
         token: String::new(),

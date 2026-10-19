@@ -92,6 +92,7 @@ pub fn project_at(endpoint: &Endpoint, raw: &Value, now: DateTime<Utc>) -> Resul
             }
             let mut item = original.clone();
             item["_source"] = json!(endpoint.id);
+            item["_pairedComputer"] = json!(endpoint.paired_host.is_some());
             item["_actionsEnabled"] = json!(endpoint.allow_actions);
             item["_provider"] = json!(provider);
             item["_key"] = json!(key(&json!([endpoint.id, provider, name, id])));
@@ -102,7 +103,10 @@ pub fn project_at(endpoint: &Endpoint, raw: &Value, now: DateTime<Utc>) -> Resul
                 item["id"] = json!(scoped_provider);
                 item["name"] = json!(format!(
                     "{} / {}",
-                    endpoint.id,
+                    endpoint
+                        .paired_host
+                        .as_ref()
+                        .map_or(endpoint.id.as_str(), |p| p.name.as_str()),
                     original["name"].as_str().unwrap_or(provider)
                 ));
             } else {

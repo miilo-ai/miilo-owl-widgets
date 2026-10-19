@@ -8,6 +8,10 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         return result.map(Some);
     }
     let store = Store::from_env()?;
+    if args.first().is_some_and(|a| a == "pair") {
+        return miilo_owl::adapters::pairing::run(&store, &args[1..], &mut setup::Terminal)
+            .map(Some);
+    }
     let http = Http::new()?;
     match args
         .iter()
@@ -91,7 +95,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }
@@ -102,7 +106,7 @@ fn main() {
             // Do not echo raw errors, endpoint URLs, tokens or remote payloads.
             println!(
                 "{}",
-                json!({"status":"failed","message": if matches!(args.first().map(String::as_str), Some("uninstall" | "record-widget-install")) { error } else { "Request failed. Refresh and check setup/access.".into() }})
+                json!({"status":"failed","message": if matches!(args.first().map(String::as_str), Some("uninstall" | "record-widget-install")) { error } else if args.first().is_some_and(|a| a == "pair") { miilo_owl::adapters::pairing::diagnostic(&error).into() } else { "Request failed. Refresh and check setup/access.".into() }})
             );
             std::process::exit(1);
         }

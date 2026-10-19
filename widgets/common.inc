@@ -35,7 +35,7 @@
   let allActors = snap.actors ?? []
   let allWorks = snap.workItems ?? []
   // Transcript-backed sessions are inferred observations, not persistent factories.
-  let localSessionIds = allActors.filter(a => get(get(a.extensions ?? {}, "dev.miilo.session", {}), "runtimeStatusAuthoritative", true) == false).map(a => a.providerId)
+  let localSessionIds = allActors.filter(a => !(a._pairedComputer ?? false) && get(get(a.extensions ?? {}, "dev.miilo.session", {}), "runtimeStatusAuthoritative", true) == false).map(a => a.providerId)
   let activeActors = allActors.filter(a => contains(["working", "running", "reviewing", "blocked", "failed", "error"], a.status) && !contains(["offline", "unreachable", "unknown"], a.health ?? ""))
   let activeActorKeys = activeActors.map(a => a._key)
   let activeProviderIds = activeActors.map(a => a.providerId) + allWorks.filter(w => (w.attention ?? "none") != "none" || w.lifecycle == "failed").map(w => w.providerId)

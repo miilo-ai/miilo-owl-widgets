@@ -29,6 +29,18 @@ pub fn validate(config: &Config) -> Result<()> {
         if !valid || !seen.insert(&e.id) {
             return Err("Endpoint names must be unique lowercase words/dashes".into());
         }
+        if e.paired_host.as_ref().is_some_and(|peer| {
+            e.url != peer.url
+                || !e.url.starts_with("https://")
+                || e.allow_actions
+                || !e.token.is_empty()
+                || e.token_file.is_some()
+                || e.local_snapshot_file.is_some()
+        }) {
+            return Err(
+                "Paired computers require their pinned HTTPS origin and read-only access".into(),
+            );
+        }
         if let Some(path) = &e.local_snapshot_file {
             if !path.is_absolute()
                 || !e.token.is_empty()

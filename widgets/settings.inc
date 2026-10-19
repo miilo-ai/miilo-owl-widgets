@@ -21,7 +21,7 @@
         onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false }
         ToolbarIcon { kind: "back" }
       }
-      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
+      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
       Button { height: 44; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
     if feed.code == 127 {
@@ -29,6 +29,7 @@
     } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
+      SettingsEntry { label: "Pair computer"; detail: "Approve a read-only connection on your computer"; section: "pair" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
       SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
     } else if setupSection == "appearance" {
@@ -56,9 +57,10 @@
       }
       if len(selectableProviders) == 0 { Text { text: "Add a connection to see systems here."; fontSize: 12; color: muted; maxLines: 2 } }
     } else {
-      Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
+      Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : setupSection == "pair" ? "On your computer, start sharing and create an invitation with miilo local pair invite. Compare both codes before approving. This device can only observe selected work." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
       if setupConfiguring {
         if setupSection == "chat" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        else if setupSection == "pair" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl pair"; fill: width; height: max(240, screenHeight * 0.65) } }
         else { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
         Text { text: setupSection == "chat" ? "Follow the prompts, then tap Done." : "Type q then Enter to finish, or tap Done."; fontSize: 11; color: muted; maxLines: 2 }
       } else {
@@ -71,7 +73,7 @@
             }
           }
         }
-        Button { height: 44; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        Button { height: 44; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
         if setupSection == "chat" { Text { text: "Voice is not available in this launcher yet."; fontSize: 11; color: muted; maxLines: 2 } }
       }
     }

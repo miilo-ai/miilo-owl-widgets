@@ -16,6 +16,7 @@ pub fn fixture() -> Value {
 }
 pub fn endpoint() -> Endpoint {
     Endpoint {
+        paired_host: None,
         token_file: None,
         id: "home".into(),
         url: "http://127.0.0.1:3700".into(),

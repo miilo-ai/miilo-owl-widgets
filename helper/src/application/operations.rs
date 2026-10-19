@@ -52,10 +52,16 @@ pub fn explain(
     clock: &dyn Clock,
 ) -> Result<Value> {
     let (endpoint, work) = target(store, http, item, revision, clock)?;
-    let bundle = http.request(&endpoint, "/v1/explanations", Some(&json!({
+    let request = json!({
         "providerId":work["_provider"],"workItemId":work["id"],"expectedRevision":work["revision"],"question":null,
         "preferences":{"detail":"concise","lead":"cause","includeTechnicalDetails":false,"speakSensitiveValues":false}
-    })))?;
+    });
+    let bundle = if endpoint.paired_host.is_some() {
+        let raw = http.request(&endpoint, "/v1/snapshot", None)?;
+        crate::domain::observation_explanation::explain(&raw, &request)?
+    } else {
+        http.request(&endpoint, "/v1/explanations", Some(&request))?
+    };
     if bundle["revision"] != work["revision"] {
         return Err("Explanation revision changed; refresh".into());
     }
@@ -64,7 +70,7 @@ pub fn explain(
         .filter(|s| !s.is_empty())
         .or_else(|| bundle["cause"].as_str().filter(|s| !s.is_empty()))
         .unwrap_or("No explanation provided");
-    let message = if endpoint.local_snapshot_file.is_some() {
+    let message = if endpoint.local_snapshot_file.is_some() || endpoint.paired_host.is_some() {
         let limitations = bundle["limitations"]
             .as_array()
             .into_iter()

@@ -93,6 +93,7 @@ fn standalone_cache_connects_without_http_preserves_remote_and_fails_stale() {
 fn local_cache_cannot_enable_actions_or_carry_credentials() {
     let temp = tempfile::tempdir().unwrap();
     let mut endpoint = Endpoint {
+        paired_host: None,
         local_snapshot_file: Some(temp.path().join("snapshot.json")),
         url: "local://desktop".into(),
         token: String::new(),
