@@ -40,6 +40,13 @@ for (const linux of [true,false]) for (const width of [320,360,393,440]) {
         assert(x>=0&&x<=cell&&y>=0&&y<=92,'Compact Detail rings remain inside their cards');
     assert.deepEqual(mobile.commands,[]);
 }
+// Both fleets center their grid, including content narrower than a wide viewport.
+for (const view of ['quiet','orbit']) for (const screenWidth of [320,393,900]) {
+    const layout=scene({count:1,work:1,view,screenWidth}).render(1);
+    const container=layout.find(n=>n.kind==='Box'&&n.p.fill==='width'&&n.p.align==='top'&&n.c?.some(c=>c.kind==='Grid'));
+    assert(container,'Both view modes must center the grid within available content');
+    assert(container.c.find(c=>c.kind==='Grid').p.width<=screenWidth);
+}
 // Returning through task details and overflow preserves the entry mode and page.
 for (const origin of ['quiet','orbit']) {
     const route=scene({count:8,work:9,view:origin});

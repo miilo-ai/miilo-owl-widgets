@@ -53,3 +53,10 @@ and the complete tile/screen fixture matrix. The action fixture now asserts the
 actual explicit PATH-prefixed helper command rather than its obsolete unprefixed
 form; confirmation/cancel dispatch-count assertions remain intact. Generated
 source, default portrait output and the full portable presentation suite passed.
+
+Fleet centering: Compact and Detail use full-width top-centered containers around
+bounded grids. Actual Android preview captures confirm equal outer margins in
+both modes without altering card sizes, animation or connection state. Generated
+widget/navigation/density tests, official Kotlin compilation of all three widgets,
+Compact/settings/visibility/retained-render checks and source guards passed. The
+native plugin separately tests actual Qt grid coordinates at narrow/wide widths.

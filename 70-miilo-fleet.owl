@@ -882,12 +882,16 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     let page = min(orbitPage, max(0, ceil(len(systems) / 6) - 1))
     // Content-sized columns, not a desktop/mobile breakpoint.
     let columns = max(1, min(len(systems), min(4, floor((screenWidth - 14) / 150))))
-    Grid {
-      width: min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10)
-      columns: columns
-      gap: 10
-      for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
-        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
+    Box {
+      fill: width
+      align: top
+      Grid {
+        width: min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10)
+        columns: columns
+        gap: 10
+        for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
+          OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
+        }
       }
     }
     if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }
@@ -935,17 +939,21 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
   component QuietFleet(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
     let columns = max(1, min(4, min(len(systems), floor(max(screenWidth - 18, 1) / 88))))
-    Grid {
+    Box {
       fill: width
-      columns: columns
-      gap: 6
-      for p in systems.take(providerLimit) key p.id {
-        Column {
-          align: center
-          gap: 2
-          onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
-          QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
-          Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
+      align: top
+      Grid {
+        width: max(screenWidth - 24, 100)
+        columns: columns
+        gap: 6
+        for p in systems.take(providerLimit) key p.id {
+          Column {
+            align: center
+            gap: 2
+            onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
+            QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
+            Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
+          }
         }
       }
     }

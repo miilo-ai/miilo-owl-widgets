@@ -60,12 +60,16 @@
     let page = min(orbitPage, max(0, ceil(len(systems) / 6) - 1))
     // Content-sized columns, not a desktop/mobile breakpoint.
     let columns = max(1, min(len(systems), min(4, floor((screenWidth - 14) / 150))))
-    Grid {
-      width: min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10)
-      columns: columns
-      gap: 10
-      for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
-        OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
+    Box {
+      fill: width
+      align: top
+      Grid {
+        width: min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10)
+        columns: columns
+        gap: 10
+        for p, i in systems.filter((p, i) => i >= page * 6 && i < (page + 1) * 6) key p.id {
+          OrbitCluster { provider: p; items: list.filter(w => w.providerId == p.id); slot: indexOf(allProviders.map(q => q.id), p.id); fit: min(0.85, ((min(max(screenWidth - 24, 100), columns * (screenWidth < 600 ? 240 : 330) + (columns - 1) * 10) - (columns - 1) * 10) / columns - 20) / 270) }
+        }
       }
     }
     if len(systems) == 0 { Text { text: needsOnly ? "Nothing needs you" : "No systems to display"; style: small; color: muted } }
