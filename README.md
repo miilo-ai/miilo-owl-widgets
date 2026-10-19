@@ -219,7 +219,7 @@ boundaries. Run `node tools/check-architecture.cjs` and
 `node --test tools/architecture.test.cjs`; CI qualification runs both. These are
 development checks, not runtime dependencies.
 
-Text chat helper checkpoint and setup: [launcher chat](docs/launcher-chat.md). Graphical chat and voice acceptance remain pending.
+Text chat helper setup: [launcher chat](docs/launcher-chat.md). Full chat-panel qualification is separate from model-backed Explain. Voice is deferred.
 
 ### Robot personality and motion
 
