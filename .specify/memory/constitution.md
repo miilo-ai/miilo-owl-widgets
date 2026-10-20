@@ -73,3 +73,8 @@ output. Preserve evidence at rest. Renderer changes require source guards and th
 native loopback canary with a working positive control. Coordinate fixes with the
 native plugin's vendored renderer and preserve provenance. Read
 `docs/omarchy-integration-guide.md` before editing these surfaces.
+
+Preview tooling uses a Rust coordinator and installed qmltestrunner with QML tests.
+Do not add authored C/C++, CMake projects, or Rust Qt bindings that compile generated
+C++ to the preview tool. Qt/Quickshell remain upstream platform dependencies.
+Run make check-preview; fixture acceptance does not qualify a live shell or phone.

@@ -4,6 +4,13 @@ import "runtime" as Runtime
 import "runtime/Owl.js" as Owl
 Window {
  id: root; width: 900; height: 850; visible: true; color: widget.ink("background")
+ property string widgetSource: ""
+ property var sceneData: ({})
+ property string sceneTheme: ""
+ property string sceneView: "orbit"
+ property string sceneMotion: "full"
+ property bool sceneLight: false
+ Rectangle { anchors.fill: parent; color: root.color; z: -1 }
  property var errors: []
  property real sceneTime: .2
  property bool showScreen: sceneView !== "quiet"
@@ -11,6 +18,7 @@ Window {
  function advance(t) { sceneTime=t; widget.renderAt(t) }
  Item {
   id: widget
+  property bool active: true
   property real dp:1
   property int frame:0
   property string home:""

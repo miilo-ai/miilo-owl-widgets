@@ -1,0 +1,22 @@
+name: QML preview tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+        with:
+          toolchain: 1.96.1
+          components: rustfmt, clippy
+      - name: Install QML test runner
+        run: |
+          brew list qtdeclarative >/dev/null 2>&1 || brew install qtdeclarative
+          echo "$(brew --prefix qtdeclarative)/bin" >> "$GITHUB_PATH"
+      - run: make check-preview
