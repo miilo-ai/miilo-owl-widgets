@@ -8,3 +8,5 @@ bin/
 
 xtask/target/
 **/.errors/
+
+tools/qt-preview/target/

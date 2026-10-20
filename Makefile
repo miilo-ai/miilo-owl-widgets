@@ -2,7 +2,7 @@
 assemble:
 	cargo xtask assemble
 
-test:
+test: check-preview-toolchain
 	node tools/test-render-invalidation.cjs
 	node --test tools/plain-text.test.cjs
 	node --test tools/install-helper.test.cjs
@@ -54,3 +54,14 @@ check-canvas-clock:
 	node tools/test-canvas-clock.cjs
 
 check-typography: check-canvas-clock
+
+.PHONY: check-preview-toolchain check-preview
+check-preview-toolchain:
+	node tools/check-preview-toolchain.cjs
+	node --test tools/preview-toolchain.test.cjs
+	cargo fmt --manifest-path tools/qt-preview/Cargo.toml --check
+	cargo test --locked --manifest-path tools/qt-preview/Cargo.toml
+	cargo clippy --locked --manifest-path tools/qt-preview/Cargo.toml --all-targets -- -D warnings
+
+check-preview: check-preview-toolchain
+	node --test tools/preview-capture.test.cjs

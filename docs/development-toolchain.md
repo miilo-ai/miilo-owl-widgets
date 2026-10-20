@@ -5,16 +5,21 @@ shared JavaScript renderer. No Python source, installation, CI, check, test or
 preview driver is required in this repository.
 
 Portable development tools use Node.js 22+ built-ins (no npm install). The native
-preview driver uses C++17, CMake 3.21+ and Qt 6.8+ Core/Gui/Qml/Quick/Test, matching
-the actual renderer rather than recreating it in a web screenshot.
+preview coordinator is a standalone Rust development crate. It invokes the installed
+Qt 6.8+ qmltestrunner; QML tests exercise the actual renderer and capture PNGs.
+There is no authored C/C++, CMake project or Rust-to-Qt binding build.
 
 ## Preview capture
 
 Install Qt development tools with your normal package manager. On Arch/Omarchy,
-use qt6-base, qt6-declarative and cmake. On macOS, use Homebrew qtbase,
-qtdeclarative and cmake. Standard Qt SDKs also work through CMAKE_PREFIX_PATH.
-The capture wrapper builds in a temporary directory with two build jobs and
-removes that directory afterward. The system Qt packages do not ship with Miilo.
+use qt6-base and qt6-declarative. On macOS, use Homebrew qtdeclarative
+(which includes qtbase as a dependency). Install stable Rust and Cargo as well.
+Put qmltestrunner on PATH, or set MIILO_QMLTESTRUNNER to its executable path.
+The Rust crate uses its committed Cargo.lock and builds under tools/qt-preview/target.
+Fixture inputs and captures use temporary directories and are cleaned after the run.
+Only validated captures from a successful run are copied to the requested output.
+Qt remains an upstream dependency; this removes Miilo-maintained C++ tooling,
+not Qt itself. The system Qt packages do not ship with Miilo.
 
 Run:
 
@@ -71,3 +76,25 @@ The shared Qt host defaults to a 30 FPS animation paint budget. It advances usin
 elapsed time, so orbit speed is independent of skipped paint ticks. Hosts can set
 `animationFramesPerSecond` between 1 and 60. Source refresh and input invalidation
 remain immediate. The Android launcher has its own frame clock.
+
+## Preview regression gates
+
+Run `make check-preview-toolchain` for the language boundary, Cargo formatting,
+unit tests and Clippy. Run `make check-preview` for actual offscreen captures,
+interaction assertions and a matrix of motion/view modes. The independent QML
+preview workflow runs these checks without SDK access or provider credentials.
+
+The tool preserves the orbit.png, orbit-next-frame.png, orbit-detail.png and
+frames/NNNN.png output names. Native onboarding additionally preserves crew-dark.png,
+crew-expanded.png and crew-light-narrow.png. Recording includes both endpoint frames:
+two seconds produces 25 PNGs; the 20-second default produces 241.
+
+The coordinator validates dimensions (100–4096), recording duration (2–20 seconds),
+mode and motion settings. Missing runner, QML compilation errors, QML warnings,
+failed interactions, missing/invalid captures and a 90-second runner timeout fail
+with a nonzero exit. Qt platform diagnostics such as font-alias timing remain visible;
+they are not QML-engine warnings. These tests use no live observation data.
+
+When shortening a recording, use a new output directory. The coordinator rejects
+leftover numbered frames from a longer recording before publishing captures; it
+does not silently combine recordings or delete the earlier frames.
