@@ -58,8 +58,8 @@ submitting the new pin. Repository checksums alone do not replace this store pin
 
 ## Branding and About
 
-The wordmark is rendered within the widget; the native launcher title and close
-control remain host-owned. Settings → About explains observation, credential
+The launcher owns the screen title and close control. The widget does not add
+a second wordmark beneath that title. Settings → About explains observation, credential
 storage, optional model context sharing and data retention on removal. It shows
 the packaged widget version and offers explicit website and sponsorship links.
 About remains accessible when the required helper is absent.

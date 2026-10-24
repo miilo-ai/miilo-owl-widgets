@@ -35,15 +35,7 @@ for (const file of ['70-miilo-fleet.owl', '71-miilo-attention.owl', '72-miilo-bo
     assert(!rendered.some(n => n.kind === 'Terminal' || n.kind === 'Input'));
     assert(rendered.some(n => n.p?.text?.includes('No Miilo account')));
     assert.deepEqual(actions, [], 'Rendering never opens a site or starts installation');
-    const mark = rendered.find(n => n.kind === 'Canvas' && n.p.width >= 72 && n.p.width <= 96 && n.p.height === n.p.width * 72 / 184);
-    assert(mark, 'Responsive wordmark is present');
-    const first = mark.draw(mark.p.width, mark.p.height);
-    assert(first.length > 4); assert(!first.some(op => op.op === 'image' || op.op === 'text'));
-    instance.frame(9); assert.deepEqual(mark.draw(mark.p.width, mark.p.height), first, 'Brand stays static');
-    for (const op of first) {
-      assert.equal(op.fill ?? op.stroke, Owl.hex8(palette.foreground), 'Brand uses the theme foreground');
-      for (const [x, y] of op.points || []) assert(x >= 0 && x <= mark.p.width && y >= 0 && y <= mark.p.height);
-    }
+    assert(!rendered.some(n => n.kind === 'Canvas' && n.p.width >= 72 && n.p.width <= 96 && n.p.height === n.p.width * 72 / 184), 'The launcher title must not be duplicated by an internal wordmark');
     for (const leftHanded of [false, true]) {
       set('leftHanded', leftHanded); rendered = nodes();
       const row = rendered.find(n => n.kind === 'Row' && n.c?.some(c => c.p?.text === 'Sponsor Miilo ↗'));

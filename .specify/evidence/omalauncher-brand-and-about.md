@@ -2,10 +2,11 @@
 
 Local branch: feat/omalauncher-brand-and-about. Package version: 1.7.1.
 
-The three generated OWL6 widgets use the custom wordmark inside their screen and
-settings views. The native launcher chrome is unchanged. Stock canvas paths are
+The three generated OWL6 widgets use the native launcher title without a second
+wordmark inside the screen or settings views. The native launcher chrome is unchanged. Stock canvas paths are
 projected from the project SVGs, with theme foreground ink, sampled curves,
 transparent visor cutouts and no image fetches or animation clock dependencies.
+Canonical brand assets remain available, but the internal wordmark is not rendered.
 Full observation robots and their existing responsive layouts are preserved.
 
 Settings → About is isolated from task content and configuration terminals. It
@@ -37,7 +38,7 @@ column limits and width/height bounds. Small fleets grow while dense fleets stay
 compact. Generated widget copies and brand assets match their source.
 
 The Android 14 ARM64 Omalauncher preview app loaded the exact generated fleet
-widget, verified by SHA-256. Its custom wordmark, About disclosures, packaged
+widget, verified by SHA-256. Its single launcher-owned title, About disclosures, packaged
 version 1.7.1, Back and Done were checked in the installed launcher. Existing helper,
 configuration and credentials were preserved; no enrollment, model request or
 provider action was performed. The configured inventory was empty, so this device

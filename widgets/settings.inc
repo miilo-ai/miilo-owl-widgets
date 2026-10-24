@@ -14,7 +14,6 @@
     }
   }
   component SettingsPage() {
-    BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
     Row {
       fill: width; gap: 8; align: center
       Box {

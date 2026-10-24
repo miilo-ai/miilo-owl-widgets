@@ -411,7 +411,6 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     }
   }
   component SettingsPage() {
-    BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
     Row {
       fill: width; gap: 8; align: center
       Box {
@@ -1156,7 +1155,6 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       scroll: true
       gap: 10
       if setupOpen { SettingsPage { } } else {
-        BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
         Setup { }
         if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
         if focused != null {
