@@ -24,7 +24,7 @@
   let capacity = columns * rows
   let cellWidth = (availableWidth - (columns - 1) * 6) / columns
   let cellHeight = (availableHeight - 16 - (rows - 1) * 6) / rows
-  let robotSize = clamp(min(cellWidth - 10, cellHeight - (showNames ? 32 : 0)), 30, 100)
+  let robotSize = clamp(min(cellWidth - 10, cellHeight - (showNames ? 32 : 0)), 30, len(tileActors) <= 2 ? 180 : 100)
   let usedRows = ceil(min(len(tileActors), capacity) / columns)
   let groupHeight = usedRows * (robotSize * 0.82 + (showNames ? 30 : 0)) + max(usedRows - 1, 0) * 6 + (len(tileActors) > capacity ? 20 : 0) + (issueCount > 0 ? 20 : 0) + (len(actors) == 0 ? 20 : 0)
   Box {

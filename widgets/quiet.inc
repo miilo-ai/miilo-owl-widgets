@@ -29,7 +29,9 @@
   }
   component QuietFleet(list) {
     let systems = provs.filter(p => !needsOnly || any(list, w => w.providerId == p.id))
-    let columns = max(1, min(4, min(len(systems), floor(max(screenWidth - 18, 1) / 88))))
+    let capacity = max(1, min(4, floor(max(screenWidth - 18, 1) / 88)))
+    let rows = max(1, ceil(len(systems) / capacity))
+    let columns = max(1, min(capacity, ceil(len(systems) / rows)))
     Box {
       fill: width
       align: top
@@ -42,7 +44,7 @@
             align: center
             gap: 2
             onTap: { inspectionView = "quiet"; expandedSystem = p.id; workflowActor = ""; selectedActor = ""; pageSize = 5; agentsOpen = false }
-            QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: min(128, max(48, (screenWidth - 24 - (columns - 1) * 6) / columns)) }
+            QuietPortrait { provider: p; items: live.filter(w => w.providerId == p.id); s: clamp(min((screenWidth - 24 - (columns - 1) * 6) / columns - 16, screenHeight * 0.24), 24, len(systems) <= 2 ? 200 : 128) }
             Text { text: replace(p.name, "-", " "); width: max(48, (screenWidth - 24 - (columns - 1) * 8) / columns); height: 28; align: center; fontSize: 10; maxLines: 2 }
           }
         }

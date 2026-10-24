@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 72" width="184" height="72">
+<g fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 60V31 M6 41C6 27 30 27 30 41V60 M30 41C30 27 54 27 54 41V60" />
+      <path d="M74 35V60 M94 35V60 M115 12V60" />
+    </g>
+    <g fill="#FFFFFF">
+      <circle cx="74" cy="20" r="4.5" />
+      <circle cx="94" cy="20" r="4.5" />
+      <path fill-rule="evenodd" d="M145 29H166Q178 29 178 41V52Q178 64 166 64H145Q133 64 133 52V41Q133 29 145 29Z M144 38Q140 38 140 42V51Q140 55 144 55H167Q171 55 171 51V42Q171 38 167 38Z" />
+      <path d="M155.5 22V30" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+      <circle cx="155.5" cy="20" r="4.5" />
+      <circle cx="149" cy="46.5" r="3" />
+      <circle cx="162" cy="46.5" r="3" />
+    </g>
+</svg>

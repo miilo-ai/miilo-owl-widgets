@@ -18,20 +18,23 @@
       fill: width; gap: 8; align: center
       Box {
         width: 44; height: toolbarHeight; align: center
-        onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false }
+        onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false; refresh() }
         ToolbarIcon { kind: "back" }
       }
-      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
-      Button { height: 28; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
+      Text { text: setupSection == "about" ? "About" : setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
     }
-    if feed.code == 127 {
+    if setupSection == "about" {
+      WidgetAbout { }
+    } else if feed.code == 127 {
       HelperInstall { }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Pair computer"; detail: "Approve a read-only connection on your computer"; section: "pair" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
       SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "appearance" {
       RobotAppearance { }
       Text { text: "Controls"; fontSize: 12; color: muted }
@@ -62,7 +65,7 @@
         if setupSection == "chat" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
         else if setupSection == "pair" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl pair"; fill: width; height: max(240, screenHeight * 0.65) } }
         else { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
-        Text { text: setupSection == "chat" ? "Follow the prompts, then tap Done." : "Type q then Enter to finish, or tap Done."; fontSize: 11; color: muted; maxLines: 2 }
+        Text { text: setupSection == "chat" ? "Follow the prompts, then go back." : "Type q then Enter to finish, then go back."; fontSize: 11; color: muted; maxLines: 2 }
       } else {
         if setupSection == "systems" {
           for p in selectableProviders key p.id {

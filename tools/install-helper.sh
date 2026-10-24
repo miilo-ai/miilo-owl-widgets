@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # User-invoked bootstrap; never enrolls sessions or changes credentials.
 set -euo pipefail
-version='1.7.0'
+version='1.7.1'
 [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = aarch64 ] || {
   echo 'This installer supports ARM64 Linux inside Omalauncher. See the installation guide for other systems.' >&2
   exit 1

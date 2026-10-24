@@ -67,7 +67,10 @@ fn assemble() -> Result<()> {
         text.push_str(&format!(
             "  let helperInstallCommand = \"\"\"{installer}\"\"\"\n"
         ));
+        text.push_str(&format!("  let widgetVersion = \"{version}\"\n"));
         let mut parts = vec![
+            "brand",
+            "about",
             "appearance",
             "common",
             "toolbar",

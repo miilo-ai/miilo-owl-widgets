@@ -26,11 +26,14 @@ check-owl:
 	cargo xtask check-owl
 
 check-desktop:
+	node tools/generate-brand.cjs --check
+	node tools/test-brand-about.cjs
 	cargo xtask check-desktop
 	node tools/test-robot-motion.cjs
 	node tools/test-orbit.cjs
 	node tools/test-portrait.cjs
 	node tools/test-compact.cjs
+	node tools/test-adaptive-fleet.cjs
 	node tools/test-session-visibility.cjs
 	node tools/test-mobile-settings.cjs
 	node tools/test-helper-onboarding.cjs

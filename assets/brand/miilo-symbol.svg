@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" color="#B4D3E8">
+<title>Miilo robot symbol</title>
+<g fill="currentColor" transform="translate(-123.5 -8)">
+<path fill-rule="evenodd" d="M145 29H166Q178 29 178 41V52Q178 64 166 64H145Q133 64 133 52V41Q133 29 145 29Z M144 38Q140 38 140 42V51Q140 55 144 55H167Q171 55 171 51V42Q171 38 167 38Z" />
+      <path d="M155.5 22V30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+      <circle cx="155.5" cy="20" r="4.5" />
+      <circle cx="149" cy="46.5" r="3" />
+      <circle cx="162" cy="46.5" r="3" />
+</g>
+</svg>

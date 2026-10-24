@@ -16,8 +16,8 @@ profile edits, or credential changes occur. Existing helpers are not overwritten
 The checksum detects corrupted or mismatched assets; it is not an independent
 signature because the archive and checksum come from the same release account.
 Return and refresh after success. Ensure `~/.local/bin` is on the launcher PATH.
-Version 1.6.2 must be published with its archive and SHA256SUMS before this workflow
-can install it. Missing release assets fail without installing anything.
+The matching pinned helper version must be published with its archive and
+SHA256SUMS before this workflow can install it. Missing release assets fail without installing anything.
 
 To remove the helper, delete `~/.local/bin/miilo-owl` after stopping its use.
 Remove the widget through the launcher. Configuration and credentials are retained;
@@ -46,3 +46,20 @@ is not bundled in the store. Packages: bash, curl, coreutils, tar, gawk, grep, g
 No automatic download occurs on rendering. The helper uses local selected session
 files and explicitly configured network endpoints. Its download/execution must be
 reviewed under the store's flagged-command policy before listing.
+
+## Updating the reviewed store entry
+
+After device qualification and publication of the matching helper release, update
+the upstream store entry in a separate PR. Pin both the helper version and the
+archive’s literal SHA-256 to the exact reviewed release. Keep the store widget
+version above 1.6.4. Do not substitute a moving download URL or retain the checksum
+from an older binary. Test the actual ARM64 archive and clean installation before
+submitting the new pin. Repository checksums alone do not replace this store pin.
+
+## Branding and About
+
+The launcher owns the screen title and close control. The widget does not add
+a second wordmark beneath that title. Settings → About explains observation, credential
+storage, optional model context sharing and data retention on removal. It shows
+the packaged widget version and offers explicit website and sponsorship links.
+About remains accessible when the required helper is absent.
