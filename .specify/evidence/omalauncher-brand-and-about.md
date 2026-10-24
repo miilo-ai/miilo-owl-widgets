@@ -39,7 +39,7 @@ compact. Generated widget copies and brand assets match their source.
 
 The Android 14 ARM64 Omalauncher preview app loaded the exact generated fleet
 widget, verified by SHA-256. Its single launcher-owned title, About disclosures, packaged
-version 1.7.1, Back and Done were checked in the installed launcher. Existing helper,
+version 1.7.1 and Back navigation were checked in the installed launcher. Existing helper,
 configuration and credentials were preserved; no enrollment, model request or
 provider action was performed. The configured inventory was empty, so this device
 run does not establish live multi-system geometry or current provider health.

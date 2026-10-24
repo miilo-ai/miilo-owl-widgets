@@ -28,7 +28,10 @@ for(const file of ['70-miilo-fleet.owl','71-miilo-attention.owl','72-miilo-board
    set('setupConfiguring',false);
   }
  }
- button('Done').h.onTap(0,0);assert.equal(instance.values[slot('setupOpen')],false);assert.equal(instance.values[slot('selectedWork')],'w1');
+ assert(!button('Done'),'Back is the only settings exit control');
+ const back=()=>nodes().find(n=>n.kind==='Box'&&n.h?.onTap&&n.p.width===44);
+ back().h.onTap(0,0);assert.equal(instance.values[slot('setupSection')],'menu');
+ back().h.onTap(0,0);assert.equal(instance.values[slot('setupOpen')],false);assert.equal(instance.values[slot('selectedWork')],'w1');
  assert(nodes().some(n=>n.p?.text===item.title),'Closing settings restores task');
  assert.deepEqual(errors,[]);assert.deepEqual(commands,[],'Settings cannot dispatch provider mutations');cases++;
 }
