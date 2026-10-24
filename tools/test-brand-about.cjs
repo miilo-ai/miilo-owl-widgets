@@ -40,8 +40,9 @@ for (const file of ['70-miilo-fleet.owl', '71-miilo-attention.owl', '72-miilo-bo
       set('leftHanded', leftHanded); rendered = nodes();
       const row = rendered.find(n => n.kind === 'Row' && n.c?.some(c => c.p?.text === 'Sponsor Miilo ↗'));
       assert.equal(row.c[0].kind, leftHanded ? 'Button' : 'Spacer');
+      assert(row.c.some(c => c.p?.text === 'miilo.tech ↗'), 'Both links share one row');
     }
-    rendered.find(n => n.kind === 'Button' && n.p.text === 'More at miilo.tech ↗').h.onTap(0, 0);
+    rendered.find(n => n.kind === 'Button' && n.p.text === 'miilo.tech ↗').h.onTap(0, 0);
     rendered.find(n => n.kind === 'Button' && n.p.text === 'Sponsor Miilo ↗').h.onTap(0, 0);
     assert.deepEqual(actions, [{name: 'url', args: ['https://miilo.tech/']}, {name: 'url', args: ['https://github.com/sponsors/miilo-ai']}]);
     const back = rendered.find(n => n.kind === 'Box' && n.h?.onTap && n.p.width === 44);
