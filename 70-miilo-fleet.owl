@@ -1,5 +1,5 @@
 widget "miilo" {
-  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.7.0"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Animated agents and work across selected systems"; version: "1.7.1"; license: "MIT"; category: "dev" }
   page: 1
   order: 7
   size: 3x2
@@ -9,7 +9,7 @@ widget "miilo" {
   let helperInstallCommand = """#!/usr/bin/env bash
 # User-invoked bootstrap; never enrolls sessions or changes credentials.
 set -euo pipefail
-version='1.7.0'
+version='1.7.1'
 [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = aarch64 ] || {
   echo 'This installer supports ARM64 Linux inside Omalauncher. See the installation guide for other systems.' >&2
   exit 1
@@ -46,6 +46,63 @@ install -m 755 "$stage/miilo-owl" "$pending"
 ln "$pending" "$base/miilo-owl"
 printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n' "$version" "$base"
 """
+  let widgetVersion = "1.7.1"
+  // Generated from assets/brand SVGs by tools/generate-brand.cjs.
+  component BrandWordmark(w = 86, ink = foreground) {
+    Canvas {
+      width: w; height: w * 72 / 184
+      let k = width / 184
+      path([[6*k,60*k],[6*k,31*k]], stroke: ink, width: 9*k, cap: round)
+      path([[6*k,41*k],[6.27*k,38.539*k],[7.031*k,36.406*k],[8.215*k,34.602*k],[9.75*k,33.125*k],[11.566*k,31.977*k],[13.594*k,31.156*k],[15.762*k,30.664*k],[18*k,30.5*k],[20.238*k,30.664*k],[22.406*k,31.156*k],[24.434*k,31.977*k],[26.25*k,33.125*k],[27.785*k,34.602*k],[28.969*k,36.406*k],[29.73*k,38.539*k],[30*k,41*k],[30*k,60*k]], stroke: ink, width: 9*k, cap: round)
+      path([[30*k,41*k],[30.27*k,38.539*k],[31.031*k,36.406*k],[32.215*k,34.602*k],[33.75*k,33.125*k],[35.566*k,31.977*k],[37.594*k,31.156*k],[39.762*k,30.664*k],[42*k,30.5*k],[44.238*k,30.664*k],[46.406*k,31.156*k],[48.434*k,31.977*k],[50.25*k,33.125*k],[51.785*k,34.602*k],[52.969*k,36.406*k],[53.73*k,38.539*k],[54*k,41*k],[54*k,60*k]], stroke: ink, width: 9*k, cap: round)
+      path([[74*k,35*k],[74*k,60*k]], stroke: ink, width: 9*k, cap: round)
+      path([[94*k,35*k],[94*k,60*k]], stroke: ink, width: 9*k, cap: round)
+      path([[115*k,12*k],[115*k,60*k]], stroke: ink, width: 9*k, cap: round)
+      circle(74*k, 20*k, 4.5*k, fill: ink)
+      circle(94*k, 20*k, 4.5*k, fill: ink)
+      path([[145*k,29*k],[166*k,29*k],[167.453*k,29.047*k],[168.813*k,29.188*k],[170.078*k,29.422*k],[171.25*k,29.75*k],[172.328*k,30.172*k],[173.313*k,30.688*k],[174.203*k,31.297*k],[175*k,32*k],[175.703*k,32.797*k],[176.313*k,33.688*k],[176.828*k,34.672*k],[177.25*k,35.75*k],[177.578*k,36.922*k],[177.813*k,38.188*k],[177.953*k,39.547*k],[178*k,41*k],[178*k,52*k],[177.953*k,53.453*k],[177.813*k,54.813*k],[177.578*k,56.078*k],[177.25*k,57.25*k],[176.828*k,58.328*k],[176.313*k,59.313*k],[175.703*k,60.203*k],[175*k,61*k],[174.203*k,61.703*k],[173.313*k,62.313*k],[172.328*k,62.828*k],[171.25*k,63.25*k],[170.078*k,63.578*k],[168.813*k,63.813*k],[167.453*k,63.953*k],[166*k,64*k],[145*k,64*k],[143.547*k,63.953*k],[142.188*k,63.813*k],[140.922*k,63.578*k],[139.75*k,63.25*k],[138.672*k,62.828*k],[137.688*k,62.313*k],[136.797*k,61.703*k],[136*k,61*k],[135.297*k,60.203*k],[134.688*k,59.313*k],[134.172*k,58.328*k],[133.75*k,57.25*k],[133.422*k,56.078*k],[133.188*k,54.813*k],[133.047*k,53.453*k],[133*k,52*k],[133*k,41*k],[133.047*k,39.547*k],[133.188*k,38.188*k],[133.422*k,36.922*k],[133.75*k,35.75*k],[134.172*k,34.672*k],[134.688*k,33.688*k],[135.297*k,32.797*k],[136*k,32*k],[136.797*k,31.297*k],[137.688*k,30.688*k],[138.672*k,30.172*k],[139.75*k,29.75*k],[140.922*k,29.422*k],[142.188*k,29.188*k],[143.547*k,29.047*k],[145*k,29*k],[145*k,29*k],[145*k,29*k],[144*k,38*k],[144*k,38*k],[143.516*k,38.016*k],[143.063*k,38.063*k],[142.641*k,38.141*k],[142.25*k,38.25*k],[141.891*k,38.391*k],[141.563*k,38.563*k],[141.266*k,38.766*k],[141*k,39*k],[140.766*k,39.266*k],[140.563*k,39.563*k],[140.391*k,39.891*k],[140.25*k,40.25*k],[140.141*k,40.641*k],[140.063*k,41.063*k],[140.016*k,41.516*k],[140*k,42*k],[140*k,51*k],[140.016*k,51.484*k],[140.063*k,51.938*k],[140.141*k,52.359*k],[140.25*k,52.75*k],[140.391*k,53.109*k],[140.563*k,53.438*k],[140.766*k,53.734*k],[141*k,54*k],[141.266*k,54.234*k],[141.563*k,54.438*k],[141.891*k,54.609*k],[142.25*k,54.75*k],[142.641*k,54.859*k],[143.063*k,54.938*k],[143.516*k,54.984*k],[144*k,55*k],[167*k,55*k],[167.484*k,54.984*k],[167.938*k,54.938*k],[168.359*k,54.859*k],[168.75*k,54.75*k],[169.109*k,54.609*k],[169.438*k,54.438*k],[169.734*k,54.234*k],[170*k,54*k],[170.234*k,53.734*k],[170.438*k,53.438*k],[170.609*k,53.109*k],[170.75*k,52.75*k],[170.859*k,52.359*k],[170.938*k,51.938*k],[170.984*k,51.484*k],[171*k,51*k],[171*k,42*k],[170.984*k,41.516*k],[170.938*k,41.063*k],[170.859*k,40.641*k],[170.75*k,40.25*k],[170.609*k,39.891*k],[170.438*k,39.563*k],[170.234*k,39.266*k],[170*k,39*k],[169.734*k,38.766*k],[169.438*k,38.563*k],[169.109*k,38.391*k],[168.75*k,38.25*k],[168.359*k,38.141*k],[167.938*k,38.063*k],[167.484*k,38.016*k],[167*k,38*k],[144*k,38*k],[144*k,38*k],[145*k,29*k]], fill: ink, closed: true)
+      path([[155.5*k,22*k],[155.5*k,30*k]], fill: ink, stroke: ink, width: 2.5*k, cap: round, closed: true)
+      circle(155.5*k, 20*k, 4.5*k, fill: ink)
+      circle(149*k, 46.5*k, 3*k, fill: ink)
+      circle(162*k, 46.5*k, 3*k, fill: ink)
+    }
+  }
+  component BrandSymbol(w = 24, ink = foreground) {
+    Canvas {
+      width: w; height: w * 64 / 64
+      let k = width / 64
+      path([[21.5*k,21*k],[42.5*k,21*k],[43.953*k,21.047*k],[45.313*k,21.188*k],[46.578*k,21.422*k],[47.75*k,21.75*k],[48.828*k,22.172*k],[49.813*k,22.688*k],[50.703*k,23.297*k],[51.5*k,24*k],[52.203*k,24.797*k],[52.813*k,25.688*k],[53.328*k,26.672*k],[53.75*k,27.75*k],[54.078*k,28.922*k],[54.313*k,30.188*k],[54.453*k,31.547*k],[54.5*k,33*k],[54.5*k,44*k],[54.453*k,45.453*k],[54.313*k,46.813*k],[54.078*k,48.078*k],[53.75*k,49.25*k],[53.328*k,50.328*k],[52.813*k,51.313*k],[52.203*k,52.203*k],[51.5*k,53*k],[50.703*k,53.703*k],[49.813*k,54.313*k],[48.828*k,54.828*k],[47.75*k,55.25*k],[46.578*k,55.578*k],[45.313*k,55.813*k],[43.953*k,55.953*k],[42.5*k,56*k],[21.5*k,56*k],[20.047*k,55.953*k],[18.688*k,55.813*k],[17.422*k,55.578*k],[16.25*k,55.25*k],[15.172*k,54.828*k],[14.188*k,54.313*k],[13.297*k,53.703*k],[12.5*k,53*k],[11.797*k,52.203*k],[11.188*k,51.313*k],[10.672*k,50.328*k],[10.25*k,49.25*k],[9.922*k,48.078*k],[9.688*k,46.813*k],[9.547*k,45.453*k],[9.5*k,44*k],[9.5*k,33*k],[9.547*k,31.547*k],[9.688*k,30.188*k],[9.922*k,28.922*k],[10.25*k,27.75*k],[10.672*k,26.672*k],[11.188*k,25.688*k],[11.797*k,24.797*k],[12.5*k,24*k],[13.297*k,23.297*k],[14.188*k,22.688*k],[15.172*k,22.172*k],[16.25*k,21.75*k],[17.422*k,21.422*k],[18.688*k,21.188*k],[20.047*k,21.047*k],[21.5*k,21*k],[21.5*k,21*k],[21.5*k,21*k],[20.5*k,30*k],[20.5*k,30*k],[20.016*k,30.016*k],[19.563*k,30.063*k],[19.141*k,30.141*k],[18.75*k,30.25*k],[18.391*k,30.391*k],[18.063*k,30.563*k],[17.766*k,30.766*k],[17.5*k,31*k],[17.266*k,31.266*k],[17.063*k,31.563*k],[16.891*k,31.891*k],[16.75*k,32.25*k],[16.641*k,32.641*k],[16.563*k,33.063*k],[16.516*k,33.516*k],[16.5*k,34*k],[16.5*k,43*k],[16.516*k,43.484*k],[16.563*k,43.938*k],[16.641*k,44.359*k],[16.75*k,44.75*k],[16.891*k,45.109*k],[17.063*k,45.438*k],[17.266*k,45.734*k],[17.5*k,46*k],[17.766*k,46.234*k],[18.063*k,46.438*k],[18.391*k,46.609*k],[18.75*k,46.75*k],[19.141*k,46.859*k],[19.563*k,46.938*k],[20.016*k,46.984*k],[20.5*k,47*k],[43.5*k,47*k],[43.984*k,46.984*k],[44.438*k,46.938*k],[44.859*k,46.859*k],[45.25*k,46.75*k],[45.609*k,46.609*k],[45.938*k,46.438*k],[46.234*k,46.234*k],[46.5*k,46*k],[46.734*k,45.734*k],[46.938*k,45.438*k],[47.109*k,45.109*k],[47.25*k,44.75*k],[47.359*k,44.359*k],[47.438*k,43.938*k],[47.484*k,43.484*k],[47.5*k,43*k],[47.5*k,34*k],[47.484*k,33.516*k],[47.438*k,33.063*k],[47.359*k,32.641*k],[47.25*k,32.25*k],[47.109*k,31.891*k],[46.938*k,31.563*k],[46.734*k,31.266*k],[46.5*k,31*k],[46.234*k,30.766*k],[45.938*k,30.563*k],[45.609*k,30.391*k],[45.25*k,30.25*k],[44.859*k,30.141*k],[44.438*k,30.063*k],[43.984*k,30.016*k],[43.5*k,30*k],[20.5*k,30*k],[20.5*k,30*k],[21.5*k,21*k]], fill: ink, closed: true)
+      path([[32*k,14*k],[32*k,22*k]], fill: ink, stroke: ink, width: 2.5*k, cap: round, closed: true)
+      circle(32*k, 12*k, 4.5*k, fill: ink)
+      circle(25.5*k, 38.5*k, 3*k, fill: ink)
+      circle(38.5*k, 38.5*k, 3*k, fill: ink)
+    }
+  }
+
+  component WidgetAbout() {
+    Column {
+      fill: width; gap: 10
+      Text { text: "Widget · ${widgetVersion}"; fontSize: 11; color: muted; maxLines: 1 }
+      Text { text: "Personal by default. No Miilo account is required to observe your selected sessions and connected systems."; fontSize: 12; maxLines: 4 }
+      Text { text: "You choose what to connect and import. Observation uses your configured endpoints. Preferences and connection settings stay in your launcher’s Linux environment; credentials stay outside widget source."; fontSize: 12; maxLines: 6 }
+      Text { text: "Model explanations are optional. Selected work context goes to the endpoint you configure and consent to, whose privacy policy applies. Voice is not available in this launcher."; fontSize: 12; maxLines: 5 }
+      Text { text: "Observation does not grant permission to act on your systems. Removing the widget preserves connections and observation data. Revoke remote access at its source when a device is no longer trusted."; fontSize: 12; maxLines: 6 }
+      Row {
+        fill: width
+        if !leftHanded { Spacer { weight: 1 } }
+        Button { height: 28; background: alpha(accent, 0.12); color: accent; text: "More at miilo.tech ↗"; onTap: url("https://miilo.tech/") }
+        if leftHanded { Spacer { weight: 1 } }
+      }
+      Text { text: "Help fund Miilo’s development."; fontSize: 12; color: muted; maxLines: 2 }
+      Row {
+        fill: width
+        if !leftHanded { Spacer { weight: 1 } }
+        Button { height: 28; background: alpha(accent, 0.12); color: accent; text: "Sponsor Miilo ↗"; onTap: url("https://github.com/sponsors/miilo-ai") }
+        if leftHanded { Spacer { weight: 1 } }
+      }
+    }
+  }
+
   // Presentation preferences only: never alter observations or action authority.
   state robotMotion = "full" persist
   state robotPace = "normal" persist
@@ -354,6 +411,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     }
   }
   component SettingsPage() {
+    BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
     Row {
       fill: width; gap: 8; align: center
       Box {
@@ -361,17 +419,21 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
         onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false }
         ToolbarIcon { kind: "back" }
       }
-      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
+      Text { text: setupSection == "about" ? "About" : setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
       Button { height: 28; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
-    if feed.code == 127 {
+    if setupSection == "about" {
+      WidgetAbout { }
+    } else if feed.code == 127 {
       HelperInstall { }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Pair computer"; detail: "Approve a read-only connection on your computer"; section: "pair" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
       SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "appearance" {
       RobotAppearance { }
       Text { text: "Controls"; fontSize: 12; color: muted }
@@ -1092,6 +1154,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
       scroll: true
       gap: 10
       if setupOpen { SettingsPage { } } else {
+        BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
         Setup { }
         if focused == null && actor == null { Search { placeholder: "Search systems, agents or work" } }
         if focused != null {

@@ -723,7 +723,7 @@ dependencies = [
 
 [[package]]
 name = "miilo-owl"
-version = "1.7.0"
+version = "1.7.1"
 dependencies = [
  "chrono",
  "fs2",

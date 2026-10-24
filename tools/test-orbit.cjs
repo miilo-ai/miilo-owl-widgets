@@ -116,14 +116,14 @@ many.data.snapshot.providers=many.data.snapshot.providers.slice(0,1);many.update
 const none=scene({count:0});assert(none.render(1).some(n=>n.p?.text==='No systems to display'));
 require('./test-orbit-navigation.cjs')(scene);
 const quiet=scene({view:'quiet'});assert.equal(quiet.draw(1).length,0,'Compact fields use content-sized geometry');
-const quietBots = s => s.render(1).filter(n => n.kind === 'Canvas' && n.p?.height > 25 && !n.p?.fill);
+const quietBots = s => s.render(1).filter(n => n.kind === 'Canvas' && n.p?.height > 25 && n.p.width === n.p.height && !n.p?.fill);
 assert.equal(quietBots(quiet).length, 2, 'Quiet initially shows the robot fleet');
 assert(!quiet.render(1).some(n=>n.p?.text==='Task p0 0'), 'Task lists stay behind robot selection');
 assert(quietBots(quiet)[0].draw(58,58).some(op=>op.op==='text'&&op.text==='?!'), 'Quiet aggregates attention');
 const noActors=scene({view:'quiet'});noActors.data.snapshot.actors=[];noActors.update();
 assert.equal(quietBots(noActors).length,2,'Provider-only sources retain system robots');
 const compactQuiet=scene({view:'quiet',screenWidth:320});
-assert.equal(compactQuiet.render(1).filter(n=>n.kind==='Canvas'&&n.p?.height > 25 && !n.p?.fill).length,2,'Narrow fleet keeps smaller robots');
+assert.equal(compactQuiet.render(1).filter(n=>n.kind==='Canvas'&&n.p?.height > 25 && n.p.width === n.p.height && !n.p?.fill).length,2,'Narrow fleet keeps smaller robots');
 const quietOffline=scene({view:'quiet',stale:true});
 assert(!quietBots(quietOffline)[0].draw(88,88).some(op=>op.op==='text'&&['?!','!'].includes(op.text)),'Stale fleets suppress attention');
 const robotTile=quiet.render(1).find(n=>n.kind==='Column'&&n.h?.onTap&&n.c?.some(c=>c.p?.text==='System 0'));

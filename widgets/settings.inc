@@ -14,6 +14,7 @@
     }
   }
   component SettingsPage() {
+    BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
     Row {
       fill: width; gap: 8; align: center
       Box {
@@ -21,17 +22,21 @@
         onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false }
         ToolbarIcon { kind: "back" }
       }
-      Text { text: setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
+      Text { text: setupSection == "about" ? "About" : setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
       Button { height: 28; background: alpha(accent, 0.12); text: "Done"; onTap: { setupOpen = false; setupConfiguring = false; refresh() } }
     }
-    if feed.code == 127 {
+    if setupSection == "about" {
+      WidgetAbout { }
+    } else if feed.code == 127 {
       HelperInstall { }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "menu" {
       SettingsEntry { label: "Appearance"; detail: "Motion, personality and robot colors"; section: "appearance" }
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Pair computer"; detail: "Approve a read-only connection on your computer"; section: "pair" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
       SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
+      SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "appearance" {
       RobotAppearance { }
       Text { text: "Controls"; fontSize: 12; color: muted }

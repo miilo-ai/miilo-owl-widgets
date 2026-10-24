@@ -49,6 +49,7 @@
       scroll: true
       gap: 10
       if setupOpen { SettingsPage { } } else {
+        BrandWordmark { w: clamp(screenWidth * 0.22, 72, 96) }
         Setup { }
         if focused == null && actor == null { Search { placeholder: "Search work or systems" } }
         if focused != null {
