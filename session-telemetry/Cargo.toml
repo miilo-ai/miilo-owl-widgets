@@ -1,0 +1,22 @@
+[package]
+name = "miilo-session-telemetry"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[dependencies]
+miilo-telemetry = { git = "https://github.com/miilo-ai/miilo-cli", rev = "a710b496148264cb7e8d8d600ea8ab1728775a59" }
+miilo-adapter-sdk = { git = "https://github.com/miilo-ai/miilo-sdk", rev = "09d6630d855e0cb0cb69ce7e4508471c1b3a35c9", features = ["telemetry"] }
+chrono = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+opentelemetry = { version = "0.33", default-features = false, features = ["trace"] }
+libc = "0.2"
+
+[workspace]
+
+[dev-dependencies]
+tempfile = "3"
+prost = "0.14"
+opentelemetry-proto = { version = "0.33", default-features = false, features = ["gen-tonic-messages", "trace"] }

@@ -11,3 +11,5 @@ pub mod chat_sse;
 pub mod uninstall;
 
 pub mod paired_selection;
+
+pub mod telemetry;

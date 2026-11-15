@@ -1,5 +1,5 @@
 widget "miilo attention" {
-  meta { owl: 6; description: "Compact review queue with evidence and provider actions"; version: "1.7.1"; license: "MIT"; category: "dev" }
+  meta { owl: 6; description: "Compact review queue with evidence and provider actions"; version: "1.7.2"; license: "MIT"; category: "dev" }
   page: 1
   order: 8
   size: 3x2
@@ -9,7 +9,7 @@ widget "miilo attention" {
   let helperInstallCommand = """#!/usr/bin/env bash
 # User-invoked bootstrap; never enrolls sessions or changes credentials.
 set -euo pipefail
-version='1.7.1'
+version='1.7.2'
 [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = aarch64 ] || {
   echo 'This installer supports ARM64 Linux inside Omalauncher. See the installation guide for other systems.' >&2
   exit 1
@@ -46,7 +46,7 @@ install -m 755 "$stage/miilo-owl" "$pending"
 ln "$pending" "$base/miilo-owl"
 printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n' "$version" "$base"
 """
-  let widgetVersion = "1.7.1"
+  let widgetVersion = "1.7.2"
   // Generated from assets/brand SVGs by tools/generate-brand.cjs.
   component BrandWordmark(w = 86, ink = foreground) {
     Canvas {

@@ -57,6 +57,13 @@ fn run(args: &[String]) -> Result<Option<Value>> {
                 json!({"status":"installed","activation":"explicit","mode":mode}),
             ))
         }
+        ["telemetry", rest @ ..] => {
+            miilo_owl::adapters::telemetry::dispatch(&store, rest).map(Some)
+        }
+        ["chat", "--trace-parent", parent] => {
+            miilo_owl::adapters::chat_command::run_traced(&store, false, Some(parent))?;
+            Ok(None)
+        }
         ["chat-setup"] => {
             miilo_owl::adapters::chat_config::setup(&store)?;
             Ok(Some(
@@ -95,7 +102,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

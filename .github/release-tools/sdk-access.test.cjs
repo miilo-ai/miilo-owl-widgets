@@ -4,7 +4,7 @@ const path=require('node:path');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {pinnedReference,main}=require('./sdk-access.cjs');
-const root=path.resolve(__dirname,'../..'),revision='40c2008207ae8abac2b82eeca7511ad6bf665d35';
+const root=path.resolve(__dirname,'../..'),revision='09d6630d855e0cb0cb69ce7e4508471c1b3a35c9';
 test('canonical immutable pin required',()=>{
   assert.equal(pinnedReference({git:'https://github.com/miilo-ai/miilo-sdk',rev:'a'.repeat(40)}),'a'.repeat(40));
   for(const value of [{git:'https://example.invalid/sdk',rev:'a'.repeat(40)},{git:'https://github.com/miilo-ai/miilo-sdk',rev:'main'},{git:'https://github.com/miilo-ai/miilo-sdk',tag:'v1.0.0',rev:'a'.repeat(40)}])assert.throws(()=>pinnedReference(value));

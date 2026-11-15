@@ -17,6 +17,15 @@
         "Uuid::new_v4\\(",
         "Instant::now\\("
       ]
+    },
+    {
+      "name": "session-telemetry-adapters",
+      "paths": [
+        "session-telemetry/src/**/*.rs"
+      ],
+      "forbid": [
+        "\\buse\\s+super::\\*"
+      ]
     }
   ],
   "existingSizeExceptions": {}

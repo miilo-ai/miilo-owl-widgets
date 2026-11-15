@@ -9,6 +9,8 @@ use serde_json::json;
 use std::time::Duration;
 pub struct OpenAiChat {
     client: Client,
+    telemetry: Option<std::sync::Arc<miilo_session_telemetry::Host>>,
+    parent: miilo_session_telemetry::Context,
 }
 impl OpenAiChat {
     pub fn new() -> Result<Self> {
@@ -18,7 +20,20 @@ impl OpenAiChat {
             .timeout(Duration::from_secs(60))
             .build()
             .map_err(|_| "Cannot initialize chat client")?;
-        Ok(Self { client })
+        Ok(Self {
+            client,
+            telemetry: None,
+            parent: miilo_session_telemetry::Context::new(),
+        })
+    }
+    pub fn traced(
+        mut self,
+        telemetry: Option<std::sync::Arc<miilo_session_telemetry::Host>>,
+        parent: miilo_session_telemetry::Context,
+    ) -> Self {
+        self.telemetry = telemetry;
+        self.parent = parent;
+        self
     }
 }
 impl ChatBackend for OpenAiChat {
@@ -43,18 +58,32 @@ impl ChatBackend for OpenAiChat {
         if let Some(token) = super::chat_config::credential(config)? {
             call = call.bearer_auth(token);
         }
-        let response = call.send().map_err(|_| "Chat endpoint unavailable")?;
-        if !response.status().is_success() {
-            return Err("Chat endpoint rejected the request; check model and access".into());
+        let operation = self
+            .telemetry
+            .as_ref()
+            .map(|host| host.chat(self.parent.clone()));
+        let result = (|| {
+            let response = call.send().map_err(|_| "Chat endpoint unavailable")?;
+            if !response.status().is_success() {
+                return Err("Chat endpoint rejected the request; check model and access".into());
+            }
+            if !response
+                .headers()
+                .get(reqwest::header::CONTENT_TYPE)
+                .and_then(|h| h.to_str().ok())
+                .is_some_and(|v| v.starts_with("text/event-stream"))
+            {
+                return Err("Chat endpoint did not return an SSE stream".into());
+            }
+            super::chat_sse::read(response, delta)
+        })();
+        if let Some(operation) = operation {
+            operation.finish(if result.is_ok() {
+                miilo_session_telemetry::Outcome::Success
+            } else {
+                miilo_session_telemetry::Outcome::Error(miilo_session_telemetry::ErrorKind::Other)
+            });
         }
-        if !response
-            .headers()
-            .get(reqwest::header::CONTENT_TYPE)
-            .and_then(|h| h.to_str().ok())
-            .is_some_and(|v| v.starts_with("text/event-stream"))
-        {
-            return Err("Chat endpoint did not return an SSE stream".into());
-        }
-        super::chat_sse::read(response, delta)
+        result
     }
 }
