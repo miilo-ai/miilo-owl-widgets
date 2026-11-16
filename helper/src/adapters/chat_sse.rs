@@ -3,7 +3,8 @@ use crate::Result;
 use serde_json::Value;
 use std::io::{BufRead, BufReader, Read};
 pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Result<()> {
-    let mut reader = BufReader::new(reader.take(256_001));
+    const MAX_STREAM_BYTES: usize = 8 * 1024 * 1024;
+    let mut reader = BufReader::new(reader.take(MAX_STREAM_BYTES as u64 + 1));
     let mut total = 0;
     let mut frame = String::new();
     let mut answer = super::chat_text::Answer::default();
@@ -17,7 +18,7 @@ pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Res
             return Err("Chat stream ended without a completion marker".into());
         }
         total += size;
-        if size > 65_536 || total > 256_000 {
+        if size > 65_536 || total > MAX_STREAM_BYTES {
             return Err("Chat stream exceeded the limit".into());
         }
         let line = std::str::from_utf8(&bytes)

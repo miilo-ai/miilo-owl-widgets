@@ -13,6 +13,7 @@ use std::{
 fn config(url: String) -> ChatConfig {
     ChatConfig {
         max_output_tokens: 512,
+        template_thinking: None,
         version: 1,
         base_url: url,
         model: "example-small".into(),
@@ -83,6 +84,7 @@ fn actual_http_request_streams_and_does_not_enable_tools() {
         assert_eq!(request["model"], "example-small");
         assert_eq!(request["stream"], true);
         assert_eq!(request["max_tokens"], 2048);
+        assert_eq!(request["chat_template_kwargs"]["enable_thinking"], false);
         assert!(request.get("tools").is_none());
         let body = "data: {\"choices\":[{\"delta\":{\"content\":\"No current work.\"}}]}\n\ndata: [DONE]\n\n";
         write!(socket,"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",body.len(),body).unwrap();
@@ -90,6 +92,7 @@ fn actual_http_request_streams_and_does_not_enable_tools() {
     let mut answer = String::new();
     let mut settings = config(url);
     settings.max_output_tokens = 2048;
+    settings.template_thinking = Some(false);
     OpenAiChat::new()
         .unwrap()
         .stream(&settings, &turn(), &ctx(), &mut |s| {

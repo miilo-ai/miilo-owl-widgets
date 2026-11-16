@@ -53,8 +53,17 @@ impl ChatBackend for OpenAiChat {
             messages.push(json!({"role":match message.role{ChatRole::User=>"user",ChatRole::Assistant=>"assistant"},"content":message.text}));
         }
         messages.push(json!({"role":"user","content":request.text}));
-        let mut call=self.client.post(format!("{}/chat/completions",config.base_url.trim_end_matches('/')))
-            .json(&json!({"model":config.model,"messages":messages,"stream":true,"max_tokens":config.max_output_tokens,"temperature":0.2}));
+        let mut body = json!({"model":config.model,"messages":messages,"stream":true,"max_tokens":config.max_output_tokens,"temperature":0.2});
+        if let Some(enabled) = config.template_thinking {
+            body["chat_template_kwargs"] = json!({"enable_thinking":enabled});
+        }
+        let mut call = self
+            .client
+            .post(format!(
+                "{}/chat/completions",
+                config.base_url.trim_end_matches('/')
+            ))
+            .json(&body);
         if let Some(token) = super::chat_config::credential(config)? {
             call = call.bearer_auth(token);
         }

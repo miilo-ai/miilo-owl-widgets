@@ -108,6 +108,7 @@ pub fn setup(store: &Store) -> Result<()> {
         store,
         &ChatConfig {
             max_output_tokens: 512,
+            template_thinking: None,
             version: 1,
             base_url,
             model,

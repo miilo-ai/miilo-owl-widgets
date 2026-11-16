@@ -17,6 +17,11 @@ Optional `maxOutputTokens` sets the completion budget from 128 through 8192;
 existing configurations default to 512. Reasoning models may need a larger
 budget to produce a final answer. Truncated output remains an incomplete turn
 and is never committed as a successful answer.
+For a server that explicitly supports `chat_template_kwargs.enable_thinking`,
+optional `templateThinking` configures that boolean. It is omitted by default;
+do not set it for an incompatible provider. Standard separate reasoning fields
+and streamed `<think>` blocks are not rendered as answers. SSE framing overhead
+has its own 8 MiB cap; individual frames remain bounded at 64 KiB.
 It is mode 600 and separate from observation connections. Tokens are read from
 the referenced private file on each turn; never put them in widgets or Git.
 Normalized summaries may still contain sensitive information. Inspect context

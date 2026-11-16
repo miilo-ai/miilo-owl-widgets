@@ -13,6 +13,8 @@ pub struct ChatConfig {
     pub consent: bool,
     #[serde(default = "default_output_tokens")]
     pub max_output_tokens: u32,
+    #[serde(default)]
+    pub template_thinking: Option<bool>,
 }
 fn default_output_tokens() -> u32 {
     512
