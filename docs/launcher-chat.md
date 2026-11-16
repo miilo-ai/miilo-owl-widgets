@@ -13,6 +13,10 @@ loopback. The setup asks permission to send normalized observation context.
 Saving config does not claim that an endpoint has been tested.
 
 The file is `chat.json` in the existing private helper configuration directory.
+Optional `maxOutputTokens` sets the completion budget from 128 through 8192;
+existing configurations default to 512. Reasoning models may need a larger
+budget to produce a final answer. Truncated output remains an incomplete turn
+and is never committed as a successful answer.
 It is mode 600 and separate from observation connections. Tokens are read from
 the referenced private file on each turn; never put them in widgets or Git.
 Normalized summaries may still contain sensitive information. Inspect context

@@ -70,6 +70,12 @@ fn run(args: &[String]) -> Result<Option<Value>> {
                 json!({"status":"configured","message":"Chat configuration saved; run chat to verify the endpoint"}),
             ))
         }
+        ["chat-status"] => {
+            let ready = miilo_owl::adapters::chat_config::load(&store)
+                .and_then(|config| miilo_owl::adapters::chat_config::credential(&config))
+                .is_ok();
+            Ok(Some(json!({"ready":ready})))
+        }
         ["chat"] | ["chat-context"] => {
             miilo_owl::adapters::chat_command::run(&store, args[0] == "chat-context")?;
             Ok(None)

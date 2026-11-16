@@ -74,6 +74,7 @@ fn actual_chat_stream_exports_metadata_without_question_or_reply() {
     );
     let request: ChatRequest = serde_json::from_value(json!({"protocolVersion":"0.1","requestId":"private-id-fixture","text":"private-question-fixture"})).unwrap();
     let config = ChatConfig {
+        max_output_tokens: 512,
         version: 1,
         base_url: format!("{endpoint}/v1"),
         model: "private-model-fixture".into(),

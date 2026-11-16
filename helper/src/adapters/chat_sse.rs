@@ -6,6 +6,7 @@ pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Res
     let mut reader = BufReader::new(reader.take(256_001));
     let mut total = 0;
     let mut frame = String::new();
+    let mut answer = super::chat_text::Answer::default();
     loop {
         let mut bytes = vec![];
         let size = (&mut reader)
@@ -28,7 +29,7 @@ pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Res
             }
             let data = std::mem::take(&mut frame);
             if data.trim() == "[DONE]" {
-                return Ok(());
+                return answer.finish(delta);
             }
             let value: Value =
                 serde_json::from_str(&data).map_err(|_| "Invalid chat stream frame")?;
@@ -36,8 +37,11 @@ pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Res
                 return Err("Chat provider failed".into());
             }
             if let Some(choice) = value["choices"].as_array().and_then(|v| v.first()) {
-                if choice["delta"].get("tool_calls").is_some()
-                    || choice["delta"].get("function_call").is_some()
+                if choice["delta"].get("tool_calls").is_some_and(|value| {
+                    !value.is_null() && value.as_array().is_none_or(|calls| !calls.is_empty())
+                }) || choice["delta"]
+                    .get("function_call")
+                    .is_some_and(|value| !value.is_null())
                     || matches!(
                         choice["finish_reason"].as_str(),
                         Some("tool_calls" | "function_call" | "length" | "content_filter")
@@ -49,7 +53,7 @@ pub fn read(reader: impl Read, delta: &mut dyn FnMut(&str) -> Result<()>) -> Res
                     .as_str()
                     .filter(|s| !s.is_empty())
                 {
-                    delta(text)?;
+                    answer.push(text, delta)?;
                 }
             }
         } else if let Some(data) = line.strip_prefix("data:") {

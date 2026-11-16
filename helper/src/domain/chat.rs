@@ -11,6 +11,11 @@ pub struct ChatConfig {
     pub model: String,
     pub api_key_file: Option<String>,
     pub consent: bool,
+    #[serde(default = "default_output_tokens")]
+    pub max_output_tokens: u32,
+}
+fn default_output_tokens() -> u32 {
+    512
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]

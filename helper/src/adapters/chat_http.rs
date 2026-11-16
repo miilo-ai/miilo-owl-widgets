@@ -54,7 +54,7 @@ impl ChatBackend for OpenAiChat {
         }
         messages.push(json!({"role":"user","content":request.text}));
         let mut call=self.client.post(format!("{}/chat/completions",config.base_url.trim_end_matches('/')))
-            .json(&json!({"model":config.model,"messages":messages,"stream":true,"max_tokens":512,"temperature":0.2}));
+            .json(&json!({"model":config.model,"messages":messages,"stream":true,"max_tokens":config.max_output_tokens,"temperature":0.2}));
         if let Some(token) = super::chat_config::credential(config)? {
             call = call.bearer_auth(token);
         }

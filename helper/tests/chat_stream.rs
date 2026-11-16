@@ -32,7 +32,7 @@ fn truncated_malformed_and_oversized_streams_fail() {
 #[test]
 fn tool_calls_and_truncation_cannot_become_success() {
     for body in [
-        r#"{"choices":[{"delta":{"tool_calls":[]}}]}"#,
+        r#"{"choices":[{"delta":{"tool_calls":[{"function":{"name":"execute"}}]}}]}"#,
         r#"{"choices":[{"delta":{},"finish_reason":"length"}]}"#,
     ] {
         assert!(

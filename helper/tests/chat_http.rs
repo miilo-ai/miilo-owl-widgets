@@ -12,6 +12,7 @@ use std::{
 };
 fn config(url: String) -> ChatConfig {
     ChatConfig {
+        max_output_tokens: 512,
         version: 1,
         base_url: url,
         model: "example-small".into(),
@@ -81,20 +82,36 @@ fn actual_http_request_streams_and_does_not_enable_tools() {
         let request: Value = serde_json::from_slice(&raw[header_end..header_end + length]).unwrap();
         assert_eq!(request["model"], "example-small");
         assert_eq!(request["stream"], true);
+        assert_eq!(request["max_tokens"], 2048);
         assert!(request.get("tools").is_none());
         let body = "data: {\"choices\":[{\"delta\":{\"content\":\"No current work.\"}}]}\n\ndata: [DONE]\n\n";
         write!(socket,"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",body.len(),body).unwrap();
     });
     let mut answer = String::new();
+    let mut settings = config(url);
+    settings.max_output_tokens = 2048;
     OpenAiChat::new()
         .unwrap()
-        .stream(&config(url), &turn(), &ctx(), &mut |s| {
+        .stream(&settings, &turn(), &ctx(), &mut |s| {
             answer.push_str(s);
             Ok(())
         })
         .unwrap();
     assert_eq!(answer, "No current work.");
     server.join().unwrap();
+}
+#[test]
+fn output_budget_is_optional_for_existing_settings_and_bounded() {
+    let mut settings:ChatConfig=serde_json::from_value(json!({"version":1,"baseUrl":"https://example.invalid/v1","model":"example","consent":true})).unwrap();
+    assert_eq!(settings.max_output_tokens, 512);
+    for budget in [0, 127, 8193, u32::MAX] {
+        settings.max_output_tokens = budget;
+        assert!(chat_config::validate(&settings).is_err());
+    }
+    for budget in [128, 2048, 8192] {
+        settings.max_output_tokens = budget;
+        assert!(chat_config::validate(&settings).is_ok());
+    }
 }
 #[test]
 fn configuration_roundtrip_is_private_and_preserves_other_connections() {
