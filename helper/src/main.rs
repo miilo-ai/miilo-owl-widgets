@@ -19,6 +19,14 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["workers", rest @ ..] => miilo_owl::adapters::workers::dispatch(
+            &store,
+            &rest.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+        )
+        .map(Some),
+        ["workers-configure"] => {
+            miilo_owl::adapters::workers::configure(&store, std::io::stdin().lock()).map(Some)
+        }
         ["local-agents"] => {
             let home =
                 std::path::PathBuf::from(std::env::var_os("HOME").ok_or("Home unavailable")?);

@@ -14,3 +14,6 @@ pub mod uninstall;
 pub mod paired_selection;
 
 pub mod telemetry;
+
+pub mod worker_process;
+pub mod workers;
