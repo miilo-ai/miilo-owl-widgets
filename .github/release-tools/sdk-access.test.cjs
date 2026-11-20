@@ -20,6 +20,22 @@ test('public SDK must still resolve exact revision',async()=>{
   assert.equal(calls.length,2);assert.match(calls[1],new RegExp(revision+'$'));
   await assert.rejects(main({root,env:{},request:async()=>({ok:true,json:async()=>({sha:'wrong'})})}),/Pinned SDK/);
 });
+test('job token authenticates public metadata without configuring private Git access',async()=>{
+  const calls=[],logs=[];
+  const env={GITHUB_API_TOKEN:'inert-job-token'};
+  const request=async(url,options)=>{calls.push(options.headers.Authorization);return {ok:true,json:async()=>({sha:revision})};};
+  assert.equal(await main({root,env,request,log:m=>logs.push(m)}),true);
+  assert.deepEqual(calls,['Bearer inert-job-token','Bearer inert-job-token']);
+  assert.equal(env.GIT_CONFIG_GLOBAL,undefined);
+  assert.ok(!logs.some(m=>m.includes(env.GITHUB_API_TOKEN)));
+  assert.equal(await main({root,env,request:async()=>({ok:false,status:404}),log:()=>{}}),false);
+});
+test('failed metadata checks expose status codes without credentials',async()=>{
+  const logs=[];
+  await assert.rejects(main({root,env:{GITHUB_API_TOKEN:'inert-job-token'},request:async()=>({ok:false,status:403}),log:m=>logs.push(m)}),/access check failed/);
+  assert.match(logs.join('\n'),/HTTP 403/);
+  assert.ok(!logs.join('\n').includes('inert-job-token'));
+});
 test('bad credential/service failure is not mistaken for an allowed skip',async()=>{
   await assert.rejects(main({root,env:{SDK_READ_TOKEN:'fixture'},request:async()=>({ok:false,status:401})}),/access check failed/);
   await assert.rejects(main({root,env:{},request:async()=>({ok:false,status:503})}),/access check failed/);

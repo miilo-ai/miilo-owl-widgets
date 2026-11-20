@@ -22,12 +22,15 @@ function readDependency(file) {
 async function main({env=process.env,request=fetch,log=console.log,root=process.cwd()}={}) {
   const dependency=readDependency(path.join(root,'helper/Cargo.toml'));pinnedReference(dependency);
   const token=env.SDK_READ_TOKEN||'',headers={Accept:'application/vnd.github+json','User-Agent':'miilo-release-check'};
-  if(token)headers.Authorization='Bearer '+token;
+  // The job token authenticates public metadata checks without granting Git access
+  // to a separate private repository. Only an explicit SDK token configures Git.
+  const apiToken=token||env.GITHUB_API_TOKEN||'';
+  if(apiToken)headers.Authorization='Bearer '+apiToken;
   const response=await request('https://api.github.com/repos/miilo-ai/miilo-sdk',{headers,signal:AbortSignal.timeout(20000)});
   let ready=true;
   if(!response.ok) {
     if(!token&&[401,404].includes(response.status))ready=false;
-    else throw Error('SDK access check failed; inspect credential scope or service availability');
+    else {log('SDK repository metadata check failed (HTTP '+response.status+').');throw Error('SDK access check failed; inspect credential scope or service availability');}
   } else await response.json();
   const gitEnv={...env,GIT_TERMINAL_PROMPT:'0'};
   if(ready) {
@@ -42,7 +45,8 @@ async function main({env=process.env,request=fetch,log=console.log,root=process.
     }
     if(dependency.rev) {
       const commit=await request('https://api.github.com/repos/miilo-ai/miilo-sdk/commits/'+dependency.rev,{headers,signal:AbortSignal.timeout(20000)});
-      if(!commit.ok||(await commit.json()).sha!==dependency.rev)throw Error('Pinned SDK commit cannot be fetched; no release may proceed');
+      if(!commit.ok){log('Pinned SDK metadata check failed (HTTP '+commit.status+').');throw Error('Pinned SDK commit cannot be fetched; no release may proceed');}
+      if((await commit.json()).sha!==dependency.rev)throw Error('Pinned SDK commit cannot be fetched; no release may proceed');
     } else {
       try{execFileSync('git',['ls-remote','--exit-code',dependency.git,'refs/tags/'+dependency.tag],{env:gitEnv,stdio:['ignore','pipe','pipe'],timeout:30000});}
       catch{throw Error('Pinned SDK tag cannot be fetched; no release may proceed');}
