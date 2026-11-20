@@ -96,7 +96,6 @@ fn run(args: &[String]) -> Result<Option<Value>> {
             miilo_owl::adapters::chat_command::run(&store, args[0] == "chat-context")?;
             Ok(None)
         }
-        ["voice"] => Ok(Some(miilo_owl::adapters::chat_command::voice_unavailable())),
         ["setup"] => {
             setup::setup(&store, &http, &mut setup::Terminal)?;
             Ok(None)
@@ -124,7 +123,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

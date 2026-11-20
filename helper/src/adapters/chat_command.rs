@@ -1,6 +1,5 @@
 use crate::{Result, config::Store};
 use miilo_adapter_sdk::{ChatEvent, ChatRequest, MIILO_PROTOCOL_VERSION};
-use serde_json::{Value, json};
 use std::io::{self, Read, Write};
 pub fn run(store: &Store, preview: bool) -> Result<()> {
     run_traced(store, preview, None)
@@ -68,8 +67,4 @@ pub fn run_mode(store: &Store, preview: bool, parent: Option<&str>, spoken: bool
         );
     }
     Ok(())
-}
-pub fn voice_unavailable() -> Value {
-    json!({"status":"not_implemented","code":"not_implemented","specId":"VOICE-001",
-        "message":"Launcher speech is deferred; use text chat.","spec":".specify/specs/004-launcher-voice/spec.md"})
 }

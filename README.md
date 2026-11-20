@@ -82,7 +82,7 @@ settings remain; this is integration removal, not a full device purge.
 - Provider-advertised, available **read/bounded or explicitly confirmed privileged** actions with no input form can be proposed, then explicitly confirmed. The helper re-reads the task and rejects a changed revision before posting. The backend also validates access and revision.
 - Strong-auth, privileged, destructive, expired, unavailable, or form-dependent actions remain in the provider interface. CE currently has observation/explanations but no action-proxy route; leave action opt-in disabled for CE.
 - Accepted receipts are shown as accepted, never as completed. Mutation requests are not automatically retried. Idempotency keys are stable for the same task/action/revision.
-- Explanation results are text. Speech playback and microphone capture are not implemented in these widgets.
+- OmaLauncher widget interaction and explanation results are text-based. Hands-free voice is provided separately by [Miilo One for Omarchy](https://github.com/miilo-ai/miilo-omarchy-plugin/blob/main/docs/voice.md).
 
 No demo approvals or fabricated evidence are included in the installed widgets.
 
@@ -222,7 +222,7 @@ boundaries. Run `node tools/check-architecture.cjs` and
 `node --test tools/architecture.test.cjs`; CI qualification runs both. These are
 development checks, not runtime dependencies.
 
-Text chat helper setup: [launcher chat](docs/launcher-chat.md). Full chat-panel qualification is separate from model-backed Explain. Voice is deferred.
+Text chat helper setup: [launcher chat](docs/launcher-chat.md). The native Omarchy plugin owns its chat panel, microphone capture and spoken replies through its separate Rust voice-session helper; these are not OmaLauncher widget features.
 
 ### Robot personality and motion
 

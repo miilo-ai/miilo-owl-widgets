@@ -469,7 +469,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
           }
         }
         Button { height: 28; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
-        if setupSection == "chat" { Text { text: "Voice is not available in this launcher yet."; fontSize: 11; color: muted; maxLines: 2 } }
+        if setupSection == "chat" { Text { text: "This widget uses text interaction. Hands-free voice is available in Miilo One for Omarchy."; fontSize: 11; color: muted; maxLines: 3 } }
       }
     }
   }
