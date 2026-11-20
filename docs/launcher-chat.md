@@ -13,6 +13,15 @@ loopback. The setup asks permission to send normalized observation context.
 Saving config does not claim that an endpoint has been tested.
 
 The file is `chat.json` in the existing private helper configuration directory.
+Optional `maxOutputTokens` sets the completion budget from 128 through 8192;
+existing configurations default to 512. Reasoning models may need a larger
+budget to produce a final answer. Truncated output remains an incomplete turn
+and is never committed as a successful answer.
+For a server that explicitly supports `chat_template_kwargs.enable_thinking`,
+optional `templateThinking` configures that boolean. It is omitted by default;
+do not set it for an incompatible provider. Standard separate reasoning fields
+and streamed `<think>` blocks are not rendered as answers. SSE framing overhead
+has its own 8 MiB cap; individual frames remain bounded at 64 KiB.
 It is mode 600 and separate from observation connections. Tokens are read from
 the referenced private file on each turn; never put them in widgets or Git.
 Normalized summaries may still contain sensitive information. Inspect context
@@ -39,11 +48,18 @@ Current observations are forcibly refreshed each turn. Closing the helper proces
 cancels its request; native UI must terminate the owned process on cancel/close
 and discard events from an earlier requestId.
 
-## Voice placeholder
+## Voice ownership
 
-`miilo-owl voice` returns `status: not_implemented`, `specId: VOICE-001`.
-See `.specify/specs/004-launcher-voice/spec.md`. It does not request microphone
-permission or record audio. Existing provider/mobile speech is not removed.
+OmaLauncher widgets use text interaction; they do not invoke a voice command.
+The unused legacy `miilo-owl voice` placeholder has been removed and is no longer
+an advertised or supported command. It does not forward to a microphone helper.
+
+[Miilo One for Omarchy](https://github.com/miilo-ai/miilo-omarchy-plugin/blob/main/docs/voice.md)
+provides in-place chat and hands-free conversation using its separate Rust
+`miilo-voice-session` helper, Superwhisper transcription and configured speech
+playback. That native UI owns consent, wake detection, cancellation and playback;
+the shared `miilo-owl chat --spoken` command supplies conversational model text.
+Installing the OmaLauncher widgets does not install or activate that voice stack.
 
 ## Qualification
 

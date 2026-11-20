@@ -2,7 +2,7 @@
 assemble:
 	cargo xtask assemble
 
-test: check-preview-toolchain
+test: check-preview-toolchain check-session-telemetry
 	node tools/test-render-invalidation.cjs
 	node --test tools/plain-text.test.cjs
 	node --test tools/install-helper.test.cjs
@@ -68,3 +68,9 @@ check-preview-toolchain:
 
 check-preview: check-preview-toolchain
 	node --test tools/preview-capture.test.cjs
+
+.PHONY: check-session-telemetry
+check-session-telemetry:
+	cargo fmt --manifest-path session-telemetry/Cargo.toml --check
+	cargo test --locked --manifest-path session-telemetry/Cargo.toml
+	cargo clippy --locked --manifest-path session-telemetry/Cargo.toml --all-targets -- -D warnings

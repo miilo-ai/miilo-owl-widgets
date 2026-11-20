@@ -19,6 +19,14 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["workers", rest @ ..] => miilo_owl::adapters::workers::dispatch(
+            &store,
+            &rest.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+        )
+        .map(Some),
+        ["workers-configure"] => {
+            miilo_owl::adapters::workers::configure(&store, std::io::stdin().lock()).map(Some)
+        }
         ["local-agents"] => {
             let home =
                 std::path::PathBuf::from(std::env::var_os("HOME").ok_or("Home unavailable")?);
@@ -57,17 +65,37 @@ fn run(args: &[String]) -> Result<Option<Value>> {
                 json!({"status":"installed","activation":"explicit","mode":mode}),
             ))
         }
+        ["telemetry", rest @ ..] => {
+            miilo_owl::adapters::telemetry::dispatch(&store, rest).map(Some)
+        }
+        ["chat", "--spoken"] => {
+            miilo_owl::adapters::chat_command::run_mode(&store, false, None, true)?;
+            Ok(None)
+        }
+        ["chat", "--spoken", "--trace-parent", parent] => {
+            miilo_owl::adapters::chat_command::run_mode(&store, false, Some(parent), true)?;
+            Ok(None)
+        }
+        ["chat", "--trace-parent", parent] => {
+            miilo_owl::adapters::chat_command::run_traced(&store, false, Some(parent))?;
+            Ok(None)
+        }
         ["chat-setup"] => {
             miilo_owl::adapters::chat_config::setup(&store)?;
             Ok(Some(
                 json!({"status":"configured","message":"Chat configuration saved; run chat to verify the endpoint"}),
             ))
         }
+        ["chat-status"] => {
+            let ready = miilo_owl::adapters::chat_config::load(&store)
+                .and_then(|config| miilo_owl::adapters::chat_config::credential(&config))
+                .is_ok();
+            Ok(Some(json!({"ready":ready})))
+        }
         ["chat"] | ["chat-context"] => {
             miilo_owl::adapters::chat_command::run(&store, args[0] == "chat-context")?;
             Ok(None)
         }
-        ["voice"] => Ok(Some(miilo_owl::adapters::chat_command::voice_unavailable())),
         ["setup"] => {
             setup::setup(&store, &http, &mut setup::Terminal)?;
             Ok(None)
@@ -95,7 +123,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: chat-setup | chat (JSON stdin, NDJSON output) | chat-context | voice (deferred) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

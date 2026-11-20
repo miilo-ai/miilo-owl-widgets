@@ -1,8 +1,13 @@
 use crate::{Result, config::Store};
 use miilo_adapter_sdk::{ChatEvent, ChatRequest, MIILO_PROTOCOL_VERSION};
-use serde_json::{Value, json};
 use std::io::{self, Read, Write};
 pub fn run(store: &Store, preview: bool) -> Result<()> {
+    run_traced(store, preview, None)
+}
+pub fn run_traced(store: &Store, preview: bool, parent: Option<&str>) -> Result<()> {
+    run_mode(store, preview, parent, false)
+}
+pub fn run_mode(store: &Store, preview: bool, parent: Option<&str>, spoken: bool) -> Result<()> {
     let mut input = vec![];
     io::stdin()
         .take(64_001)
@@ -34,8 +39,14 @@ pub fn run(store: &Store, preview: bool) -> Result<()> {
             return Ok(());
         }
         let config = super::chat_config::load(store)?;
+        let telemetry = super::telemetry::load(store);
+        let parent = parent
+            .and_then(miilo_session_telemetry::carrier::parse)
+            .unwrap_or_default();
         crate::application::chat::run(
-            &super::chat_http::OpenAiChat::new()?,
+            &super::chat_http::OpenAiChat::new()?
+                .spoken(spoken)
+                .traced(telemetry, parent),
             &config,
             &request,
             &fresh,
@@ -56,8 +67,4 @@ pub fn run(store: &Store, preview: bool) -> Result<()> {
         );
     }
     Ok(())
-}
-pub fn voice_unavailable() -> Value {
-    json!({"status":"not_implemented","code":"not_implemented","specId":"VOICE-001",
-        "message":"Launcher speech is deferred; use text chat.","spec":".specify/specs/004-launcher-voice/spec.md"})
 }

@@ -26,6 +26,8 @@ fn compiled_helper_streams_a_fresh_local_workflow_without_ce() {
     miilo_owl::adapters::chat_config::save(
         &store,
         &miilo_owl::domain::chat::ChatConfig {
+            max_output_tokens: 512,
+            template_thinking: None,
             version: 1,
             base_url: url,
             model: "fixture-small".into(),

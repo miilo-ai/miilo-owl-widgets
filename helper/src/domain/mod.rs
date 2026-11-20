@@ -10,3 +10,5 @@ pub mod projection;
 pub mod removal;
 
 pub mod observation_explanation;
+
+pub mod workers;

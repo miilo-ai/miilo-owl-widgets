@@ -13,8 +13,11 @@ Local observation is read-only; provider actions require a separately connected 
 
 ## Outstanding work
 
-- Voice capture/playback is deferred. The helper voice command deliberately returns
-  `not_implemented`; endpoint configuration is not microphone or streaming-audio support.
+- OmaLauncher widgets support text interaction. Native Omarchy capture and playback
+  belong to the separate Miilo One plugin and its Rust `miilo-voice-session` helper.
+  The unused shared-helper voice placeholder has been removed. See
+  [voice ownership](launcher-chat.md#voice-ownership); chat endpoint configuration
+  alone does not install or activate microphone or speech support.
 - Full conversational chat-panel acceptance is distinct from the working model-backed
   Explain path. Do not mark all chat milestones complete based on explanation demos.
 - Keep platform-specific acceptance explicit: physical Android, Windows local observation,

@@ -3,12 +3,15 @@
 > Retained design record. Unchecked historical milestones are not a current release checklist. See docs/release-status.md for current scope and outstanding validation.
 
 
-Status: deferred, not implemented for the launcher chat release.
+Status: superseded. Native Omarchy voice is owned by the separate Miilo One plugin
+and its Rust `miilo-voice-session` helper. OmaLauncher widgets remain text-based.
 Existing web/mobile/provider speech contracts and implementations stay intact.
 
-The helper command `voice` must return a structured `not_implemented` result with
-specId VOICE-001, not panic, start recording, or claim microphone support. UI must
-hide/disable unsupported voice controls rather than display a working microphone.
+The original unused shared-helper voice placeholder has been removed. No launcher
+widget called it, and it must not be advertised as a microphone entry point.
+See `docs/launcher-chat.md` for current ownership and installation boundaries.
+The remaining host-adapter requirements below are retained design context, not
+a claim that OmaLauncher has native microphone support.
 
 Host adapters own permission, capture readiness, VAD/endpointing and playback.
 Core owns explicit turn state and cancellation. Provider adapters support

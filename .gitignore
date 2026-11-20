@@ -10,3 +10,4 @@ xtask/target/
 **/.errors/
 
 tools/qt-preview/target/
+session-telemetry/target/

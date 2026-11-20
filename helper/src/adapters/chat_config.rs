@@ -11,6 +11,7 @@ pub fn validate(config: &ChatConfig) -> Result<()> {
     let url = url::Url::parse(&config.base_url).map_err(|_| "Invalid chat URL")?;
     let local = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
     if config.version != 1
+        || !(128..=8192).contains(&config.max_output_tokens)
         || !config.consent
         || config.model.trim().is_empty()
         || config.model.len() > 200
@@ -106,6 +107,8 @@ pub fn setup(store: &Store) -> Result<()> {
     save(
         store,
         &ChatConfig {
+            max_output_tokens: 512,
+            template_thinking: None,
             version: 1,
             base_url,
             model,

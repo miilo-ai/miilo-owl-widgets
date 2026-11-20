@@ -106,9 +106,3 @@ fn consumer_cancellation_stops_inference_output() {
     );
     assert_eq!(backend.calls.get(), 0);
 }
-#[test]
-fn voice_placeholder_is_explicit_and_spec_linked() {
-    let value = miilo_owl::adapters::chat_command::voice_unavailable();
-    assert_eq!(value["status"], "not_implemented");
-    assert_eq!(value["specId"], "VOICE-001");
-}
