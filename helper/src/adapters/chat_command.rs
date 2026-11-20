@@ -6,6 +6,9 @@ pub fn run(store: &Store, preview: bool) -> Result<()> {
     run_traced(store, preview, None)
 }
 pub fn run_traced(store: &Store, preview: bool, parent: Option<&str>) -> Result<()> {
+    run_mode(store, preview, parent, false)
+}
+pub fn run_mode(store: &Store, preview: bool, parent: Option<&str>, spoken: bool) -> Result<()> {
     let mut input = vec![];
     io::stdin()
         .take(64_001)
@@ -42,7 +45,9 @@ pub fn run_traced(store: &Store, preview: bool, parent: Option<&str>) -> Result<
             .and_then(miilo_session_telemetry::carrier::parse)
             .unwrap_or_default();
         crate::application::chat::run(
-            &super::chat_http::OpenAiChat::new()?.traced(telemetry, parent),
+            &super::chat_http::OpenAiChat::new()?
+                .spoken(spoken)
+                .traced(telemetry, parent),
             &config,
             &request,
             &fresh,

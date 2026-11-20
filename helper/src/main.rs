@@ -68,6 +68,14 @@ fn run(args: &[String]) -> Result<Option<Value>> {
         ["telemetry", rest @ ..] => {
             miilo_owl::adapters::telemetry::dispatch(&store, rest).map(Some)
         }
+        ["chat", "--spoken"] => {
+            miilo_owl::adapters::chat_command::run_mode(&store, false, None, true)?;
+            Ok(None)
+        }
+        ["chat", "--spoken", "--trace-parent", parent] => {
+            miilo_owl::adapters::chat_command::run_mode(&store, false, Some(parent), true)?;
+            Ok(None)
+        }
         ["chat", "--trace-parent", parent] => {
             miilo_owl::adapters::chat_command::run_traced(&store, false, Some(parent))?;
             Ok(None)
