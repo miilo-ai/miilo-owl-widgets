@@ -18,7 +18,7 @@
   component OrbitCluster(provider, items, slot = 0, fit = 0.85) {
     let team = actors.filter(a => a.providerId == provider.id)
     let offline = contains(["offline", "unreachable", "unknown", "stale"], provider.health ?? "") || contains(["offline", "unreachable", "stale"], provider.status ?? "") || any(team, a => contains(["offline", "unreachable", "unknown"], a.health ?? ""))
-    let representative = len(team) > 0 ? team[0] : {_key: provider.id, providerId: provider.id, name: provider.name, status: "ready", health: "unknown"}
+    let representative = len(team) > 0 ? team[0] : {_key: provider.id, providerId: provider.id, name: provider.name, status: provider.status ?? "ready", health: provider.health ?? "unknown"}
     let anchor = offline ? {_key: representative._key, providerId: provider.id, name: representative.name, status: "offline", health: "unreachable"} : representative
     let errors = any(items, w => w.lifecycle == "failed") || any(team, a => contains(["failed", "error"], a.status))
     let warning = any(items, w => w.attention != "none") || any(team, a => a.status == "blocked")
