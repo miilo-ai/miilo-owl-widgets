@@ -36,6 +36,7 @@ check-desktop:
 	node tools/test-adaptive-fleet.cjs
 	node tools/test-session-visibility.cjs
 	node tools/test-mobile-settings.cjs
+	node tools/test-mobile-chat.cjs
 	node tools/test-helper-onboarding.cjs
 
 check-keyboard:

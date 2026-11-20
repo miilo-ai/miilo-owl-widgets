@@ -59,7 +59,7 @@ fn assemble() -> Result<()> {
             format!("miilo {internal}")
         };
         let mut text = format!(
-            "widget \"{title}\" {{\n  meta {{ owl: 6; description: \"{description}\"; version: \"{version}\"; license: \"MIT\"; category: \"dev\" }}\n  page: 1\n  order: {}\n  size: 3x2\n  minSize: 3x2\n  padding: 8\n",
+            "widget \"{title}\" {{\n  meta {{ owl: 15; description: \"{description}\"; version: \"{version}\"; license: \"MIT\"; category: \"dev\" }}\n  page: 1\n  order: {}\n  size: 3x2\n  minSize: 3x2\n  padding: 8\n",
             index - 63
         );
         text.push_str("  requires { pacman: [\"bash\", \"curl\", \"coreutils\", \"tar\", \"gawk\", \"grep\", \"gzip\"] }\n");
@@ -68,6 +68,7 @@ fn assemble() -> Result<()> {
             "  let helperInstallCommand = \"\"\"{installer}\"\"\"\n"
         ));
         text.push_str(&format!("  let widgetVersion = \"{version}\"\n"));
+        text.push_str(&format!("  let widgetChatPrefix = \"{internal}\"\n"));
         let mut parts = vec![
             "brand",
             "about",
@@ -83,6 +84,7 @@ fn assemble() -> Result<()> {
             "artifacts",
             "work-detail",
             "discovery",
+            "chat",
         ];
         if index != 72 {
             parts.extend(["robot"]);

@@ -21,7 +21,7 @@
         onTap: { setupOpen = setupSection != "menu"; setupSection = "menu"; setupConfiguring = false; refresh() }
         ToolbarIcon { kind: "back" }
       }
-      Text { text: setupSection == "about" ? "About" : setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
+      Text { text: setupSection == "about" ? "About" : setupSection == "menu" ? "Settings" : setupSection == "appearance" ? "Appearance" : setupSection == "chat" ? "Chat model" : setupSection == "speech" ? "Spoken replies" : setupSection == "pair" ? "Pair computer" : setupSection == "filters" ? "Systems" : "Connections"; fontSize: 16; weight: 1; maxLines: 1 }
     }
     if setupSection == "about" {
       WidgetAbout { }
@@ -33,6 +33,7 @@
       SettingsEntry { label: "Connections"; detail: "Factories, local sessions and credentials"; section: "systems" }
       SettingsEntry { label: "Pair computer"; detail: "Approve a read-only connection on your computer"; section: "pair" }
       SettingsEntry { label: "Chat model"; detail: "Endpoint, model and sharing consent"; section: "chat" }
+      if said.available != null { SettingsEntry { label: "Spoken replies"; detail: "Speech endpoint, voice and playback consent"; section: "speech" } }
       SettingsEntry { label: "Systems"; detail: "Choose which systems appear"; section: "filters" }
       SettingsEntry { label: "About"; detail: "Privacy, version and support"; section: "about" }
     } else if setupSection == "appearance" {
@@ -40,8 +41,8 @@
       Text { text: "Controls"; fontSize: 12; color: muted }
       Flow {
         gap: 6
-        Button { height: 28; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
-        Button { height: 28; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
+        Button { background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
+        Button { background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
       }
       RobotColors { }
     } else if setupSection == "filters" {
@@ -60,12 +61,13 @@
       }
       if len(selectableProviders) == 0 { Text { text: "Add a connection to see systems here."; fontSize: 12; color: muted; maxLines: 2 } }
     } else {
-      Text { text: setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : setupSection == "pair" ? "On your computer, start sharing and create an invitation with miilo local pair invite. Compare both codes before approving. This device can only observe selected work." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
+      Text { text: setupSection == "speech" ? "Replies go to your chosen speech endpoint only when spoken replies are enabled. Android handles playback and microphone permissions." : setupSection == "chat" ? "Questions and task context go only to the endpoint you configure and consent to." : setupSection == "pair" ? "On your computer, start sharing and create an invitation with miilo local pair invite. Compare both codes before approving. This device can only observe selected work." : "Connect a private factory or choose local sessions. Credentials stay in your configured credential store."; fontSize: 12; color: muted; maxLines: 4 }
       if setupConfiguring {
         if setupSection == "chat" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl chat-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
+        else if setupSection == "speech" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl speech-setup"; fill: width; height: max(240, screenHeight * 0.65) } }
         else if setupSection == "pair" { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl pair"; fill: width; height: max(240, screenHeight * 0.65) } }
         else { Terminal { fontSize: 12; command: "export PATH=\"$HOME/.local/bin:$PATH\"; miilo-owl setup"; fill: width; height: max(240, screenHeight * 0.65) } }
-        Text { text: setupSection == "chat" ? "Follow the prompts, then go back." : "Type q then Enter to finish, then go back."; fontSize: 11; color: muted; maxLines: 2 }
+        Text { text: setupSection == "chat" || setupSection == "speech" ? "Follow the prompts, then go back." : "Type q then Enter to finish, then go back."; fontSize: 11; color: muted; maxLines: 2 }
       } else {
         if setupSection == "systems" {
           for p in selectableProviders key p.id {
@@ -76,8 +78,8 @@
             }
           }
         }
-        Button { height: 28; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
-        if setupSection == "chat" { Text { text: "This widget uses text interaction. Hands-free voice is available in Miilo One for Omarchy."; fontSize: 11; color: muted; maxLines: 3 } }
+        Button { background: alpha(accent, 0.12); text: setupSection == "speech" ? "Configure speech model" : setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        if setupSection == "chat" { Text { text: "Open Ask Miilo from the Miilo face. Dictation requires OmaLauncher 1.8 and a supported Android recognizer. Continuous hands-free conversation is available in Miilo One for Omarchy."; fontSize: 11; color: muted; maxLines: 4 } }
       }
     }
   }

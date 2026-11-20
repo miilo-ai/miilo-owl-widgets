@@ -8,6 +8,10 @@ pub mod chat_config;
 pub mod chat_http;
 pub mod chat_sse;
 pub mod chat_text;
+pub mod widget_chat;
+pub mod widget_chat_guard;
+pub mod widget_speech;
+pub mod widget_speech_setup;
 
 pub mod uninstall;
 

@@ -25,6 +25,9 @@
     Row {
       gap: 4
       align: center
+      Box { width: 44; height: toolbarHeight; align: center; onTap: { chatOpen = true; setupOpen = false }
+        BrandSymbol { w: 24 }
+      }
       Box { width: 44; height: toolbarHeight; align: center; onTap: { setupOpen = true; setupSection = "menu"; setupConfiguring = false; systemsOpen = false }
         ToolbarIcon { kind: "settings" }
       }

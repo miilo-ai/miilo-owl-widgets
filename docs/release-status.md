@@ -1,6 +1,6 @@
 # Release scope and validation
 
-Current published package: 1.6.0 (reviewed October 18, 2026).
+Current published package: 1.7.2 (checked November 20, 2026).
 For available assets and subsequent versions, use GitHub Releases and the package manifests.
 Documentation-only changes do not require a package version bump.
 
@@ -13,13 +13,13 @@ Local observation is read-only; provider actions require a separately connected 
 
 ## Outstanding work
 
-- OmaLauncher widgets support text interaction. Native Omarchy capture and playback
-  belong to the separate Miilo One plugin and its Rust `miilo-voice-session` helper.
-  The unused shared-helper voice placeholder has been removed. See
-  [voice ownership](launcher-chat.md#voice-ownership); chat endpoint configuration
-  alone does not install or activate microphone or speech support.
-- Full conversational chat-panel acceptance is distinct from the working model-backed
-  Explain path. Do not mark all chat milestones complete based on explanation demos.
+- This branch adds unreleased Android chat, native host dictation and opt-in
+  completed-answer playback. Emulator fixtures do not establish real microphone,
+  audible voice quality or physical-device acceptance. Continuous hands-free
+  conversation still needs a supported host integration. See
+  [Android conversation](launcher-chat.md#android-conversation).
+- The native Omarchy capture/playback implementation belongs to its separate
+  plugin and Rust `miilo-voice-session` helper; Android does not use PipeWire.
 - Keep platform-specific acceptance explicit: physical Android, Windows local observation,
   fractional scaling, large fleets and hidden/reduced-motion performance need their own evidence.
 - Marketplace approval and AUR availability require external confirmation; a public

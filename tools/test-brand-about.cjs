@@ -26,6 +26,7 @@ for (const file of ['70-miilo-fleet.owl', '71-miilo-attention.owl', '72-miilo-bo
       ok: true, out: JSON.stringify({configured: false, errors: [], snapshot: {providers: [], actors: [], workItems: [], attention: []}}), code: 0, err: '',
     }));
     const nodes = () => [...walk(instance.render(true))];
+    assert.equal(instance.render(true).title, 'Miilo One', 'Native launcher chrome uses the product name without changing widget identity');
     set('setupOpen', true);
     const entry = nodes().find(n => n.kind === 'Box' && n.h?.onTap && [...walk(n)].some(c => c.p?.text === 'About'));
     assert(entry, 'About remains reachable without the helper'); entry.h.onTap(0, 0);

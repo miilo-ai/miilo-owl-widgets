@@ -30,3 +30,7 @@ Animation performance patch: retain component-local expressions and invalidate t
 
 Keyboard focus patch: interactive OWL nodes retain their existing Tab and
 Enter/Space activation, with a full themed outline instead of a small edge mark.
+
+Android 1.8 vocabulary: accept upstream `speech(action)` and `sound(source)`
+actions. This is compiler compatibility, not a Linux microphone/playback adapter.
+The dictation control is hidden unless the host supplies android.speech.available.
