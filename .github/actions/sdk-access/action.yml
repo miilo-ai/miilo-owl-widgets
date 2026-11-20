@@ -19,3 +19,4 @@ runs:
     run: node .github/release-tools/sdk-access.cjs
     env:
       SDK_READ_TOKEN: ${{ inputs.token }}
+      GITHUB_API_TOKEN: ${{ github.token }}
