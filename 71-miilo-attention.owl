@@ -798,7 +798,7 @@ printf 'Installed miilo-owl %s in %s. Return to Miilo and refresh to continue.\n
     }
   }
   screen {
-    title: "needs you"
+    title: "Miilo One"
     Column {
       scroll: true
       gap: 10

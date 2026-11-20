@@ -93,7 +93,7 @@
     }
   }
   screen {
-    title: "miilo"
+    title: "Miilo One"
     Column {
       scroll: true
       gap: 10

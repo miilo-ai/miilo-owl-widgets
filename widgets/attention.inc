@@ -19,7 +19,7 @@
     }
   }
   screen {
-    title: "needs you"
+    title: "Miilo One"
     Column {
       scroll: true
       gap: 10

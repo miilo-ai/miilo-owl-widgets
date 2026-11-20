@@ -1,4 +1,4 @@
-<h1 align="center">Miilo OWL widgets</h1>
+<h1 align="center">Miilo One for OmaLauncher</h1>
 
 <p align="center">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-b7410e?style=flat-square&amp;logo=rust&amp;logoColor=white" />
@@ -9,7 +9,7 @@
   <img alt="Linux" src="https://img.shields.io/badge/Linux-343434?style=flat-square&amp;logo=linux&amp;logoColor=white" />
 </p>
 
-Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
+Compact, theme-aware Miilo One controls for OmaLauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
 Application logic and device installation use Rust. Assembly and release orchestration use Rust xtask; portable source/CI checks use Node built-ins, and preview capture uses native Qt. Run `make test` and `cargo xtask assemble`. OWL remains the shared declarative UI format. Its official Android compiler and the Linux Quickshell renderer are upstream platform tools.
 

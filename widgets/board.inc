@@ -44,7 +44,7 @@
     }
   }
   screen {
-    title: "work in motion"
+    title: "Miilo One"
     Column {
       scroll: true
       gap: 10
