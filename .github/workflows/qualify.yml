@@ -77,8 +77,8 @@ jobs:
     - name: Compile with pinned official OWL checker
       shell: bash
       env:
-        OWL_URL: https://raw.githubusercontent.com/SimonSchubert/omarchy-widgets/34c08fd6a9de020a7a9fcd6f397d493c3351a8fd/tools/owl.jar
-        OWL_SHA256: bfc294234f6cc2ab2024271cb6d55b5259513db0647ac8f636c85997b4f5f0cf
+        OWL_URL: https://raw.githubusercontent.com/SimonSchubert/omarchy-widgets/bd8c04d5094349d315fe6ebe68f4d1d7daf1ba11/tools/owl.jar
+        OWL_SHA256: 81855c710980de4b13d5b5c0398c33195c8e60ba1496e7a9adcf6be1e4e390ce
       run: 'curl --fail --silent --show-error --location "$OWL_URL" -o "$RUNNER_TEMP/owl.jar"
 
         printf ''%s  %s\n'' "$OWL_SHA256" "$RUNNER_TEMP/owl.jar" | sha256sum -c -

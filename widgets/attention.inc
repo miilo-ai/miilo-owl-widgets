@@ -23,7 +23,7 @@
     Column {
       scroll: true
       gap: 10
-      if setupOpen { SettingsPage { } } else {
+      if setupOpen { SettingsPage { } } else if chatOpen { ChatPanel { } } else {
         Setup { }
         if focused == null && actor == null { Search { placeholder: "Search attention" } }
         if focused != null {

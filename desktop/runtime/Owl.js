@@ -963,7 +963,8 @@ var CONSTANTS = { pi: Math.PI, transparent: new Col(null, 0, 1) }
 var ACTIONS = {
   terminal: [1, 2], app: [1, 1], run: [1, 1], url: [1, 1], launcher: [1, 1], refresh: [0, 1],
   media: [1, 1], androidApp: [1, 1], copy: [1, 1], notify: [1, 2], volume: [1, 1],
-  notification: [2, 2], screen: [0, 0], close: [0, 0], torch: [1, 1], share: [1, 1], haptic: [0, 0]
+  notification: [2, 2], screen: [0, 0], close: [0, 0], torch: [1, 1], share: [1, 1], haptic: [0, 0],
+  speech: [1, 1], sound: [1, 1]
 }
 
 function Args(args, host) {
@@ -1615,7 +1616,8 @@ var OPERATORS = {
 
 // ---------------------------------------------------------------- compiler
 
-var LEVEL = 7
+// Miilo's OWL 15 dictation vocabulary; other unsupported nodes still fail explicitly.
+var LEVEL = 15
 var MAX_NODES = 500
 var MAX_SCREEN_NODES = 1000
 var MAX_ASSET_BYTES = 2097152
@@ -1671,6 +1673,9 @@ var SINCE = { Terminal: 2, sprite: 3 }
 // owl 6: values in commands, quoted, and the launcher's corner style.
 SINCE.sh = 6
 SINCE.corners = 6
+SINCE.sound = 8
+SINCE.speech = 15
+SINCE["android.speech"] = 15
 SINCE["Input.focus"] = 6
 // owl 7: more of the phone: the next alarm, its modes, the torch, the share sheet, haptics.
 ;["android.alarm", "android.modes", "torch", "share", "haptic"].forEach(function(k) { SINCE[k] = 7 })
@@ -1679,7 +1684,7 @@ var MANAGERS = { pacman: /^[a-z0-9@_+][a-z0-9@._+-]*$/ }
 var HANDLER_PARAMS = { onTap: ["x", "y"], onDrag: ["dx", "dy", "x", "y"], onChange: ["value"], onSubmit: ["value"] }
 var HANDLER_KINDS = { onChange: ["Slider", "Input"], onSubmit: ["Input"] }
 var TRIGGER_PARAMS = { on: ["value", "old"] }
-var ANDROID = ["battery", "device", "media", "notifications", "volume", "system", "alarm", "modes"]
+var ANDROID = ["battery", "device", "media", "notifications", "volume", "system", "alarm", "modes", "speech"]
 var MEDIA = ["toggle", "play", "pause", "next", "previous", "open"]
 var VOLUME = ["up", "down", "mute", "unmute", "toggle"]
 var TORCH = ["on", "off", "toggle"]
