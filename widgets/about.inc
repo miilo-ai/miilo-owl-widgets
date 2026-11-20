@@ -10,8 +10,8 @@
       Row {
         fill: width; gap: 8
         if !leftHanded { Spacer { weight: 1 } }
-        Button { height: 28; background: alpha(accent, 0.12); color: accent; text: "miilo.tech ↗"; onTap: url("https://miilo.tech/") }
-        Button { height: 28; background: alpha(accent, 0.12); color: accent; text: "Sponsor Miilo ↗"; onTap: url("https://github.com/sponsors/miilo-ai") }
+        Button { background: alpha(accent, 0.12); color: accent; text: "miilo.tech ↗"; onTap: url("https://miilo.tech/") }
+        Button { background: alpha(accent, 0.12); color: accent; text: "Sponsor Miilo ↗"; onTap: url("https://github.com/sponsors/miilo-ai") }
         if leftHanded { Spacer { weight: 1 } }
       }
     }

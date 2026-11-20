@@ -40,8 +40,8 @@
       Text { text: "Controls"; fontSize: 12; color: muted }
       Flow {
         gap: 6
-        Button { height: 28; background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
-        Button { height: 28; background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
+        Button { background: alpha(accent, 0.12); text: leftHanded ? "Left handed" : "Right handed"; color: accent; onTap: leftHanded = !leftHanded }
+        Button { background: alpha(accent, 0.12); text: previewRobots ? "Hide preview robots" : "Preview robots"; onTap: previewRobots = !previewRobots }
       }
       RobotColors { }
     } else if setupSection == "filters" {
@@ -76,7 +76,7 @@
             }
           }
         }
-        Button { height: 28; background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
+        Button { background: alpha(accent, 0.12); text: setupSection == "chat" ? "Configure chat model" : setupSection == "pair" ? "Pair computer" : "Manage connections"; color: accent; onTap: setupConfiguring = true }
         if setupSection == "chat" { Text { text: "This widget uses text interaction. Hands-free voice is available in Miilo One for Omarchy."; fontSize: 11; color: muted; maxLines: 3 } }
       }
     }
