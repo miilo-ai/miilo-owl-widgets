@@ -39,7 +39,8 @@ In GitHub Actions, select **Build native Linux helper**, then **Run workflow**:
    empty container with no network or extra runtime libraries.
 3. Inspect the uploaded workflow artifact. Repeat with `publish` checked to
    append the package and its separate checksum to the existing release.
-   The release environment's protections still apply.
+   The release environment's protections and the repository's emergency release
+   pause still apply.
 
 Publishing is allowed only from the default workflow branch. The source tag must
 already have a GitHub release, its package version must match, and build metadata
