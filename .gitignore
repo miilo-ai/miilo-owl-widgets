@@ -11,3 +11,6 @@ xtask/target/
 
 tools/qt-preview/target/
 session-telemetry/target/
+
+dist-native/
+release-input/

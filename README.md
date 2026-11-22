@@ -37,6 +37,11 @@ All colors come from Omalauncher’s semantic palette. There are no fixed provid
 
 <p align="center"><sub>Native Qt render · sample systems and tasks · installed-host acceptance is separate.</sub></p>
 
+## Native desktop helper
+
+For x86-64 Omarchy, use the [native Linux helper guide](docs/native-linux-helper.md).
+The native helper archive is separate from the ARM64 OmaLauncher widget bundle.
+
 ## Install and register what to observe
 
 To observe another computer directly, use [computer pairing](docs/computer-pairing.md)

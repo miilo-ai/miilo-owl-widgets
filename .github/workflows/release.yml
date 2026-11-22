@@ -69,7 +69,17 @@ jobs:
           != 'true' }}
       if: steps.sdk.outputs.ready == 'true'
   build:
-    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - arch: aarch64
+          runner: ubuntu-24.04-arm
+        - arch: x86_64
+          runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    env:
+      MIILO_LINUX_ARCH: ${{ matrix.arch }}
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       with:
@@ -82,14 +92,14 @@ jobs:
           || secrets.MIILO_WORKSPACE_READ_TOKEN) || '' }}
     - run: make build-linux
       if: steps.sdk.outputs.ready == 'true'
-    - name: Run native ARM64 tests and compiled CLI journeys
+    - name: Run native architecture tests and compiled CLI journeys
       run: tools/test-linux.sh
       if: steps.sdk.outputs.ready == 'true'
     - run: make package
       if: steps.sdk.outputs.ready == 'true'
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: miilo-owl-widgets-linux-aarch64
+        name: miilo-owl-widgets-linux-${{ matrix.arch }}
         path: dist/*
       if: steps.sdk.outputs.ready == 'true'
     needs:
@@ -106,10 +116,15 @@ jobs:
       id-token: write
       attestations: write
     steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        ref: ${{ inputs.tag || github.ref }}
+        persist-credentials: false
     - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
       with:
-        name: miilo-owl-widgets-linux-aarch64
-        path: release
+        pattern: miilo-owl-widgets-linux-*
+        path: release-input
+    - run: node tools/collect-release-assets.cjs release-input release
     - run: sha256sum -c SHA256SUMS
       working-directory: release
     - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be

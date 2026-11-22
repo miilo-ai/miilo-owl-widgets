@@ -4,9 +4,14 @@ set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 base="${MIILO_OWL_INSTALL_ROOT:-$HOME/.local}"
 widgets="${MIILO_OWL_WIDGET_DIR:-$HOME/.config/omalauncher/widgets}"
-binary="${MIILO_OWL_BINARY:-$repo/bin/linux-aarch64/miilo-owl}"
+case "$(uname -m)" in
+  aarch64|arm64) arch=aarch64 ;;
+  x86_64|amd64) arch=x86_64 ;;
+  *) echo "Unsupported Linux architecture" >&2; exit 1 ;;
+esac
+binary="${MIILO_OWL_BINARY:-$repo/bin/linux-$arch/miilo-owl}"
 if [ ! -x "$binary" ] || ! "$binary" --version >/dev/null 2>&1; then
-  echo 'A compatible native miilo-owl binary is required. Use the ARM64 Linux release bundle, or set MIILO_OWL_BINARY to a locally built binary.' >&2
+  echo 'A compatible native miilo-owl binary is required. Use the matching Linux release bundle, or set MIILO_OWL_BINARY to a locally built binary.' >&2
   exit 1
 fi
 "$binary" uninstall --help >/dev/null

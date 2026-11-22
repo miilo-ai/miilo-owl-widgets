@@ -5,7 +5,7 @@ assemble:
 test: check-preview-toolchain check-session-telemetry
 	node tools/test-render-invalidation.cjs
 	node --test tools/plain-text.test.cjs
-	node --test tools/install-helper.test.cjs
+	node --test tools/install-helper.test.cjs tools/native-publication.test.cjs tools/collect-release-assets.test.cjs tools/widget-bundle-install.test.cjs
 	node tools/check-no-python.cjs
 	node --test tools/no-python.test.cjs
 	node tools/check-architecture.cjs
