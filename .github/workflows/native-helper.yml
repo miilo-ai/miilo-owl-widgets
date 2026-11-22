@@ -1,0 +1,112 @@
+name: Build native Linux helper
+'on':
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published version tag, for example v1.7.2
+        required: true
+        type: string
+      architecture:
+        description: Native desktop architecture
+        type: choice
+        options: [x86_64, aarch64]
+        default: x86_64
+      publish:
+        description: Append new assets to the existing release; never replace assets
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: native-helper-${{ inputs.tag }}-${{ inputs.architecture }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ${{ inputs.architecture == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 35
+    env:
+      TAG: ${{ inputs.tag }}
+      MIILO_LINUX_ARCH: ${{ inputs.architecture }}
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Validate source tag and publication context
+      shell: bash
+      env:
+        PUBLISH: ${{ inputs.publish }}
+        RELEASE_ENABLED: ${{ vars.MIILO_RELEASE_ENABLED }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][A-Za-z0-9.-]+)?$ ]]
+        git rev-parse --verify "refs/tags/$TAG^{commit}" > "$RUNNER_TEMP/source-commit"
+        gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+        if [[ "$PUBLISH" == true ]]; then
+          [[ "$RELEASE_ENABLED" != false ]]
+          [[ "$GITHUB_REF" == "refs/heads/$DEFAULT_BRANCH" ]]
+        fi
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        ref: ${{ inputs.tag }}
+        path: source
+        persist-credentials: false
+    - name: Verify exact source version
+      shell: bash
+      run: |
+        test "$(git -C source rev-parse HEAD)" = "$(cat "$RUNNER_TEMP/source-commit")"
+        version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' source/helper/Cargo.toml | head -1)
+        test "v$version" = "$TAG"
+    - uses: ./.github/actions/sdk-access
+      id: sdk
+      with:
+        token: ${{ secrets.MIILO_SDK_READ_TOKEN || secrets.MIILO_WORKSPACE_READ_TOKEN || '' }}
+    - name: Require source access
+      run: test "$READY" = true
+      env:
+        READY: ${{ steps.sdk.outputs.ready }}
+    - name: Build and test exact-tag helper
+      run: |
+        bash tools/build-linux.sh
+        bash tools/test-linux.sh
+        bash tools/package-native-helper.sh
+        bash tools/test-native-package.sh
+      env:
+        MIILO_OWL_SOURCE_ROOT: ${{ github.workspace }}/source
+    - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      with:
+        name: native-helper-${{ inputs.architecture }}
+        path: dist-native/*
+        if-no-files-found: error
+  publish:
+    needs: build
+    if: inputs.publish == true
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      TAG: ${{ inputs.tag }}
+      ARCH: ${{ inputs.architecture }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      with:
+        name: native-helper-${{ inputs.architecture }}
+        path: dist-native
+    - name: Verify checksums, source identity and new asset names
+      shell: bash
+      run: node tools/verify-native-publication.cjs
+    - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+      with:
+        subject-path: dist-native/*
+    - name: Append native helper without replacing existing assets
+      shell: bash
+      run: gh release upload "$TAG" dist-native/* --repo "$GITHUB_REPOSITORY"

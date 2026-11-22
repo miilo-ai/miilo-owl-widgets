@@ -1,6 +1,9 @@
 name: Widget helper tests
 permissions:
   contents: read
+concurrency:
+  group: helper-tests-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,25 +36,48 @@ jobs:
     - run: bash -n install.sh tools/check-device.sh tools/build-linux.sh tools/package.sh
     - run: cargo xtask assemble && git diff --exit-code -- '*.owl'
       if: steps.sdk.outputs.ready == 'true'
-  linux-arm64:
-    runs-on: ubuntu-24.04-arm
+  linux-build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - arch: aarch64
+          runner: ubuntu-24.04-arm
+        - arch: x86_64
+          runner: ubuntu-24.04
+    runs-on: ${{ matrix.runner }}
+    env:
+      MIILO_LINUX_ARCH: ${{ matrix.arch }}
     steps:
     - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
     - uses: ./.github/actions/sdk-access
       id: sdk
       with: *id001
+    - name: Require native build dependencies
+      run: test "$READY" = true
+      env:
+        READY: ${{ steps.sdk.outputs.ready }}
     - run: make build-linux
       if: steps.sdk.outputs.ready == 'true'
-    - name: Run native ARM64 tests and compiled CLI journeys
+    - name: Run native architecture tests and compiled CLI journeys
       run: tools/test-linux.sh
       if: steps.sdk.outputs.ready == 'true'
     - run: make package
       if: steps.sdk.outputs.ready == 'true'
     - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
       with:
-        name: miilo-owl-widgets-linux-aarch64
+        name: miilo-owl-widgets-linux-${{ matrix.arch }}
         path: dist/*
       if: steps.sdk.outputs.ready == 'true'
+  linux-arm64:
+    # Preserve the existing required check, now covering both native packages.
+    needs: linux-build
+    if: always() && !cancelled()
+    runs-on: ubuntu-24.04
+    steps:
+    - run: test "$RESULT" = success
+      env:
+        RESULT: ${{ needs.linux-build.result }}
 'on':
 - workflow_dispatch
 - push
