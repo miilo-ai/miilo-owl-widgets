@@ -72,7 +72,7 @@ jobs:
   linux-arm64:
     # Preserve the existing required check, now covering both native packages.
     needs: linux-build
-    if: always()
+    if: always() && !cancelled()
     runs-on: ubuntu-24.04
     steps:
     - run: test "$RESULT" = success
