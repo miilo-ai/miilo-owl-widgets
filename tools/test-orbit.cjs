@@ -185,3 +185,4 @@ assert.notEqual(color('-old'),color('+new'));
 assert.notEqual(color('+new'),color(' unchanged'));
 assert.equal(color('--- a/demo.ts'),color('+++ b/demo.ts'),'File headers share neutral accent ink');
 assert.deepEqual(details.commands,[],'Inspecting a diff must remain read-only');
+require('./test-provider-health.cjs')(scene);

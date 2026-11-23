@@ -80,6 +80,22 @@ fn run(args: &[String]) -> Result<Option<Value>> {
             miilo_owl::adapters::chat_command::run_traced(&store, false, Some(parent))?;
             Ok(None)
         }
+        ["widget-chat"] => {
+            miilo_owl::adapters::widget_chat::run(&store)?;
+            Ok(None)
+        }
+        ["widget-speak"] => {
+            miilo_owl::adapters::widget_speech::run(&store)?;
+            Ok(None)
+        }
+        ["speech-setup"] => {
+            miilo_owl::adapters::widget_speech_setup::run(&store)?;
+            Ok(None)
+        }
+        ["speech-cleanup"] => {
+            miilo_owl::adapters::widget_speech::cleanup(&store)?;
+            Ok(Some(json!({"status":"cleared"})))
+        }
         ["chat-setup"] => {
             miilo_owl::adapters::chat_config::setup(&store)?;
             Ok(Some(
@@ -90,7 +106,7 @@ fn run(args: &[String]) -> Result<Option<Value>> {
             let ready = miilo_owl::adapters::chat_config::load(&store)
                 .and_then(|config| miilo_owl::adapters::chat_config::credential(&config))
                 .is_ok();
-            Ok(Some(json!({"ready":ready})))
+            Ok(Some(json!({"ready":ready,"widgetApi":1})))
         }
         ["chat"] | ["chat-context"] => {
             miilo_owl::adapters::chat_command::run(&store, args[0] == "chat-context")?;
@@ -123,7 +139,7 @@ fn main() {
     }
     if args.is_empty() || matches!(args.first().map(String::as_str), Some("--help" | "-h")) {
         println!(
-            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
+            "miilo-owl: telemetry status|disable|configure --consent --endpoint URL [--token-file PATH] | chat-setup | chat (JSON stdin, NDJSON output) | chat-context | speech-setup | speech-cleanup | widget-chat (NUL stdin) | widget-speak (NUL stdin) | setup | pair | uninstall widgets [--confirm PLAN_ID] | snapshot | refresh | explain ITEM REVISION | action ITEM ACTION REVISION | name-agent ACTOR NAME"
         );
         return;
     }

@@ -1,4 +1,4 @@
-<h1 align="center">Miilo OWL widgets</h1>
+<h1 align="center">Miilo One for OmaLauncher</h1>
 
 <p align="center">
   <img alt="Rust" src="https://img.shields.io/badge/Rust-b7410e?style=flat-square&amp;logo=rust&amp;logoColor=white" />
@@ -9,7 +9,7 @@
   <img alt="Linux" src="https://img.shields.io/badge/Linux-343434?style=flat-square&amp;logo=linux&amp;logoColor=white" />
 </p>
 
-Compact, theme-aware Miilo controls for Omalauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
+Compact, theme-aware Miilo One controls for OmaLauncher. Animated agents blink while working and close their eyes with drifting z's while resting. One heading per tile; details and controls appear on tap.
 
 Application logic and device installation use Rust. Assembly and release orchestration use Rust xtask; portable source/CI checks use Node built-ins, and preview capture uses native Qt. Run `make test` and `cargo xtask assemble`. OWL remains the shared declarative UI format. Its official Android compiler and the Linux Quickshell renderer are upstream platform tools.
 
@@ -87,7 +87,7 @@ settings remain; this is integration removal, not a full device purge.
 - Provider-advertised, available **read/bounded or explicitly confirmed privileged** actions with no input form can be proposed, then explicitly confirmed. The helper re-reads the task and rejects a changed revision before posting. The backend also validates access and revision.
 - Strong-auth, privileged, destructive, expired, unavailable, or form-dependent actions remain in the provider interface. CE currently has observation/explanations but no action-proxy route; leave action opt-in disabled for CE.
 - Accepted receipts are shown as accepted, never as completed. Mutation requests are not automatically retried. Idempotency keys are stable for the same task/action/revision.
-- OmaLauncher widget interaction and explanation results are text-based. Hands-free voice is provided separately by [Miilo One for Omarchy](https://github.com/miilo-ai/miilo-omarchy-plugin/blob/main/docs/voice.md).
+- This branch adds unreleased in-place chat, Android dictation and opt-in spoken replies, requiring OWL 15 and a matching helper (tested with OmaLauncher 1.8.0). Continuous hands-free voice remains separate in [Miilo One for Omarchy](https://github.com/miilo-ai/miilo-omarchy-plugin/blob/main/docs/voice.md). See [conversation setup and limits](docs/launcher-chat.md).
 
 No demo approvals or fabricated evidence are included in the installed widgets.
 
@@ -164,7 +164,7 @@ Miilo Feed is the primary view: expand a system to browse five work items at a t
 
 Controls default to right-handed placement. Open ⚙ → Appearance and tap Right handed to switch to left-hand placement; the toolbar and work-list More control follow that preference. Setup/refresh/back use borderless icons in 44 × 48 dp touch areas. Omalauncher's title/close row is launcher-owned and has no widget action slot, so icons sit directly below it. Robot tabs replace the redundant Agents count button for small teams.
 
-The settings menu opens dedicated Appearance, Connections, Chat model and Systems pages. Task content and search stay hidden while settings are open. Connections and Chat model start their setup terminal only after Manage connections or Configure chat model is selected. Done returns to the previous task or view.
+The settings menu opens dedicated Appearance, Connections, Chat model, Spoken replies (Android) and Systems pages. Task content and search stay hidden while settings are open. Connections and Chat model start their setup terminal only after Manage connections or Configure chat model is selected. Back returns to the previous task or view.
 
 The collapsed Miilo tile is robot-first: no task titles or workflow progress bar. Theme-colored `?!` marks actionable work and tight red `!!` marks failures; a muted connection marker distinguishes reported offline agents. Activity is conveyed through robot animation without a bulb. Resting agents retain closed eyes and drifting Zs. Tapping a robot opens its assigned workflows. Additional agents remain discoverable in the expanded view. New installations default to a compact 3×2 tile; existing user sizing is retained by the launcher.
 
@@ -227,7 +227,7 @@ boundaries. Run `node tools/check-architecture.cjs` and
 `node --test tools/architecture.test.cjs`; CI qualification runs both. These are
 development checks, not runtime dependencies.
 
-Text chat helper setup: [launcher chat](docs/launcher-chat.md). The native Omarchy plugin owns its chat panel, microphone capture and spoken replies through its separate Rust voice-session helper; these are not OmaLauncher widget features.
+Conversation setup: [launcher chat](docs/launcher-chat.md). Android uses the launcher's permission, dictation and playback APIs. The native Omarchy plugin has a separate Rust voice-session helper and a richer hands-free flow.
 
 ### Robot personality and motion
 
